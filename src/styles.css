@@ -1,0 +1,328 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* J P Saraiva — Fraunces (variable display serif) */
+@font-face {
+  font-family: "Fraunces";
+  src: url("/fonts/Fraunces.ttf") format("truetype-variations");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Fraunces";
+  src: url("/fonts/Fraunces-Italic.ttf") format("truetype-variations");
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
+}
+/* Inter Tight — variable body sans */
+@font-face {
+  font-family: "Inter Tight";
+  src: url("/fonts/InterTight.ttf") format("truetype-variations");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Inter Tight";
+  src: url("/fonts/InterTight-Italic.ttf") format("truetype-variations");
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+@theme inline {
+  --radius-sm: 0;
+  --radius-md: 2px;
+  --radius-lg: 2px;
+  --radius-xl: 4px;
+  --radius-2xl: 4px;
+  --radius-3xl: 4px;
+  --radius-4xl: 4px;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ring-offset-background: var(--background);
+
+  /* Farol semantic aliases (superfície de utilities do Tailwind) */
+  --color-night: var(--farol-night);
+  --color-night-deep: var(--farol-night-deep);
+  --color-surface: var(--farol-surface);
+  --color-surface-alt: var(--farol-surface-alt);
+  --color-beam: var(--farol-beam);
+  --color-beam-bright: var(--farol-beam-bright);
+  --color-beam-deep: var(--farol-beam-deep);
+  --color-beam-soft: var(--farol-beam-soft);
+  --color-ink: var(--farol-ink);
+  --color-mist: var(--farol-mist);
+  --color-fog: var(--farol-fog);
+  --color-tier-a: var(--farol-tier-a);
+  --color-tier-b: var(--farol-tier-b);
+  --color-tier-c: var(--farol-tier-c);
+  --color-danger: var(--farol-danger);
+  --color-paper: var(--farol-paper);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --font-display: "Fraunces", "Source Serif 4", Georgia, serif;
+  --font-sans: "Inter Tight", "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "SF Mono", Consolas, ui-monospace, monospace;
+}
+
+:root {
+  --header-height: 4.25rem;
+  --radius: 2px;
+
+  /* ============================================================
+     FAROL PRIMITIVES — noite neutra / facho âmbar
+     Derivados da paleta J P Saraiva: a base vem da família --jps-ink,
+     o facho da família --jps-gold clareada para contraste em escuro.
+     Ver Design/farol-ds-spec.md §2. NÃO editar primitives.css do DS-mãe.
+     ============================================================ */
+  --farol-night:        #14181B;
+  --farol-night-deep:   #0D1113;
+  --farol-surface:      #1C2226;
+  --farol-surface-alt:  #232B30;
+  --farol-rule:         #2E383E;
+
+  --farol-beam:         #E8B93F;
+  --farol-beam-bright:  #F6D073;
+  --farol-beam-deep:    #A87F14;
+  --farol-beam-soft:    #2A2412;
+
+  --farol-ink:          #F2F0EA;
+  --farol-mist:         #A9B4BA;
+  --farol-fog:          #859299;  /* AA 4.50 no pior fundo (surface-alt) */
+
+  /* Tiers — cores funcionais da rubrica. B é o próprio facho: "nutrir" é o
+     estado de marca. A é sinal de partida, C é neblina. */
+  --farol-tier-a:       #4FA37F;
+  --farol-tier-a-soft:  #16251F;
+  --farol-tier-b:       var(--farol-beam);
+  --farol-tier-b-soft:  var(--farol-beam-soft);
+  --farol-tier-c:       #7D8C94;  /* AA 4.53 sobre tier-c-soft */
+  --farol-tier-c-soft:  #1E2427;
+
+  --farol-danger:       #E0645C;
+  --farol-danger-soft:  #2B1917;
+
+  /* Superfície clara — só impressão e og-image. Não é um tema. */
+  --farol-paper:        #F5F6F4;
+
+  /* Densidade / layout do produto */
+  --farol-row-h-sm:     30px;
+  --farol-row-h-md:     38px;
+  --farol-row-h-lg:     46px;
+  --farol-tap-min:      38px;
+  --farol-topbar-h:     56px;
+  --farol-content-max:  1180px;
+  --farol-tnum:         "tnum" 1, "lnum" 1;
+
+  /* ============================================================
+     SEMANTIC ROLE TOKENS (shadcn / Tailwind)
+     ============================================================ */
+  --background:         var(--farol-night);
+  --foreground:         var(--farol-ink);
+  --card:               var(--farol-surface);
+  --card-foreground:    var(--farol-ink);
+  --popover:            var(--farol-surface);
+  --popover-foreground: var(--farol-ink);
+
+  --primary:            var(--farol-beam);
+  --primary-foreground: var(--farol-night-deep);
+
+  --secondary:            var(--farol-surface-alt);
+  --secondary-foreground: var(--farol-ink);
+
+  --muted:              var(--farol-surface-alt);
+  --muted-foreground:   var(--farol-mist);
+
+  --accent:             var(--farol-beam);
+  --accent-foreground:  var(--farol-night-deep);
+
+  --destructive:            var(--farol-danger);
+  --destructive-foreground: var(--farol-night-deep);
+
+  --border: var(--farol-rule);
+  --input:  var(--farol-rule);
+  --ring:   var(--farol-beam);
+
+  /* Data viz — facho → tier A → neblina → mist → danger */
+  --chart-1: var(--farol-beam);
+  --chart-2: var(--farol-tier-a);
+  --chart-3: var(--farol-tier-c);
+  --chart-4: var(--farol-mist);
+  --chart-5: var(--farol-danger);
+
+  /* Sidebar (app shell) */
+  --sidebar: var(--farol-night-deep);
+  --sidebar-foreground: var(--farol-ink);
+  --sidebar-primary: var(--farol-beam);
+  --sidebar-primary-foreground: var(--farol-night-deep);
+  --sidebar-accent: var(--farol-surface-alt);
+  --sidebar-accent-foreground: var(--farol-ink);
+  --sidebar-border: var(--farol-rule);
+  --sidebar-ring: var(--farol-beam);
+
+  /* Sombras — em fundo escuro, drop shadow quase não lê. O que separa plano
+     aqui é a superfície mais clara e a hairline. */
+  --shadow-card:  0 1px 0 rgba(0, 0, 0, 0.30);
+  --shadow-hover: 0 1px 0 rgba(0, 0, 0, 0.40), 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+  html,
+  body {
+    font-family: var(--font-sans);
+    letter-spacing: -0.005em;
+  }
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    /* Produto digital denso: sem grain de papel. */
+  }
+  /* Default: Inter Tight em toda a hierarquia. Fraunces fica reservada a
+     momentos de marca — opt-in com .font-display.
+     Em fundo escuro, peso fino de Fraunces esgarça: nunca abaixo de 500. */
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-sans);
+    letter-spacing: -0.012em;
+    color: var(--farol-ink);
+  }
+  .font-display {
+    font-family: var(--font-display) !important;
+    letter-spacing: -0.012em;
+  }
+  /* Numerais tabulares em CNPJ, capital social e score */
+  .farol-num,
+  .tabular {
+    font-variant-numeric: tabular-nums lining-nums;
+    font-feature-settings: var(--farol-tnum);
+    text-align: right;
+  }
+}
+
+/* ============================================================
+   Utilities de marca
+   ============================================================ */
+.eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--farol-mist);
+}
+.hairline {
+  border-top: 0.5px solid var(--farol-rule);
+}
+
+/* Tiers da rubrica — pílulas de A/B/C */
+.pill-tier-a {
+  background: var(--farol-tier-a-soft);
+  color: var(--farol-tier-a);
+}
+.pill-tier-b {
+  background: var(--farol-tier-b-soft);
+  color: var(--farol-tier-b);
+}
+.pill-tier-c {
+  background: var(--farol-tier-c-soft);
+  color: var(--farol-tier-c);
+}
+.pill-beam {
+  background: var(--farol-beam-soft);
+  color: var(--farol-beam-bright);
+}
+
+/* Procedência da detecção — evidência direta versus inferida.
+   Honestidade na UI: o que veio de `implies` aparece mais fraco. */
+.chip-direct {
+  background: var(--farol-surface-alt);
+  color: var(--farol-ink);
+}
+.chip-implied {
+  background: transparent;
+  color: var(--farol-fog);
+  border: 0.5px dashed var(--farol-rule);
+}
+
+/* Cabeçalho de tabela */
+.th-farol {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--farol-mist);
+  background: var(--farol-night-deep);
+}
+
+/* O facho — gradiente cônico estático do hero. Estático de propósito: a
+   animação existe só na varredura da busca (uma passada, 900ms). */
+.beam-hero {
+  position: relative;
+  overflow: hidden;
+}
+.beam-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: conic-gradient(
+    from 200deg at 8% 12%,
+    transparent 0deg,
+    color-mix(in oklab, var(--farol-beam) 8%, transparent) 18deg,
+    transparent 42deg
+  );
+}
+@media (prefers-reduced-motion: no-preference) {
+  .beam-sweep {
+    animation: beam-sweep 900ms cubic-bezier(0.4, 0, 0.2, 1) 1;
+  }
+}
+@keyframes beam-sweep {
+  from {
+    opacity: 0.15;
+    transform: translateX(-6%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}

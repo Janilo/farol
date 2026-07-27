@@ -1,0 +1,16 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "farol",
+  "compatibility_date": "2025-09-24",
+  "compatibility_flags": ["nodejs_compat"],
+  "main": "src/server.ts",
+  "routes": [{ "pattern": "farol.pereirasaraiva.com", "custom_domain": true }],
+  "vars": {
+    // Projeto Supabase do Farol (org delvnlveikbrtdndbjgv). Chave publishable
+    // moderna (sb_publishable_*), não a anon legada em JWT que os irmãos usam:
+    // rotaciona de forma independente. Pública por design — respeita RLS.
+    "SUPABASE_URL": "https://sscnhpcyvcsgtacundgc.supabase.co",
+    "SUPABASE_PROJECT_ID": "sscnhpcyvcsgtacundgc",
+    "SUPABASE_PUBLISHABLE_KEY": "sb_publishable_Nog8EYSMeMHD9I6TQjPY3A_QizWblz7",
+  },
+}

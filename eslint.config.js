@@ -1,0 +1,54 @@
+import js from "@eslint/js";
+import eslintPluginPrettier from "eslint-plugin-prettier/recommended";
+import globals from "globals";
+import reactHooks from "eslint-plugin-react-hooks";
+import reactRefresh from "eslint-plugin-react-refresh";
+import tseslint from "typescript-eslint";
+
+export default tseslint.config(
+  { ignores: ["dist", ".output", ".vinxi"] },
+  {
+    extends: [js.configs.recommended, ...tseslint.configs.recommended],
+    files: ["**/*.{ts,tsx}"],
+    languageOptions: {
+      ecmaVersion: 2020,
+      globals: globals.browser,
+    },
+    plugins: {
+      "react-hooks": reactHooks,
+      "react-refresh": reactRefresh,
+    },
+    rules: {
+      ...reactHooks.configs.recommended.rules,
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            {
+              name: "server-only",
+              message:
+                "TanStack Start does not use the Next.js `server-only` package. Rename the module to `*.server.ts` or mark it with `@tanstack/react-start/server-only`.",
+            },
+          ],
+        },
+      ],
+      "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
+      "@typescript-eslint/no-unused-vars": "off",
+      // Lovable/Supabase codebase with pervasive `any` at untyped data boundaries —
+      // keep it visible as a warning instead of blocking CI on a large type refactor.
+      "@typescript-eslint/no-explicit-any": "warn",
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "Literal[value=/hsl\\(var\\(/]",
+          message: "Tokens Cascata são hex — use var(--token) direto, nunca hsl(var(--token)).",
+        },
+        {
+          selector: "TemplateLiteral > TemplateElement[value.raw=/hsl\\(var\\(/]",
+          message: "Tokens Cascata são hex — use var(--token) direto, nunca hsl(var(--token)).",
+        },
+      ],
+    },
+  },
+  eslintPluginPrettier,
+);
