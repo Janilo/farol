@@ -3,30 +3,22 @@ import { Eye } from "lucide-react";
 import { BrandFooter } from "@/components/brand/BrandFooter";
 import { SiteHeader } from "@/components/brand/SiteHeader";
 
+const TITLE = "Farol · Ficha instantânea de empresas brasileiras";
+const DESCRIPTION =
+  "Digite um nome ou um CNPJ. O Farol lê o cadastro público da Receita Federal, detecta a stack do site e devolve razão social, CNAE, porte, quadro societário e ferramentas em uso, com uma prioridade calculada e a conta aberta de como chegou nela.";
+
 export const Route = createFileRoute("/")({
   component: LandingPage,
   head: () => ({
     meta: [
-      { title: "Farol · Dossiê instantâneo de empresas brasileiras" },
-      {
-        name: "description",
-        content:
-          "Da receita bruta ao custo de servir, cliente a cliente. A IA lê os arquivos enviados, identifica os campos e monta o price waterfall com drill-down nos 33 tipos de desconto comercial e separação por BU.",
-      },
-      { property: "og:title", content: "Farol · Dossiê instantâneo de empresas brasileiras" },
-      {
-        property: "og:description",
-        content:
-          "Da receita bruta ao custo de servir, cliente a cliente. A IA lê os arquivos enviados, identifica os campos e monta o price waterfall com drill-down nos 33 tipos de desconto comercial e separação por BU.",
-      },
+      { title: TITLE },
+      { name: "description", content: DESCRIPTION },
+      { property: "og:title", content: TITLE },
+      { property: "og:description", content: DESCRIPTION },
       { property: "og:url", content: "https://farol.pereirasaraiva.com/" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "Farol · Dossiê instantâneo de empresas brasileiras" },
-      {
-        name: "twitter:description",
-        content:
-          "Da receita bruta ao custo de servir, cliente a cliente. A IA lê os arquivos enviados, identifica os campos e monta o price waterfall com drill-down nos 33 tipos de desconto comercial e separação por BU.",
-      },
+      { name: "twitter:title", content: TITLE },
+      { name: "twitter:description", content: DESCRIPTION },
     ],
     links: [{ rel: "canonical", href: "https://farol.pereirasaraiva.com/" }],
     scripts: [
@@ -37,7 +29,8 @@ export const Route = createFileRoute("/")({
           "@type": "WebSite",
           name: "Farol",
           url: "https://farol.pereirasaraiva.com/",
-          description: "Navegador de Price Waterfall por cliente para operações B2B e B2C.",
+          description:
+            "Ficha de empresa brasileira a partir de CNPJ ou nome: cadastro da Receita, tecnografia do site e priorização por rubrica.",
         }),
       },
       {
@@ -55,16 +48,59 @@ export const Route = createFileRoute("/")({
   }),
 });
 
-const PREVIEW_LINES = [
-  { n: "P0", label: "Receita bruta", value: "R$ 1.850k", type: "root" },
-  { n: "P1–3", label: "Descontos comerciais", value: "−R$ 278k", type: "sub" },
-  { n: "R1", label: "Receita líquida 1", value: "R$ 1.573k", type: "total" },
-  { n: "P5", label: "Impostos sobre vendas", value: "−R$ 278k", type: "sub" },
-  { n: "P6", label: "Custo da mercadoria", value: "−R$ 740k", type: "sub" },
-  { n: "P7", label: "Margem bruta", value: "R$ 555k", type: "total" },
-  { n: "↳", label: "33 sublinhas de desconto…", value: null, type: "drill" },
-  { n: "P8–9", label: "Custo de atendimento", value: "−R$ 74k", type: "sub" },
-  { n: "P10", label: "Custo de servir", value: "R$ 481k", type: "total" },
+/**
+ * Mock da ficha exibido na landing. Empresa FICTÍCIA, no mesmo padrão da
+ * "Acme Distribuidora" do Cascata: nada aqui é consulta real, e os valores
+ * existem só para mostrar a forma do resultado.
+ */
+const PREVIEW_ROWS: { label: string; value: string; kind?: "head" | "num" | "stack" }[] = [
+  { label: "Razão social", value: "ACME SAÚDE DIGITAL LTDA", kind: "head" },
+  { label: "CNPJ", value: "12.345.678/0001-90", kind: "num" },
+  { label: "CNAE principal", value: "6201-5/01 · Desenvolvimento de programas sob encomenda" },
+  { label: "Porte (Receita)", value: "Demais · nem micro, nem pequeno porte" },
+  { label: "Capital social", value: "R$ 4.200.000", kind: "num" },
+  { label: "Quadro societário", value: "3 sócios · 1 administrador" },
+  { label: "Stack detectada", value: "RD Station Marketing · Pagar.me · VTEX", kind: "stack" },
+];
+
+const BEFORE_LINES = [
+  "receita.economia.gov.br — captcha, uma consulta por vez",
+  "site da empresa — abrir o código pra ver o que roda",
+  "linkedin.com/company — headcount aproximado, sem CNPJ",
+  "planilha_prospects_v4.xlsx — copiar e colar campo por campo",
+];
+
+const AFTER_BLOCKS = [
+  {
+    label: "CADASTRO",
+    body: "CNPJ resolvido na Receita Federal: razão social, CNAE, porte, capital, sócios e situação cadastral.",
+  },
+  {
+    label: "TECNOGRAFIA",
+    body: "A stack do site contra 24 fingerprints brasileiros. RD Station, Totvs, VTEX e Pagar.me não aparecem em scanner global.",
+  },
+  {
+    label: "PRIORIDADE",
+    body: "Pré-tier A, B ou C com os quatro eixos abertos. Você vê o que somou ponto e o que rebaixou.",
+  },
+];
+
+const STEPS = [
+  {
+    n: "01",
+    title: "Digite o nome ou o CNPJ",
+    body: "CNPJ vai direto. Nome cai numa busca que devolve até cinco candidatos com razão social, pra você escolher a empresa certa antes de gastar a consulta.",
+  },
+  {
+    n: "02",
+    title: "O Farol lê as fontes",
+    body: "Cadastro na Receita Federal via Brasil API. Se você informar o site, a stack sai da própria página: scripts, cabeçalhos, cookies e o que uma ferramenta implica sobre a outra.",
+  },
+  {
+    n: "03",
+    title: "A rubrica calcula a prioridade",
+    body: "Setor, porte, gatilho e alcance do comprador. Porte e gatilho você informa, porque nenhum dos dois está em cadastro público. O score aparece com a conta na frente, e o eixo de alcance está calibrado para consultor solo, não para time de vendas. Isso é premissa, e a tela diz isso.",
+  },
 ];
 
 function LandingPage() {
@@ -74,9 +110,9 @@ function LandingPage() {
 
       <main className="flex-1">
         {/* Hero */}
-        <section className="py-24">
+        <section className="beam-hero py-24">
           <div className="mx-auto max-w-5xl px-6">
-            <p className="eyebrow mb-8">Price Waterfall</p>
+            <p className="eyebrow mb-8">Ficha de empresa brasileira</p>
             <h1
               className="font-display italic mb-10"
               style={{
@@ -85,20 +121,21 @@ function LandingPage() {
                 letterSpacing: "-0.025em",
                 fontWeight: 700,
                 fontVariationSettings: '"opsz" 144, "SOFT" 0, "WONK" 0',
-                maxWidth: "16ch",
+                maxWidth: "18ch",
                 color: "var(--farol-ink)",
               }}
             >
-              Da receita bruta{" "}
-              <em style={{ fontStyle: "italic", fontWeight: 700, color: "var(--farol-tier-c)" }}>
-                ao custo de servir
-              </em>
-              , cliente a cliente.
+              O que as ferramentas globais{" "}
+              <em style={{ fontStyle: "italic", fontWeight: 700, color: "var(--farol-beam)" }}>
+                não veem
+              </em>{" "}
+              no Brasil.
             </h1>
             <p className="text-lg text-muted-foreground leading-relaxed max-w-2xl mb-12">
-              Cada departamento alimenta as linhas que conhece. A IA lê os arquivos enviados,
-              identifica os campos por cliente, e o price waterfall se monta — com drill-down nos 33
-              tipos de desconto comercial e separação por BU.
+              Ferramentas globais inferem a identidade de uma empresa brasileira por scraping. O
+              Farol lê a fonte primária: CNPJ na Receita, CNAE, capital, quadro societário. Some a
+              isso a stack que roda no site, incluindo as ferramentas brasileiras que scanner global
+              não reconhece, e uma prioridade calculada com a rubrica que eu uso na consultoria.
             </p>
             <div className="flex flex-wrap items-start gap-3">
               <Link
@@ -136,17 +173,17 @@ function LandingPage() {
               <div>
                 <p className="eyebrow">O que você recebe</p>
                 <h2
-                  className="mt-4 font-display italic font-normal text-[color:var(--farol-ink)] text-4xl md:text-5xl leading-[1.05] max-w-2xl"
+                  className="mt-4 font-display italic font-medium text-[color:var(--farol-ink)] text-4xl md:text-5xl leading-[1.05] max-w-2xl"
                   style={{ fontVariationSettings: '"opsz" 96, "SOFT" 0, "WONK" 0' }}
                 >
-                  Um waterfall{" "}
-                  <em className="font-normal text-[color:var(--farol-beam)]">por cliente</em>, do
-                  bruto ao custo de servir.
+                  Uma ficha{" "}
+                  <em className="font-medium text-[color:var(--farol-beam)]">por empresa</em>, da
+                  Receita à stack.
                 </h2>
               </div>
               <p className="hidden md:block text-sm text-muted-foreground max-w-xs">
-                29 marcos do P&L. A linha 7 abre um segundo waterfall com os 33 tipos de desconto
-                comercial — por cliente, auditável.
+                Cadastro da fonte primária, 24 fingerprints de ferramentas brasileiras e a rubrica
+                de priorização com os quatro eixos abertos.
               </p>
             </div>
 
@@ -154,54 +191,60 @@ function LandingPage() {
               <div className="flex items-center justify-between px-5 py-3 border-b border-border bg-muted/40">
                 <div className="flex items-center gap-2">
                   <span className="h-2.5 w-2.5 rounded-full bg-destructive/70" />
-                  <span className="h-2.5 w-2.5 rounded-full bg-accent/70" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-[color:var(--farol-tier-c)]/70" />
                   <span className="h-2.5 w-2.5 rounded-full bg-primary/60" />
                 </div>
                 <span className="text-xs text-muted-foreground font-mono">
-                  Acme Distribuidora · Q4 2025 · 29 marcos do P&L
+                  Acme Saúde Digital · exemplo · fonte: Receita Federal
                 </span>
               </div>
               <div className="p-4">
-                {PREVIEW_LINES.map((line, i) => (
+                {PREVIEW_ROWS.map((row) => (
                   <div
-                    key={i}
-                    className={`flex items-center gap-3 py-2 border-b border-border/40 last:border-0 ${
-                      line.type === "total" ? "bg-muted/30 -mx-4 px-4" : ""
-                    }`}
+                    key={row.label}
+                    className="flex items-baseline gap-4 py-2 border-b border-border/40"
                   >
-                    <span
-                      className={`w-12 text-[10px] font-mono shrink-0 ${
-                        line.type === "total"
-                          ? "font-bold text-foreground"
-                          : "text-muted-foreground"
-                      }`}
-                    >
-                      {line.n}
+                    <span className="w-40 shrink-0 text-[10px] font-mono uppercase tracking-[0.12em] text-muted-foreground">
+                      {row.label}
                     </span>
                     <span
                       className={`flex-1 text-sm ${
-                        line.type === "total"
-                          ? "font-semibold"
-                          : line.type === "drill"
-                            ? "italic text-primary/70"
-                            : "text-muted-foreground"
+                        row.kind === "head"
+                          ? "font-semibold text-foreground"
+                          : row.kind === "num"
+                            ? "font-mono tabular-nums"
+                            : row.kind === "stack"
+                              ? "text-[color:var(--farol-beam)]"
+                              : "text-muted-foreground"
                       }`}
                     >
-                      {line.label}
+                      {row.value}
                     </span>
-                    {line.value !== null && (
-                      <span
-                        className={`font-mono text-sm tabular-nums ${
-                          line.type === "total" ? "font-bold" : ""
-                        } ${line.value.startsWith("−") ? "text-destructive/70" : ""}`}
-                      >
-                        {line.value}
-                      </span>
-                    )}
                   </div>
                 ))}
+
+                <div className="-mx-4 mt-1 flex items-center gap-4 bg-muted/30 px-4 py-3">
+                  <span className="w-40 shrink-0 text-[10px] font-mono font-bold uppercase tracking-[0.12em] text-foreground">
+                    Pré-tier
+                  </span>
+                  <span className="pill-tier-b rounded-sm px-2 py-0.5 text-xs font-semibold">
+                    B · 3 de 5
+                  </span>
+                  <span className="text-xs italic text-muted-foreground">parcial</span>
+                </div>
+                <div className="flex items-center gap-4 py-2">
+                  <span className="w-40 shrink-0" />
+                  <span className="text-xs italic text-primary/70">
+                    ↳ os quatro eixos que formaram o score…
+                  </span>
+                </div>
               </div>
             </div>
+
+            <p className="mt-4 text-xs text-[var(--farol-fog)]">
+              Porte e gatilho não estão em cadastro público. Na ficha real, você escolhe os dois e
+              vê o tier recalcular.
+            </p>
           </div>
         </section>
 
@@ -210,47 +253,35 @@ function LandingPage() {
           <div className="mx-auto max-w-5xl px-6">
             <p className="eyebrow">Antes / depois</p>
             <h2
-              className="mt-4 font-display italic font-normal text-[color:var(--farol-ink)] text-4xl md:text-5xl leading-[1.05] max-w-3xl"
+              className="mt-4 font-display italic font-medium text-[color:var(--farol-ink)] text-4xl md:text-5xl leading-[1.05] max-w-3xl"
               style={{ fontVariationSettings: '"opsz" 96, "SOFT" 0, "WONK" 0' }}
             >
-              De planilhas isoladas ao waterfall{" "}
-              <em className="font-normal text-[color:var(--farol-beam)]">unificado por cliente</em>.
+              De quatro abas abertas a{" "}
+              <em className="font-medium text-[color:var(--farol-beam)]">uma consulta</em>.
             </h2>
 
             <div className="mt-10 grid gap-6 md:grid-cols-2">
               <div className="rounded-md border border-border bg-muted/30 p-6">
-                <p className="eyebrow text-muted-foreground">Antes — consolidação manual</p>
-                <div className="mt-4 space-y-2 text-sm text-muted-foreground font-mono leading-relaxed">
-                  <p>vendas_2025_final_v3.xlsx — P1 por cliente</p>
-                  <p>frete_clientes_Q4.csv — campos sem chave comum</p>
-                  <p>descontos_clientes.pdf — tabela escaneada</p>
-                  <p>custos_atend_BU2.xlsx — sem separação por conta</p>
-                  <p className="text-muted-foreground/60">… + 3 dias de reconciliação manual</p>
+                <p className="eyebrow text-muted-foreground">Antes — pesquisa manual</p>
+                <div className="mt-4 space-y-2 font-mono text-sm leading-relaxed text-muted-foreground">
+                  {BEFORE_LINES.map((line) => (
+                    <p key={line}>{line}</p>
+                  ))}
+                  <p className="text-[var(--farol-fog)]">
+                    … + uma aba por fonte, e o dado envelhece na planilha
+                  </p>
                 </div>
               </div>
 
               <div className="rounded-md border border-primary/30 bg-background p-6">
-                <p className="eyebrow text-primary">Depois — waterfall automático</p>
+                <p className="eyebrow text-primary">Depois — ficha montada</p>
                 <div className="mt-4 space-y-4">
-                  <div>
-                    <p className="text-xs font-mono text-muted-foreground">MAPEAMENTO</p>
-                    <p className="mt-1 text-base leading-snug">
-                      A IA lê cada arquivo, identifica os campos por cliente e reconcilia chaves
-                      (código, nome ou CNPJ).
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs font-mono text-muted-foreground">WATERFALL</p>
-                    <p className="mt-1 text-base leading-snug">
-                      29 marcos do P&L, linha por linha, por cliente — em minutos.
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs font-mono text-muted-foreground">DRILL-DOWN</p>
-                    <p className="mt-1 text-base leading-snug">
-                      Linha 7 abre os 33 subtipos de desconto comercial, auditáveis e exportáveis.
-                    </p>
-                  </div>
+                  {AFTER_BLOCKS.map((b) => (
+                    <div key={b.label}>
+                      <p className="font-mono text-xs text-muted-foreground">{b.label}</p>
+                      <p className="mt-1 text-base leading-snug">{b.body}</p>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
@@ -258,36 +289,20 @@ function LandingPage() {
         </section>
 
         {/* Método */}
-        <section className="border-t border-border py-20 bg-card/40">
+        <section className="border-t border-border bg-card/40 py-20">
           <div className="mx-auto max-w-5xl px-6">
             <p className="eyebrow mb-10">Método</p>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-              {[
-                {
-                  n: "01",
-                  title: "Defina os clientes e o organograma",
-                  body: "BU, departamentos, contas e clientes. Salários e custos da hierarquia entram como gasto, com rateio quando faltar valor.",
-                },
-                {
-                  n: "02",
-                  title: "Cada depto alimenta o seu",
-                  body: "Upload de arquivo (PDF, XLSX, CSV) por linha. A IA extrai os campos por cliente, P1 → P2 → P3 como fallback.",
-                },
-                {
-                  n: "03",
-                  title: "Waterfall com drill-down",
-                  body: "29 marcos do P&L. A linha 7 abre um segundo waterfall com as 33 sublinhas de desconto comercial — sem misturar.",
-                },
-              ].map((s) => (
+            <div className="grid grid-cols-1 gap-12 md:grid-cols-3">
+              {STEPS.map((s) => (
                 <div key={s.n} className="border-t border-foreground/30 pt-6">
                   <div
-                    className="font-display text-4xl text-[var(--farol-beam)] mb-6"
+                    className="font-display mb-6 text-4xl text-[color:var(--farol-beam)]"
                     style={{ fontVariationSettings: '"opsz" 96' }}
                   >
                     {s.n}
                   </div>
-                  <h3 className="font-display text-xl text-primary mb-3">{s.title}</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{s.body}</p>
+                  <h3 className="font-display mb-3 text-xl text-foreground">{s.title}</h3>
+                  <p className="text-sm leading-relaxed text-muted-foreground">{s.body}</p>
                 </div>
               ))}
             </div>

@@ -51,7 +51,7 @@ function ResetPasswordPage() {
       return;
     }
     toast.success("Senha atualizada.");
-    navigate({ to: "/waterfall" });
+    navigate({ to: "/app" });
   };
 
   return (
@@ -64,7 +64,9 @@ function ResetPasswordPage() {
           <FarolWordmark height={28} className="!text-current" />
         </Link>
         <div>
-          <p className="eyebrow !text-[var(--farol-beam)] mb-6">PRICING · WATERFALL</p>
+          <p className="eyebrow !text-[var(--farol-beam)] mb-6">
+            CADASTRO · TECNOGRAFIA · PRIORIDADE
+          </p>
           <p className="font-display text-5xl italic leading-tight">
             Nova senha.
             <br />

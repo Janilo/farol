@@ -11,12 +11,13 @@ export const Route = createFileRoute("/signup")({
       {
         name: "description",
         content:
-          "Crie sua conta Cascata em 1 minuto. Cada departamento alimenta as linhas do waterfall que conhece, com aprovação por administrador.",
+          "Crie sua conta Farol em um minuto. Consultas com quota ampliada e histórico das suas buscas, com aprovação manualistrador.",
       },
       { property: "og:title", content: "Criar conta — Farol" },
       {
         property: "og:description",
-        content: "Crie sua conta Cascata em 1 minuto e abra o price waterfall por cliente.",
+        content:
+          "Crie sua conta Farol em um minuto: consultas com quota ampliada e histórico das suas buscas.",
       },
       { property: "og:url", content: "https://farol.pereirasaraiva.com/signup" },
       { property: "og:image", content: "/og-social.png" },
@@ -52,14 +53,14 @@ function SignupPage() {
       setErr(error.message);
       return;
     }
-    navigate({ to: "/waterfall" });
+    navigate({ to: "/app" });
   };
 
   const onGoogle = async () => {
     setErr(null);
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: window.location.origin + "/waterfall" },
+      options: { redirectTo: window.location.origin + "/app" },
     });
     if (error) {
       setErr(error.message);
@@ -79,11 +80,10 @@ function SignupPage() {
         <div>
           <p className="eyebrow !text-[var(--farol-beam)] mb-6">CRIAR CONTA</p>
           <p className="font-display text-5xl italic leading-tight">
-            Cada departamento
+            O cadastro é público.
             <br />
-            vê só o seu pedaço
-            <br />
-            do waterfall.
+            A prioridade
+            <br />é sua leitura.
           </p>
         </div>
         <a

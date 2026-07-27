@@ -88,29 +88,29 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Farol · Dossiê instantâneo de empresas brasileiras" },
+      { title: "Farol · Ficha instantânea de empresas brasileiras" },
       {
         name: "description",
         content:
-          "Price waterfall por cliente. 29 linhas da receita bruta ao custo de servir, com drill-down comercial e IA para leitura de arquivos.",
+          "Ficha instantânea de empresas brasileiras: cadastro da Receita Federal, stack detectada no site e prioridade calculada por rubrica.",
       },
       { name: "author", content: "Pereira Saraiva" },
       { property: "og:site_name", content: "Farol" },
-      { property: "og:title", content: "Farol · Dossiê instantâneo de empresas brasileiras" },
+      { property: "og:title", content: "Farol · Ficha instantânea de empresas brasileiras" },
       {
         property: "og:description",
         content:
-          "Price waterfall por cliente. 29 linhas da receita bruta ao custo de servir, com drill-down comercial e IA para leitura de arquivos.",
+          "Ficha instantânea de empresas brasileiras: cadastro da Receita Federal, stack detectada no site e prioridade calculada por rubrica.",
       },
       { property: "og:type", content: "website" },
       { property: "og:url", content: "https://farol.pereirasaraiva.com/" },
       { property: "og:locale", content: "pt_BR" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "Farol · Dossiê instantâneo de empresas brasileiras" },
+      { name: "twitter:title", content: "Farol · Ficha instantânea de empresas brasileiras" },
       {
         name: "twitter:description",
         content:
-          "Price waterfall por cliente. 29 linhas da receita bruta ao custo de servir, com drill-down comercial e IA para leitura de arquivos.",
+          "Ficha instantânea de empresas brasileiras: cadastro da Receita Federal, stack detectada no site e prioridade calculada por rubrica.",
       },
       { property: "og:image", content: "https://farol.pereirasaraiva.com/og-social.png" },
       { name: "twitter:image", content: "https://farol.pereirasaraiva.com/og-social.png" },

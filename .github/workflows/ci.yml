@@ -19,4 +19,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm run lint
+      # O build (vite) não checa tipos: sem este passo, erro de tipo passa
+      # verde no CI e só aparece no editor de quem abrir o arquivo.
+      - run: pnpm run typecheck
       - run: pnpm run test

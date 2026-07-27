@@ -4,7 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { FarolWordmark } from "@/components/brand/FarolWordmark";
 
 export const Route = createFileRoute("/login")({
-  validateSearch: (s: Record<string, unknown>) => ({
+  // O tipo de retorno declara `redirect?` (chave opcional), não
+  // `redirect: string | undefined`. É essa diferença que faz o router tratar
+  // o search como opcional e libera `<Link to="/login">` sem prop `search`.
+  validateSearch: (s: Record<string, unknown>): { redirect?: string } => ({
     redirect: s.redirect as string | undefined,
   }),
   component: LoginPage,
@@ -14,12 +17,12 @@ export const Route = createFileRoute("/login")({
       {
         name: "description",
         content:
-          "Acesse sua conta Cascata para abrir o price waterfall por cliente, com drill-down de descontos comerciais e separação por BU.",
+          "Acesse sua conta Farol para consultar fichas de empresas brasileiras com quota ampliadaU.",
       },
       { property: "og:title", content: "Entrar — Farol" },
       {
         property: "og:description",
-        content: "Acesse sua conta Cascata para abrir o price waterfall por cliente.",
+        content: "Acesse sua conta Farol para consultar fichas de empresas brasileiras.",
       },
       { property: "og:url", content: "https://farol.pereirasaraiva.com/login" },
       { name: "robots", content: "noindex,follow" },
@@ -31,7 +34,7 @@ export const Route = createFileRoute("/login")({
 function LoginPage() {
   const navigate = useNavigate();
   const { redirect } = Route.useSearch();
-  const redirectTo = redirect ?? "/waterfall";
+  const redirectTo = redirect ?? "/app";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [err, setErr] = useState<string | null>(null);
@@ -72,12 +75,15 @@ function LoginPage() {
           <FarolWordmark height={28} className="!text-current" />
         </Link>
         <div>
-          <p className="eyebrow !text-[var(--farol-beam)] mb-6">PRICING · WATERFALL</p>
+          <p className="eyebrow !text-[var(--farol-beam)] mb-6">
+            CADASTRO · TECNOGRAFIA · PRIORIDADE
+          </p>
           <p className="font-display text-5xl italic leading-tight">
-            Entre para abrir
-            <br />o seu P&L
+            Aponte o farol
             <br />
-            por cliente.
+            para uma
+            <br />
+            empresa.
           </p>
         </div>
         <a

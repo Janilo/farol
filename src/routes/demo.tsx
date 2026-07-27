@@ -1,454 +1,339 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import {
-  ComposedChart,
-  Bar,
-  Cell,
-  Line,
-  CartesianGrid,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  LabelList,
-} from "recharts";
-import { BrandFooter } from "@/components/brand/BrandFooter";
+import { Search, ArrowRight, Loader2 } from "lucide-react";
+
 import { SiteHeader } from "@/components/brand/SiteHeader";
+import { BrandFooter } from "@/components/brand/BrandFooter";
+import { getFichaFn, type FichaError } from "@/lib/ficha.functions";
+import { describePartners, formatBRL, type Enrichment } from "@/lib/enrichment";
+import type { NameMatch } from "@/lib/enrichment.server";
+import { formatCnpj } from "@/lib/cnpj";
+
+const DESCRIPTION =
+  "Digite um CNPJ e veja a ficha montada a partir do cadastro público da Receita Federal: razão social, CNAE, porte, capital e quadro societário. Sem cadastro.";
 
 export const Route = createFileRoute("/demo")({
   component: DemoPage,
   head: () => ({
     meta: [
       { title: "Demo — Farol" },
-      {
-        name: "description",
-        content:
-          "Veja o Cascata em ação: waterfall de receita bruta ao custo de servir, por cliente, com drill-down nos descontos comerciais.",
-      },
-      { name: "robots", content: "noindex" },
+      { name: "description", content: DESCRIPTION },
       { property: "og:title", content: "Demo — Farol" },
-      {
-        property: "og:description",
-        content: "Waterfall do bruto ao custo de servir. Cinco clientes B2B, dados fictícios.",
-      },
+      { property: "og:description", content: DESCRIPTION },
+      { property: "og:url", content: "https://farol.pereirasaraiva.com/demo" },
       { property: "og:image", content: "/og-social.png" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:image", content: "/og-social.png" },
     ],
+    links: [{ rel: "canonical", href: "https://farol.pereirasaraiva.com/demo" }],
   }),
 });
 
-// ── types ─────────────────────────────────────────────────────────────────
-
-type WLine = {
-  n: string;
-  label: string;
-  value: number | null;
-  type: "root" | "sub" | "total" | "drill";
-  bucket: "revenue" | "deduction" | "cost" | "total";
+/**
+ * Uma frase por código de erro. O contrato é o `FichaError` da fatia: se
+ * aparecer código novo lá, o TypeScript cobra a frase aqui.
+ */
+const ERROR_COPY: Record<FichaError, string> = {
+  INVALID_CNPJ: "Esse CNPJ não fecha nos dígitos verificadores. Confira e tente de novo.",
+  COMPANY_NOT_FOUND:
+    "CNPJ válido, mas sem registro na Receita. Pode ser baixa cadastral ou erro de digitação.",
+  NAME_NO_MATCH: "Não achei empresa com esse nome. Tente a razão social ou o CNPJ direto.",
+  NAME_SEARCH_UNAVAILABLE:
+    "Por ora o Farol consulta só por CNPJ. As fontes públicas gratuitas não têm busca por nome, e eu prefiro dizer isso a te devolver resultado ruim.",
+  SOURCE_RATE_LIMITED: "A fonte pública limitou as consultas por agora. Tente em alguns minutos.",
+  SOURCE_UNAVAILABLE: "A fonte da Receita está fora do ar. Não é você, é ela.",
 };
 
-type ChartRow = {
-  id: string;
-  name: string;
-  label: string;
-  bucket: "revenue" | "deduction" | "cost" | "total";
-  base: number;
-  bar: number;
-  running: number;
-};
-
-// ── per-client datasets ───────────────────────────────────────────────────
-
-const CLIENTS = [
-  "Acme Distribuidora",
-  "Bolt Industries",
-  "Corvin Textil",
-  "Delta Pharma",
-  "Estela Agro",
+/**
+ * Exemplos com CNPJ real, para o primeiro clique não gastar digitação. Os oito
+ * definidos na copy entram quando existir o cache; estes três são os que já
+ * consultei ao vivo e conferi.
+ */
+const EXEMPLOS = [
+  { nome: "Petrobras", cnpj: "33000167000101" },
+  { nome: "Ambev", cnpj: "07526557000100" },
+  { nome: "Banco do Brasil", cnpj: "00000000000191" },
 ];
 
-function makeLines(
-  rb: number,
-  dv: number,
-  df: number,
-  bn: number,
-  fr: number,
-  im: number,
-  cmv: number,
-  cs: number,
-  ca: number,
-): WLine[] {
-  const rl1 = rb + dv + df + bn;
-  const mb = rl1 + fr + im + cmv;
-  const pocket = mb + cs + ca;
-  return [
-    { n: "P0", label: "Receita bruta", value: rb, type: "root", bucket: "revenue" },
-    { n: "P1", label: "Desconto de volume", value: dv, type: "sub", bucket: "deduction" },
-    { n: "P2", label: "Desconto financeiro", value: df, type: "sub", bucket: "deduction" },
-    { n: "P3", label: "Bonificação", value: bn, type: "sub", bucket: "deduction" },
-    { n: "R1", label: "Receita líquida 1", value: rl1, type: "total", bucket: "total" },
-    { n: "P4", label: "Frete e logística", value: fr, type: "sub", bucket: "cost" },
-    { n: "P5", label: "Impostos sobre vendas", value: im, type: "sub", bucket: "cost" },
-    { n: "P6", label: "Custo da mercadoria vendida", value: cmv, type: "sub", bucket: "cost" },
-    { n: "P7", label: "Margem bruta", value: mb, type: "total", bucket: "total" },
-    {
-      n: "↳",
-      label: "33 sublinhas de desconto comercial…",
-      value: null,
-      type: "drill",
-      bucket: "deduction",
-    },
-    { n: "P8", label: "Comissão de vendas", value: cs, type: "sub", bucket: "cost" },
-    { n: "P9", label: "Custo de atendimento", value: ca, type: "sub", bucket: "cost" },
-    { n: "P10", label: "Custo de servir", value: pocket, type: "total", bucket: "total" },
-  ];
-}
-
-const CLIENTS_DATA: WLine[][] = [
-  // Acme Distribuidora — base
-  makeLines(1_850_000, -185_000, -55_500, -37_000, -92_500, -277_500, -740_000, -46_250, -27_750),
-  // Bolt Industries — menor escala, descontos maiores
-  makeLines(1_100_000, -143_000, -33_000, -22_000, -72_000, -171_000, -506_000, -18_000, -12_000),
-  // Corvin Textil — porte médio-grande, margens apertadas
-  makeLines(
-    2_400_000,
-    -264_000,
-    -72_000,
-    -48_000,
-    -161_280,
-    -342_720,
-    -1_008_000,
-    -60_480,
-    -40_320,
-  ),
-  // Delta Pharma — maior porte, menores deduções
-  makeLines(
-    3_200_000,
-    -256_000,
-    -64_000,
-    -32_000,
-    -199_360,
-    -512_640,
-    -1_140_000,
-    -99_600,
-    -59_760,
-  ),
-  // Estela Agro — menor porte
-  makeLines(820_000, -90_200, -16_400, -24_600, -55_104, -116_896, -344_400, -20_688, -13_792),
-];
-
-// ── utilities ────────────────────────────────────────────────────────────
-
-function fmtBRL(v: number) {
-  const abs = Math.abs(v);
-  const s =
-    abs >= 1_000_000 ? `R$ ${(abs / 1_000_000).toFixed(2)}M` : `R$ ${(abs / 1_000).toFixed(0)}k`;
-  return v < 0 ? `−${s}` : s;
-}
-
-function fmtShort(n: number) {
-  const abs = Math.abs(n);
-  if (abs >= 1_000_000) return `R$ ${(n / 1_000_000).toFixed(1)}M`;
-  if (abs >= 1_000) return `R$ ${(n / 1_000).toFixed(0)}k`;
-  return `R$ ${n.toFixed(0)}`;
-}
-
-function buildChartRows(lines: WLine[]): ChartRow[] {
-  let running = 0;
-  const rows: ChartRow[] = [];
-  for (const l of lines) {
-    if (l.type === "drill" || l.value === null) continue;
-    if (l.type === "root") {
-      running += l.value;
-      rows.push({
-        id: l.n,
-        name: l.n,
-        label: l.label,
-        bucket: "revenue",
-        base: 0,
-        bar: l.value,
-        running,
-      });
-    } else if (l.type === "sub") {
-      const delta = l.value;
-      const base = delta < 0 ? running + delta : running;
-      running += delta;
-      rows.push({
-        id: l.n,
-        name: l.n,
-        label: l.label,
-        bucket: l.bucket,
-        base,
-        bar: Math.abs(delta),
-        running,
-      });
-    } else {
-      // milestone — does not advance running
-      rows.push({
-        id: l.n,
-        name: l.n,
-        label: l.label,
-        bucket: "total",
-        base: 0,
-        bar: running,
-        running,
-      });
-    }
-  }
-  return rows;
-}
-
-const colorFor = (bucket: ChartRow["bucket"]) =>
-  bucket === "revenue"
-    ? "var(--farol-beam)"
-    : bucket === "total"
-      ? "var(--farol-beam)"
-      : "var(--farol-danger)";
-
-// ── WaterfallChart ────────────────────────────────────────────────────────
-
-function WaterfallChart({ data }: { data: ChartRow[] }) {
-  return (
-    <div className="h-72">
-      <ResponsiveContainer width="100%" height="100%">
-        <ComposedChart data={data} margin={{ top: 16, right: 12, left: 4, bottom: 44 }}>
-          <CartesianGrid strokeDasharray="2 4" vertical={false} stroke="var(--farol-rule)" />
-          <XAxis
-            dataKey="name"
-            tick={{ fontSize: 9 }}
-            interval={0}
-            angle={-40}
-            textAnchor="end"
-            height={52}
-            stroke="var(--farol-fog)"
-          />
-          <YAxis
-            tick={{ fontSize: 10 }}
-            tickFormatter={fmtShort}
-            width={76}
-            stroke="var(--farol-fog)"
-          />
-          <Tooltip
-            cursor={{ fill: "var(--secondary)", opacity: 0.4 }}
-            contentStyle={{
-              fontSize: 12,
-              border: "1px solid var(--farol-rule)",
-              borderRadius: 0,
-              background: "var(--card)",
-            }}
-            formatter={(_v: unknown, _n: unknown, props: { payload?: ChartRow }) => {
-              const row = props.payload;
-              if (!row) return ["—", ""];
-              if (row.bucket === "total") return [fmtBRL(row.running), row.label];
-              return [`${fmtBRL(row.bar)} · acum. ${fmtBRL(row.running)}`, row.label];
-            }}
-          />
-          <Bar dataKey="base" stackId="a" fill="transparent" isAnimationActive={false} />
-          <Bar dataKey="bar" stackId="a" isAnimationActive={false}>
-            {data.map((d) => (
-              <Cell key={d.id} fill={colorFor(d.bucket)} />
-            ))}
-            <LabelList
-              dataKey="bar"
-              position="top"
-              formatter={(v: unknown) => {
-                const n = Number(v);
-                return n < 80_000 ? "" : fmtShort(n);
-              }}
-              style={{ fontSize: 9, fill: "var(--farol-ink)" }}
-            />
-          </Bar>
-          <Line
-            type="stepAfter"
-            dataKey="running"
-            stroke="var(--farol-beam)"
-            strokeWidth={1.5}
-            dot={{ r: 2, fill: "var(--farol-beam)", stroke: "var(--farol-beam)" }}
-            isAnimationActive={false}
-          />
-        </ComposedChart>
-      </ResponsiveContainer>
-    </div>
-  );
-}
-
-// ── DemoPage ──────────────────────────────────────────────────────────────
+type Estado =
+  | { tipo: "vazio" }
+  | { tipo: "carregando" }
+  | { tipo: "ficha"; enrichment: Enrichment }
+  | { tipo: "escolher"; matches: NameMatch[] }
+  | { tipo: "erro"; error: FichaError };
 
 function DemoPage() {
-  const [activeClient, setActiveClient] = useState(0);
-  const lines = CLIENTS_DATA[activeClient];
-  const chartRows = buildChartRows(lines);
+  const [query, setQuery] = useState("");
+  const [estado, setEstado] = useState<Estado>({ tipo: "vazio" });
+
+  async function consultar(termo: string) {
+    const t = termo.trim();
+    if (!t) return;
+    setEstado({ tipo: "carregando" });
+    try {
+      const r = await getFichaFn({ data: { query: t } });
+      if (r.status === "ok") setEstado({ tipo: "ficha", enrichment: r.enrichment });
+      else if (r.status === "choose") setEstado({ tipo: "escolher", matches: r.matches });
+      else setEstado({ tipo: "erro", error: r.error });
+    } catch {
+      setEstado({ tipo: "erro", error: "SOURCE_UNAVAILABLE" });
+    }
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
       <SiteHeader />
 
-      {/* Faixa demo-ready */}
       <div className="border-b border-border bg-[color:var(--farol-beam)]/5">
-        <div className="mx-auto max-w-5xl px-6 md:px-10 py-2.5 flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-6 py-2.5 text-xs">
           <div className="flex items-center gap-2 text-[color:var(--farol-beam)]">
             <span className="relative flex h-2 w-2">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[color:var(--farol-beam)]/60" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-[color:var(--farol-beam)]" />
             </span>
-            <span className="font-mono uppercase tracking-wider">Demo-ready</span>
-            <span className="text-muted-foreground hidden sm:inline">
-              · Não precisa de cadastro
+            <span className="font-medium uppercase tracking-[0.14em]">
+              Demo pública · dados reais da Receita Federal
             </span>
           </div>
           <Link
             to="/signup"
-            className="rounded-sm border border-[color:var(--farol-beam)]/40 bg-background px-2.5 py-1 font-medium text-[color:var(--farol-beam)] hover:bg-[color:var(--farol-beam)] hover:text-white transition-colors"
+            className="rounded-sm border border-[color:var(--farol-beam)]/40 bg-background px-2.5 py-1 font-medium text-[color:var(--farol-beam)] transition-colors hover:bg-[color:var(--farol-beam)] hover:text-[color:var(--farol-night-deep)]"
           >
-            Criar conta →
+            Criar conta
           </Link>
         </div>
       </div>
 
       <main className="flex-1">
-        {/* Header */}
-        <section className="border-b border-border bg-card">
-          <div className="mx-auto max-w-5xl px-6 md:px-10 py-10">
-            <div className="flex items-center gap-3 text-xs font-mono text-muted-foreground">
-              <span className="px-2 py-1 bg-[color:var(--farol-beam)]/10 text-[color:var(--farol-beam)] uppercase tracking-wider">
-                Demo · dados fictícios
-              </span>
-              <span>Price Waterfall gerado pelo Cascata</span>
-            </div>
+        <section className="beam-hero py-16">
+          <div className="mx-auto max-w-3xl px-6">
+            <p className="eyebrow">Consulta</p>
             <h1
-              className="mt-4 font-display italic font-normal text-[color:var(--farol-ink)] text-3xl md:text-4xl leading-tight"
-              style={{ fontVariationSettings: '"opsz" 144, "SOFT" 0, "WONK" 0' }}
-            >
-              {CLIENTS[activeClient]}
-            </h1>
-            <p className="mt-2 text-sm text-muted-foreground font-mono">
-              B2B Distribuição · Q4 2025
-            </p>
-          </div>
-        </section>
-
-        {/* Waterfall + clients */}
-        <section>
-          <div className="mx-auto max-w-5xl px-6 md:px-10 py-12">
-            <p className="eyebrow">Price Waterfall</p>
-            <h2
-              className="mt-3 font-display italic font-normal text-[color:var(--farol-ink)] text-2xl md:text-3xl"
+              className="font-display mt-4 text-3xl font-medium italic leading-tight md:text-4xl"
               style={{ fontVariationSettings: '"opsz" 96, "SOFT" 0, "WONK" 0' }}
             >
-              Do bruto ao custo de servir, cliente a cliente.
-            </h2>
+              Aponte o farol para uma empresa.
+            </h1>
+            <p className="mt-3 max-w-xl text-muted-foreground">
+              Digite o CNPJ. O cadastro vem da Receita Federal, via Brasil API.
+            </p>
 
-            <div className="mt-10 grid gap-6 lg:grid-cols-5">
-              {/* Client list */}
-              <aside className="lg:col-span-2 space-y-2">
-                <p className="eyebrow mb-4">Clientes</p>
-                {CLIENTS.map((c, i) => (
-                  <button
-                    key={c}
-                    onClick={() => setActiveClient(i)}
-                    className={`w-full text-left px-4 py-3 border transition-colors text-sm font-semibold ${
-                      i === activeClient
-                        ? "border-[color:var(--farol-beam)] bg-[color:var(--farol-beam)]/5 text-[color:var(--farol-beam)]"
-                        : "border-border bg-background hover:border-[color:var(--farol-beam)]/40 text-foreground"
-                    }`}
-                  >
-                    {c}
-                  </button>
-                ))}
-              </aside>
+            <form
+              className="mt-8 flex flex-col gap-3 sm:flex-row"
+              onSubmit={(e) => {
+                e.preventDefault();
+                void consultar(query);
+              }}
+            >
+              <label className="sr-only" htmlFor="q">
+                CNPJ da empresa
+              </label>
+              <input
+                id="q"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="33.000.167/0001-01"
+                className="h-11 flex-1 border border-input bg-card px-4 text-base transition-colors placeholder:text-[color:var(--farol-fog)] focus-visible:border-[color:var(--farol-beam)] focus-visible:outline-none"
+              />
+              <button
+                type="submit"
+                disabled={estado.tipo === "carregando" || !query.trim()}
+                className="inline-flex h-11 items-center justify-center gap-2 bg-primary px-6 text-xs font-semibold uppercase tracking-[0.18em] text-primary-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {estado.tipo === "carregando" ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Search className="h-4 w-4" />
+                )}
+                Consultar
+              </button>
+            </form>
 
-              {/* Waterfall chart */}
-              <div className="lg:col-span-3 rounded-md border border-border bg-background overflow-hidden">
-                <div className="flex items-center justify-between px-5 py-3 border-b border-border bg-muted/40">
-                  <div className="flex items-center gap-2">
-                    <span className="h-2.5 w-2.5 rounded-full bg-[color:var(--farol-danger)]/70" />
-                    <span className="h-2.5 w-2.5 rounded-full bg-[color:var(--farol-tier-b)]/70" />
-                    <span className="h-2.5 w-2.5 rounded-full bg-[color:var(--farol-beam)]/60" />
-                  </div>
-                  <span className="text-xs text-muted-foreground font-mono">price waterfall</span>
-                </div>
-                <div className="p-4">
-                  <WaterfallChart data={chartRows} />
-                </div>
-              </div>
-            </div>
-
-            {/* P&L table */}
-            <div className="mt-6 rounded-md border border-border bg-background overflow-hidden">
-              <div className="flex items-center justify-between px-5 py-3 border-b border-border bg-muted/40">
-                <span className="text-xs text-muted-foreground font-mono">
-                  {lines.filter((l) => l.value !== null).length} marcos do P&L
-                </span>
-              </div>
-              <div className="p-4">
-                {lines.map((line, i) => (
-                  <div
-                    key={i}
-                    className={`flex items-center gap-3 py-2 border-b border-border/40 last:border-0 ${
-                      line.type === "total" ? "bg-muted/30 -mx-4 px-4" : ""
-                    }`}
-                  >
-                    <span
-                      className={`w-10 text-[10px] font-mono shrink-0 ${
-                        line.type === "total"
-                          ? "font-bold text-foreground"
-                          : "text-muted-foreground"
-                      }`}
-                    >
-                      {line.n}
-                    </span>
-                    <span
-                      className={`flex-1 text-xs ${
-                        line.type === "total"
-                          ? "font-semibold"
-                          : line.type === "drill"
-                            ? "italic text-primary/70"
-                            : "text-muted-foreground"
-                      }`}
-                    >
-                      {line.label}
-                    </span>
-                    {line.value !== null && (
-                      <span
-                        className={`font-mono text-xs tabular-nums ${
-                          line.type === "total" ? "font-bold" : ""
-                        } ${line.value < 0 ? "text-destructive/70" : ""}`}
-                      >
-                        {fmtBRL(line.value)}
-                      </span>
-                    )}
-                  </div>
-                ))}
-              </div>
+            <div className="mt-4 flex flex-wrap items-center gap-2 text-xs">
+              <span className="text-[color:var(--farol-fog)]">Experimente com:</span>
+              {EXEMPLOS.map((ex) => (
+                <button
+                  key={ex.cnpj}
+                  type="button"
+                  onClick={() => {
+                    setQuery(formatCnpj(ex.cnpj));
+                    void consultar(ex.cnpj);
+                  }}
+                  className="rounded-sm border border-border px-2.5 py-1 text-foreground transition-colors hover:border-[color:var(--farol-beam)]/50 hover:text-[color:var(--farol-beam)]"
+                >
+                  {ex.nome}
+                </button>
+              ))}
             </div>
           </div>
         </section>
 
-        {/* CTA */}
-        <section className="border-t border-border py-16">
-          <div className="mx-auto max-w-5xl px-6 md:px-10 flex flex-col md:flex-row md:items-center md:justify-between gap-8">
-            <div>
-              <p className="eyebrow">Gostou do que viu?</p>
-              <h2
-                className="mt-3 font-display italic font-normal text-primary text-2xl leading-snug"
-                style={{ fontVariationSettings: '"opsz" 96, "SOFT" 0, "WONK" 0' }}
+        <section className="border-t border-border py-12">
+          <div className="mx-auto max-w-3xl px-6">
+            {estado.tipo === "vazio" && (
+              <p className="text-sm text-[color:var(--farol-fog)]">
+                Nenhuma consulta ainda. Escolha um exemplo acima ou digite um CNPJ.
+              </p>
+            )}
+
+            {estado.tipo === "carregando" && (
+              <p className="beam-sweep text-sm text-muted-foreground">Procurando…</p>
+            )}
+
+            {estado.tipo === "erro" && (
+              <div className="border-l-2 border-destructive bg-card p-5">
+                <p className="text-sm text-foreground">{ERROR_COPY[estado.error]}</p>
+              </div>
+            )}
+
+            {estado.tipo === "escolher" && (
+              <div>
+                <p className="eyebrow mb-4">Qual delas?</p>
+                <ul className="divide-y divide-border border border-border">
+                  {estado.matches.map((m) => (
+                    <li key={m.cnpj}>
+                      <button
+                        type="button"
+                        onClick={() => void consultar(m.cnpj)}
+                        className="flex w-full items-center justify-between gap-4 px-4 py-3 text-left transition-colors hover:bg-muted/40"
+                      >
+                        <span>
+                          <span className="block text-sm font-medium text-foreground">
+                            {m.legalName}
+                          </span>
+                          {m.tradeName && (
+                            <span className="block text-xs text-muted-foreground">
+                              {m.tradeName}
+                            </span>
+                          )}
+                        </span>
+                        <span className="shrink-0 font-mono text-xs tabular-nums text-muted-foreground">
+                          {formatCnpj(m.cnpj)}
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {estado.tipo === "ficha" && <FichaCard e={estado.enrichment} />}
+          </div>
+        </section>
+
+        <section className="border-t border-border bg-card/40 py-10">
+          <div className="mx-auto max-w-3xl px-6">
+            <p className="text-xs leading-relaxed text-[color:var(--farol-fog)]">
+              Dados públicos da Receita Federal, consultados via Brasil API. O Farol não guarda nada
+              além da consulta feita.
+            </p>
+            <p className="mt-4 text-sm text-muted-foreground">
+              A stack do site e o cálculo de prioridade entram na próxima fase.{" "}
+              <Link
+                to="/metodologia"
+                className="text-[color:var(--farol-beam)] underline underline-offset-4"
               >
-                Suba seus dados e monte o waterfall
-                <br className="hidden md:block" /> em minutos.
-              </h2>
-            </div>
-            <Link
-              to="/signup"
-              className="inline-flex items-center gap-3 bg-primary text-primary-foreground px-8 py-4 text-sm font-semibold hover:opacity-90 transition-opacity"
-            >
-              Criar conta
-            </Link>
+                Como a rubrica funciona
+              </Link>
+              .
+            </p>
           </div>
         </section>
       </main>
 
       <BrandFooter />
+    </div>
+  );
+}
+
+function Linha({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex flex-col gap-1 border-b border-border/40 py-2.5 sm:flex-row sm:items-baseline sm:gap-4">
+      <span className="w-44 shrink-0 font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
+        {label}
+      </span>
+      <span className="flex-1 text-sm">{children}</span>
+    </div>
+  );
+}
+
+function FichaCard({ e }: { e: Enrichment }) {
+  return (
+    <div className="border border-border bg-background">
+      <div className="flex items-center justify-between border-b border-border bg-muted/40 px-5 py-3">
+        <span className="text-xs font-semibold uppercase tracking-[0.14em] text-foreground">
+          Ficha
+        </span>
+        <span className="font-mono text-xs text-muted-foreground">fonte: Receita Federal</span>
+      </div>
+
+      <div className="p-5">
+        <Linha label="Razão social">
+          <span className="font-semibold text-foreground">{e.legalName}</span>
+        </Linha>
+        {e.tradeName && <Linha label="Nome fantasia">{e.tradeName}</Linha>}
+        <Linha label="CNPJ">
+          <span className="font-mono tabular-nums">{e.cnpjFormatted}</span>
+        </Linha>
+        {e.cnae && (
+          <Linha label="CNAE principal">
+            <span className="font-mono tabular-nums">{e.cnae.code}</span>{" "}
+            <span className="text-muted-foreground">· {e.cnae.description}</span>
+          </Linha>
+        )}
+        <Linha label="Porte (Receita)">
+          {e.porte}
+          {e.porteNote && <span className="text-muted-foreground"> · {e.porteNote}</span>}
+        </Linha>
+        {e.shareCapital !== null && (
+          <Linha label="Capital social">
+            <span className="font-mono tabular-nums">{formatBRL(e.shareCapital)}</span>
+          </Linha>
+        )}
+        {e.legalNature && <Linha label="Natureza jurídica">{e.legalNature}</Linha>}
+        {e.registrationStatus && <Linha label="Situação cadastral">{e.registrationStatus}</Linha>}
+        {e.location && <Linha label="Município">{e.location}</Linha>}
+        <Linha label="Quadro societário">{describePartners(e.partners)}</Linha>
+
+        {e.partners.length > 0 && (
+          <ul className="mt-3 space-y-1">
+            {e.partners.map((p) => (
+              <li key={`${p.name}-${p.role ?? ""}`} className="flex items-baseline gap-2 text-xs">
+                <span className={p.isAdmin ? "text-foreground" : "text-muted-foreground"}>
+                  {p.name}
+                </span>
+                {p.role && (
+                  <span
+                    className={`rounded-sm px-1.5 py-0.5 text-[10px] ${
+                      p.isAdmin ? "pill-beam" : "chip-implied"
+                    }`}
+                  >
+                    {p.role}
+                  </span>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+
+        <p className="mt-5 border-t border-border/40 pt-4 text-xs text-[color:var(--farol-fog)]">
+          O quadro societário da Receita não traz participação acionária, então o Farol não infere
+          quem é o sócio majoritário. Os destacados são os que administram.
+        </p>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-3 border-t border-border px-5 py-4">
+        <span className="pill-tier-c rounded-sm px-2 py-0.5 text-xs font-semibold">Sem tier</span>
+        <span className="text-xs text-muted-foreground">
+          O cálculo de prioridade precisa de porte e gatilho, que você informa.
+        </span>
+        <Link
+          to="/metodologia"
+          className="ml-auto inline-flex shrink-0 items-center gap-1 text-xs font-semibold uppercase tracking-[0.14em] text-[color:var(--farol-beam)]"
+        >
+          Rubrica <ArrowRight className="h-3 w-3" />
+        </Link>
+      </div>
     </div>
   );
 }

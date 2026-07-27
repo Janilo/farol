@@ -30,7 +30,7 @@ function PendingPage() {
         .eq("user_id", data.user.id);
       const isAdmin = (roles || []).some((r) => r.role === "admin");
       if (p?.is_approved || isAdmin) {
-        navigate({ to: "/waterfall" });
+        navigate({ to: "/app" });
       }
     })();
   }, [navigate]);
@@ -49,14 +49,14 @@ function PendingPage() {
         </Link>
         <div className="border border-border bg-card p-8 space-y-4">
           <p className="eyebrow">ACESSO PENDENTE</p>
-          <h1 className="font-display text-3xl text-primary">Aguardando aprovação</h1>
+          <h1 className="font-display text-3xl text-primary">Conta em análise</h1>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            Sua conta <span className="font-mono text-foreground">{email}</span> foi criada, mas
-            ainda não foi aprovada por um administrador. Você receberá acesso assim que a aprovação
-            for concedida.
+            Sua conta <span className="font-mono text-foreground">{email}</span> foi criada e está
+            aguardando liberação. Aprovo manualmente porque o Farol consulta fontes públicas com
+            limite, e o limite é finito. Você recebe um e-mail assim que liberar.
           </p>
           <p className="text-sm text-muted-foreground">
-            Se precisar de acesso urgente, entre em contato com o administrador da plataforma.
+            A demo pública continua aberta enquanto isso, sem cadastro.
           </p>
           <div className="flex items-center gap-4 pt-2">
             <button
