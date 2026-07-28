@@ -77,6 +77,28 @@ Sobra o cache, que é o que a fase entrega:
 - `src/lib/technographics.server.ts` — `fetchTargetSite`, timeout 8s, cap
   500 KB, com erro como estado de primeira classe
   (`unreachable | timeout | blocked`). Ficha sem stack nunca quebra.
+
+  **A frase de cada estado, aprovada pelo Janilo em 28/jul/2026** — copy
+  fechada, implementar literal:
+
+  | Estado | Frase |
+  |---|---|
+  | `unreachable` | O site não respondeu ao endereço informado. |
+  | `timeout` | O site demorou demais para responder. |
+  | `blocked` | O site recusou a leitura. |
+
+  Abaixo das três, fixa: **"O cadastro da Receita não depende disso."**
+
+  Por que estas palavras, para ninguém "melhorar" depois: *"não respondeu ao
+  endereço informado"* e não "não resolveu", porque resolver é vocabulário de
+  DNS e a frase devolve a dúvida ao lugar útil — domínio errado no formulário
+  é o caso comum e o único que o visitante conserta sozinho. *"demorou demais"*
+  **sem número**, porque chumbar "8s" amarra a copy ao valor do adapter e a
+  frase passa a mentir quando o timeout mudar. *"recusou a leitura"* e não
+  "bloqueou", porque bloquear soa a acusação e o site está funcionando
+  perfeitamente — só não quer ser lido por robô. E nenhuma das três diz
+  "erro": não houve erro, a stack é opcional e a ficha entregue está completa
+  no que prometeu.
 - Domínio vem de campo opcional no formulário. Detecção por CNAME via
   DNS-over-HTTPS fica para depois: são 8 dos 24 fingerprints e uma chamada
   extra por consulta.
@@ -87,10 +109,9 @@ existe nos 24. Um segundo exemplo de detecção inferida seria inventado.
 **Dois marcadores temporários nas telas do claude.ai/design saem quando esta fase
 entrar** (registrados pelo projeto de design em 28/jul, para não virarem copy
 definitiva por esquecimento): `stack de exemplo · detector em construção` no
-cabeçalho da seção de stack, e `site não respondeu em 8s` no rodapé de procedência
-da ficha sem stack. O segundo só é verdade quando o `fetchTargetSite` existir e o
-erro for de fato `timeout` — os outros dois estados (`unreachable`, `blocked`)
-pedem outra frase, e chumbar o "8s" na copy amarra a UI ao valor do adapter.
+cabeçalho da seção de stack, e o rodapé de procedência da ficha sem stack, que
+hoje diz `site não respondeu` para os três estados. O segundo já tem substituto
+decidido — as três frases da tabela acima.
 
 ## Fase 5 — Pré-tier interativo
 
