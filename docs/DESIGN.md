@@ -149,9 +149,26 @@ em hover de cartão já está coberto.
 
 **Dois vizinhos do mesmo defeito**, achados ao varrer o resto e corrigidos junto:
 o chip de empresa-exemplo usava `border-border` (1,49) e virou `border-input`; o
-botão "Criar conta" usava `beam/40` (2,57) e subiu para `beam/60` (4,27). A régua
-para qualquer contorno de controle é a mesma: **`--farol-rule-control`, ou um
-`beam` a 60%+.** Abaixo disso não passa.
+botão "Criar conta" usava `beam/40` (2,57) e subiu para `beam/60` (4,27).
+
+**A régua, e onde ela se aplica.** Contorno de controle: **`--farol-rule-control`
+(ou `border-input`, que resolve nele), ou um `beam` a 60%+** — piso 3:1, WCAG
+1.4.11. Isso é régua de *borda*. **Texto tem outro piso: 4,5:1 (1.4.3), e ali
+`beam/60` não serve** — texto âmbar sobre escuro usa `beam` cheio (9,73 sobre
+`night`) ou `beam-bright` sobre `beam-soft` (10,44). Vale para o estado escolhido
+de qualquer chip ou seletor.
+
+**O padrão dos dois defeitos importa mais que os dois defeitos:** os primitivos do
+shadcn deste repo já estavam certos — `input`, `select`, `textarea`, `toggle` e a
+variante `outline` do `button` todos apontam para `border-input`, não para
+`--border`. Quem falhou foi **controle feito à mão** direto na rota: um `<button>`
+e um `<Link>` estilizados com `border-border`, porque `border` é o que a gente
+digita sem pensar. Régua prática: **controle novo usa o primitivo do kit; se for
+feito à mão, a borda é `border-input`, nunca `border-border`.**
+
+Isso vale especialmente para os seletores de porte e gatilho da Fase 5 — o
+controle mais clicado da ficha, com fundo transparente, onde a borda é o único
+sinal. Se saírem do `Select`/`Toggle` do kit, já nascem certos.
 
 Os campos de e-mail e senha (`login`, `signup`, `reset-password`) **já passavam** e
 não foram tocados: usam `border-foreground/40`, que compõe para 3,42 sobre
@@ -210,7 +227,11 @@ Três notas de ofício que custaram defeito e ficam registradas:
 
 **`<text>` em .svg servido como documento isolado não vê a `@font-face` da página** — favicon e `<img src>` caem em fonte de sistema. Foi o que acontecia com `public/favicon.svg`, que além disso ainda era o "jps" roxo do DS-mãe. Regra: **asset de marca em .svg não leva texto.** O favicon é a lente sozinha, que é a redução que a §8 já previa.
 
-**Sobre o painel `bg-primary` das telas de auth, lente âmbar é âmbar sobre âmbar e desaparece** — a palavra lê "far l". A variante `onBrand` inverte: o anel herda `currentColor` e o centro fica vazado, então o próprio âmbar do painel é a luz. Assim a variante não precisa saber a cor do painel. Vale para qualquer superfície âmbar, inclusive og-image.
+**O anel é `currentColor`, não âmbar — e isso dispensa variante.** Primeira tentativa no repo pintou o anel de `--farol-beam` e quebrou: sobre o painel `bg-primary` das telas de auth, lente âmbar fica âmbar sobre âmbar e **desaparece** — a palavra lê "far l", sem uma letra. Resolvi com uma variante `onBrand`; o export do DS mostrou que a variante era desnecessária. Com o anel em `currentColor`, ele segue a cor da palavra em qualquer fundo e o componente não precisa saber onde está.
+
+É também a leitura fiel desta seção: a §5 especifica **o disco** como `--farol-beam-bright` e não diz nada sobre o anel — porque o anel é a letra "o", e letra tem a cor do texto. O âmbar é a luz que mora dentro dela. Anel âmbar era invenção minha.
+
+Construção final, do export (`Design/JPS DS Farol.zip`): anel `0.1em solid currentColor` num quadrado de `0.5em`; disco por `inset: 0.048em` — que no furo de 0,30em dá exatamente os 0,204em; halo curto por `box-shadow: 0 0 0.1em 0.028em` do beam-bright a 45%; e `margin: 0 -0.01em 0 0.028em` de acerto ótico, porque a lente é geometricamente perfeita e o "o" da Fraunces não é. Peso 500, `opsz 72`.
 
 ---
 

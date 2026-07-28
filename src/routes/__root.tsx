@@ -118,6 +118,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     links: [
       { rel: "stylesheet", href: appCss },
       { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
+      // O .ico é o fallback de quem não faz SVG e o que o Windows usa na barra
+      // de tarefas; declarado em vez de deixar o navegador adivinhar /favicon.ico.
+      { rel: "icon", type: "image/x-icon", sizes: "16x16 32x32 48x48 64x64", href: "/favicon.ico" },
+      { rel: "apple-touch-icon", sizes: "180x180", href: "/apple-touch-icon.png" },
       { rel: "canonical", href: "https://farol.pereirasaraiva.com/" },
       {
         rel: "preload",

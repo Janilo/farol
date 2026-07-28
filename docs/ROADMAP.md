@@ -104,6 +104,10 @@ pedem outra frase, e chumbar o "8s" na copy amarra a UI ao valor do adapter.
   gatilho, 19 opções, e porte, três opções. Texto fixo dizendo que o eixo de
   alcance é premissa do operador calibrada para consultor solo, com link para
   `/metodologia`.
+- **Contraste:** saem do `Select`/`Toggle` do kit, que já apontam para
+  `border-input`. Se forem feitos à mão, a borda é `border-input`, nunca
+  `border-border` — foi assim que os chips de exemplo nasceram em 1,49
+  (DESIGN.md §2.2). No estado escolhido, o piso do texto é 4,5, não 3.
 
 ## Fase 6 — Quota da demo
 
