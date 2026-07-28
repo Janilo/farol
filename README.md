@@ -27,7 +27,7 @@ O eixo de alcance do comprador **subtrai** quando a empresa é grande e não há
 ## Documentação
 
 - [`GLOSSARIO.md`](GLOSSARIO.md) — linguagem ubíqua: um termo, um conceito, do schema ao botão
-- [`docs/`](docs/) — spec do design system, conteúdo das telas e copy aprovada
+- [`docs/`](docs/) — spec do design system, conteúdo das telas, copy aprovada e o [roadmap](docs/ROADMAP.md)
 - [`SEGURANCA.md`](SEGURANCA.md) — as fronteiras impostas por RLS e o que não é fronteira
 
 ## Stack
