@@ -89,6 +89,17 @@ Sobra o cache, que é o que a fase entrega:
 
   Abaixo das três, fixa: **"O cadastro da Receita não depende disso."**
 
+  **Hierarquia, não quatro frases de igual peso** (projeto de design, 28/jul):
+  a frase de estado sai em `--farol-fog` e a linha fixa em `--farol-mist`, um
+  passo mais clara. A inversão é de propósito — com o mesmo tom, o visitante lê
+  a de cima e para, e a de cima é a que não interessa. Quem faz o trabalho é a
+  linha fixa: ela impede a leitura de que a ficha inteira falhou. Medido nos
+  dois: `fog` 5,58 e `mist` 8,44 sobre o fundo do cartão, ambos AA.
+
+  No token de procedência do rodapé vai só **`Tecnografia · sem leitura`**. A
+  sentença desce para uma segunda linha: o rodapé é lista de fontes, e sentença
+  dentro de token estoura a linha e mistura dois registros.
+
   Por que estas palavras, para ninguém "melhorar" depois: *"não respondeu ao
   endereço informado"* e não "não resolveu", porque resolver é vocabulário de
   DNS e a frase devolve a dúvida ao lugar útil — domínio errado no formulário
@@ -102,6 +113,29 @@ Sobra o cache, que é o que a fase entrega:
 - Domínio vem de campo opcional no formulário. Detecção por CNAME via
   DNS-over-HTTPS fica para depois: são 8 dos 24 fingerprints e uma chamada
   extra por consulta.
+
+**O tipo da stack é união discriminada, não dois campos opcionais.** O projeto
+de design propôs `stackError?: 'unreachable' | 'timeout' | 'blocked'` ao lado
+de `stack`, para a UI não ter que destrinchar um campo só na renderização.
+Recusado, e a razão é a mesma que já governa `FichaResult`:
+
+```ts
+type StackResult =
+  | { status: "ok"; technologies: Detection[] }
+  | { status: "empty" }        // leu o site e não achou nenhuma das 24
+  | { status: "error"; reason: "unreachable" | "timeout" | "blocked" };
+```
+
+Dois campos opcionais deixam representar estado ilegal — os dois preenchidos,
+ou nenhum — e a UI passa a confiar numa combinação que o tipo não garante. E o
+modelo de dois campos **perde um estado**: site lido com sucesso e nenhuma das
+24 ferramentas encontrada. Isso não é erro nem é stack; com dois opcionais fica
+indistinguível de "nem tentou". Com a união, o `switch` é um só e cobre tudo —
+mais direto, não menos.
+
+Nas telas do design, `noStack` e `stackErro` como props separadas estão certos:
+lá são flags de visualização. No repo o domínio é a união, e o componente
+deriva as flags dela.
 
 Nota para quem desenhar a tela: `Stone → Pagar.me` é o **único** `implies` que
 existe nos 24. Um segundo exemplo de detecção inferida seria inventado.
