@@ -72,7 +72,7 @@ function LoginPage() {
         aria-hidden="true"
       >
         <Link to="/" aria-label="Farol" className="text-primary-foreground">
-          <FarolWordmark height={28} className="!text-current" />
+          <FarolWordmark height={28} onBrand />
         </Link>
         <div>
           <p className="eyebrow !text-[var(--farol-beam)] mb-6">

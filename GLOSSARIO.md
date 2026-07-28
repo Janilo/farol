@@ -21,7 +21,7 @@ Exceção, nova em relação ao Lente: **termos jurídico-fiscais brasileiros se
 | `technographic` | ficha × ferramenta | Uma ferramenta detectada no site da empresa. O plural `technographics` é o bloco inteiro da ficha. | EN |
 | `detection` | technographic | Uma ocorrência: a ferramenta **e por qual via** foi encontrada (`script`, `header`, `meta`, `dom`, `cookie`, `implied`). A via importa e aparece na UI. | EN |
 | `fingerprint` | ferramenta | A assinatura que permite detectar uma ferramenta. São 24, todas brasileiras. Fingerprint é a *regra*; detection é o *achado*. | EN |
-| `tier` | ficha | A saída da rubrica: `A`, `B` ou `C`. **Na v1 é sempre pré-tier** — ver abaixo. | EN |
+| `tier` | ficha | A saída da rubrica: `A`, `B` ou `C`. **Na v1 é sempre pré-tier** — ver abaixo. Rótulos fixos na UI: **A · abordar agora**, **B · nutrir**, **C · revisitar**. | EN código / PT UI |
 | `preTier` | ficha | O tier calculado só com o que a máquina consegue ver. O tier definitivo exige julgamento humano e não existe neste produto. Todo `tier` da v1 é `preTier`; o tipo carrega `partial: true` quando falta gatilho. | EN |
 | `trigger` | evento | O gatilho de timing da rubrica (`G1`…`G19`). Na UI é sempre **"gatilho"**. | EN código / PT UI |
 | `signal` | — | **Reservado. Não existe na v1.** No motor completo, um `signal` é a notícia bruta que *aponta* para um gatilho. Está aqui para impedir que alguém use `signal` como sinônimo de `trigger` e feche a porta para a v2. | EN, reservado |
@@ -45,5 +45,7 @@ Exceção, nova em relação ao Lente: **termos jurídico-fiscais brasileiros se
 **3. `partner` não tem percentual.** A Brasil API devolve o quadro societário sem participação acionária. O motor Python tentava inferir o "sócio relevante" lendo percentual de um campo que é texto ("Sócio-Administrador") — e a função quebrava antes de chegar lá. O produto não infere: mostra os sócios e destaca os administradores. Se um dia houver fonte com percentual, aí sim existe `ownership`.
 
 **4. `tier` não é etapa.** Tier é prioridade (A/B/C). Etapa de funil (identificada, aquecida, dormente…) é outra coisa e **não existe neste produto** — o Farol classifica, não acompanha relacionamento. Se aparecer `stage` no código da v1, é escopo vazando.
+
+Por isso o tier C é **"revisitar"** e não "observar" (28/jul/2026): `scoring.md` chama o C de "Watch / adjacente", e `watch` no método do Janilo é um valor de `Estagio_pipeline` — uma das subpastas de `Leads/`. Traduzir o rótulo do tier com a palavra do estágio importa a confusão que esta armadilha existe para impedir. "Revisitar" vem da mesma linha da fonte ("Fit parcial; revisitar no refresh") e não colide com nada. Os outros dois saem literais de `scoring.md`: A "Abordar agora", B "Nutrir / aquecer" → **abordar agora**, **nutrir**.
 
 **5. Winnability é premissa, não atributo.** O eixo 4 rebaixa empresa grande sem caminho quente porque a rubrica foi calibrada para um consultor solo — o centro de compra de uma empresa grande está fora do alcance dele. Para um SDR de um SaaS com time, essa regra seria falsa. A UI diz isso em texto, ao lado do score. É a diferença entre demonstrar um método e vender uma verdade.

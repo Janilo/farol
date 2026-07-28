@@ -14,7 +14,7 @@
 |---|---|---|
 | 1 | **Dark-first.** A alternativa clara com roxo-vinho `--jps-purple` está descartada. | §1 |
 | 2 | **Não existe tema claro.** `--farol-paper` é para impressão e og-image, não é tema. | §7 |
-| 3 | **Os valores de cor da §2 são finais.** Contraste WCAG medido nos catorze pares; `--farol-fog` e `--farol-tier-c` já foram corrigidos por falharem AA. Mudança exige recálculo com o número na mesa. | §2, §2.1 |
+| 3 | **Os valores de cor da §2 são finais.** Contraste WCAG medido nos catorze pares; `--farol-fog` e `--farol-tier-c` já foram corrigidos por falharem AA. Mudança exige recálculo com o número na mesa. *Token **novo** com medição não reabre esta decisão — foi o caso de `--farol-rule-control` (§2.2); mudar valor existente, sim.* | §2, §2.1, §2.2 |
 | 4 | **A palavra é "ficha", nunca "dossiê"** na UI. Em PT-BR "dossiê" carrega halo de investigação; o produto lê registro público. No código o tipo segue `dossier`, em inglês. | §"A palavra" |
 | 5 | **Tagline: "O que as ferramentas globais não veem no Brasil."** Sem nomear concorrente. | abaixo |
 | 6 | **Tipografia inalterada** — Fraunces + Inter Tight. É o que amarra a família. Em fundo escuro, Fraunces nunca abaixo de peso 500. | §4 |
@@ -68,7 +68,8 @@ Mesma convenção dos irmãos: cada produto declara os próprios primitivos com 
 --farol-night-deep:  #0D1113;  /* fundo de seção recuada, hero */
 --farol-surface:     #1C2226;  /* cartão sobre a noite */
 --farol-surface-alt: #232B30;  /* linha zebrada, hover de cartão */
---farol-rule:        #2E383E;  /* divisórias sobre escuro */
+--farol-rule:        #2E383E;  /* divisórias sobre escuro — decorativas */
+--farol-rule-control:#69808D;  /* borda que IDENTIFICA um controle — 3:1, ver §2.1 */
 
 /* Facho — a luz (família --jps-gold #C9A227, clareada p/ contraste em escuro) */
 --farol-beam:        #E8B93F;  /* accent principal: CTA, foco, dado em destaque */
@@ -121,6 +122,42 @@ O `fog` foi o achado que importa: ele é a cor de placeholder, e placeholder viv
 
 `--farol-rule` sobre `--farol-night` dá 1,49 e isso é aceito: é divisória de 0,5px, não texto nem contorno de controle. Se em algum lugar ela virar a borda que identifica um campo, ali precisa de 3:1 (WCAG 1.4.11) e o token certo é outro.
 
+### 2.2 O caso previsto aconteceu — `--farol-rule-control` (28/jul/2026)
+
+A ressalva acima cobrou. O repo tinha `--input: var(--farol-rule)`, e `--input` é
+justamente o token de contorno de controle do shadcn: o campo de CNPJ da `/demo`
+(`border border-input bg-card`) media **1,34** sobre `--farol-surface`. O
+preenchimento também não identificava o controle — `surface` sobre `night` dá 1,11 —
+então a borda era o único sinal, e falhava 1.4.11. Achado pelo projeto do
+claude.ai/design nas telas; confirmado no código.
+
+Isto **não reabre a decisão travada nº 3**: nenhum valor da §2 mudou. É token novo,
+que a própria §2.1 já previa ("o token certo é outro"), com o número na mesa.
+
+`--farol-rule-control: #69808D` — mesmo matiz e saturação do `rule` (r:g:b em
+0,745 : 0,908 : 1), no meio do caminho entre `rule` e `fog`:
+
+| Par | Ratio | 1.4.11 (3,0) |
+|---|---|---|
+| `rule-control` sobre `night` | 4,31 | passa |
+| `rule-control` sobre `night-deep` | 4,58 | passa |
+| `rule-control` sobre `surface` | 3,88 | passa |
+| `rule-control` sobre `surface-alt` | 3,48 | passa |
+
+Passa nos quatro fundos, não só nos dois em uso hoje — controle em linha zebrada ou
+em hover de cartão já está coberto.
+
+**Dois vizinhos do mesmo defeito**, achados ao varrer o resto e corrigidos junto:
+o chip de empresa-exemplo usava `border-border` (1,49) e virou `border-input`; o
+botão "Criar conta" usava `beam/40` (2,57) e subiu para `beam/60` (4,27). A régua
+para qualquer contorno de controle é a mesma: **`--farol-rule-control`, ou um
+`beam` a 60%+.** Abaixo disso não passa.
+
+Os campos de e-mail e senha (`login`, `signup`, `reset-password`) **já passavam** e
+não foram tocados: usam `border-foreground/40`, que compõe para 3,42 sobre
+`surface` e 3,49 sobre `night`. O estado focado usa `--farol-beam` — 8,76 sobre
+`surface`.
+
 ---
 
 ## 3. Papéis semânticos
@@ -137,8 +174,8 @@ Re-bind no `styles.css` do repo, no mesmo formato do Cascata:
 --muted:              var(--farol-surface-alt);
 --muted-foreground:   var(--farol-mist);
 --accent:             var(--farol-beam);
---border:             var(--farol-rule);
---input:              var(--farol-rule);
+--border:             var(--farol-rule);          /* divisória: decorativa */
+--input:              var(--farol-rule-control);   /* contorno de controle: 3:1 */
 --ring:               var(--farol-beam);
 --destructive:        var(--farol-danger);
 ```
@@ -163,7 +200,17 @@ Um só, usado com parcimônia:
 - **Estado de busca** — enquanto a ficha carrega, o facho faz **uma** varredura de 900ms e para. Movimento que significa "procurando", não decoração.
 - **Em nenhum outro lugar.** Cartão, tabela e formulário são sóbrios; a luz é do hero e do momento de busca.
 
-**Wordmark** — "farol" em Fraunces minúscula, tracking levemente negativo, com o ponto de luz no **"o"**: um disco `--farol-beam-bright` com halo curto. Componente `FarolWordmark.tsx`, espelhando `CascataWordmark.tsx`.
+**Wordmark** — "farol" em Fraunces minúscula, tracking levemente negativo, com o ponto de luz no **"o"**: um disco `--farol-beam-bright` com halo curto. Componente `FarolWordmark.tsx`.
+
+Medidas, do projeto do claude.ai/design (28/jul/2026), em `em` para escalar com a tipografia: **lente 0,50em · anel 0,10em · disco 0,204em · tracking −0,03em**, peso 600.
+
+Três notas de ofício que custaram defeito e ficam registradas:
+
+**A lente É o "o", não um enfeite sobre ele.** Por isso o componente é DOM e não SVG, divergindo do `CascataWordmark.tsx`: em `<svg><text>` não há como posicionar um elemento em relação a um glifo sem chumbar o avanço horizontal de "far" na Fraunces, número que muda com peso, `opsz` e versão da fonte. O glifo do Cascata fica *fora* da palavra, então SVG serve lá. Diferença de geometria, não de gosto.
+
+**`<text>` em .svg servido como documento isolado não vê a `@font-face` da página** — favicon e `<img src>` caem em fonte de sistema. Foi o que acontecia com `public/favicon.svg`, que além disso ainda era o "jps" roxo do DS-mãe. Regra: **asset de marca em .svg não leva texto.** O favicon é a lente sozinha, que é a redução que a §8 já previa.
+
+**Sobre o painel `bg-primary` das telas de auth, lente âmbar é âmbar sobre âmbar e desaparece** — a palavra lê "far l". A variante `onBrand` inverte: o anel herda `currentColor` e o centro fica vazado, então o próprio âmbar do painel é a luz. Assim a variante não precisa saber a cor do painel. Vale para qualquer superfície âmbar, inclusive og-image.
 
 ---
 
@@ -171,7 +218,7 @@ Um só, usado com parcimônia:
 
 Além do kit shadcn herdado:
 
-1. **Badge de tier** — pílula com `--farol-tier-{a,b,c}` no texto e `*-soft` no fundo. Mostra a letra e o rótulo ("A · abordar agora"). Quando o pré-tier é parcial, ganha um sufixo discreto "parcial".
+1. **Badge de tier** — pílula com `--farol-tier-{a,b,c}` no texto e `*-soft` no fundo. Mostra a letra e o rótulo: **A · abordar agora**, **B · nutrir**, **C · revisitar** (fechados em 28/jul/2026; a fonte e o porquê de "revisitar" e não "observar" estão na armadilha 4 do glossário). Quando o pré-tier é parcial, ganha um sufixo discreto "parcial".
 2. **Cartão da ficha** — três seções empilhadas com divisória `--farol-rule`: **Cadastro** (razão social, CNPJ, CNAE, porte, capital, sócios), **Stack** (chips das ferramentas detectadas, agrupadas por categoria), **Score** (badge de tier + os eixos que somaram, cada um com seu ponto).
 3. **Chip de tecnologia** — nome + categoria, com um marcador de *como* foi detectado (script, header, cookie…). Detecção por inferência (`implies`) vem com o marcador visualmente mais fraco — honestidade de procedência na UI.
 4. **Estado vazio da busca** — o facho apagado e a linha "aponte o farol para uma empresa", com os chips de empresas de exemplo logo abaixo.

@@ -3,8 +3,8 @@
   "configurations": [
     {
       "name": "farol",
-      "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["run", "dev"],
+      "runtimeExecutable": "node_modules/.bin/vite",
+      "runtimeArgs": ["dev"],
       "port": 5173
     }
   ]

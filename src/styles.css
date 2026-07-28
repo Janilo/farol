@@ -115,6 +115,10 @@
   --farol-surface:      #1C2226;
   --farol-surface-alt:  #232B30;
   --farol-rule:         #2E383E;
+  /* Borda que IDENTIFICA um controle (campo, botão outline) — WCAG 1.4.11
+     pede 3:1 e `rule` dá 1,34 sobre surface. Medido: night 4,31 · deep 4,58
+     · surface 3,88 · surface-alt 3,48. Ver docs/DESIGN.md §2.1. */
+  --farol-rule-control: #69808D;
 
   --farol-beam:         #E8B93F;
   --farol-beam-bright:  #F6D073;
@@ -174,8 +178,10 @@
   --destructive:            var(--farol-danger);
   --destructive-foreground: var(--farol-night-deep);
 
+  /* `border` é divisória (0,5px, decorativa) — 1,49 é aceito.
+     `input` é contorno de controle — precisa de 3:1, token próprio. */
   --border: var(--farol-rule);
-  --input:  var(--farol-rule);
+  --input:  var(--farol-rule-control);
   --ring:   var(--farol-beam);
 
   /* Data viz — facho → tier A → neblina → mist → danger */

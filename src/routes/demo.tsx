@@ -97,7 +97,7 @@ function DemoPage() {
           </div>
           <Link
             to="/signup"
-            className="rounded-sm border border-[color:var(--farol-beam)]/40 bg-background px-2.5 py-1 font-medium text-[color:var(--farol-beam)] transition-colors hover:bg-[color:var(--farol-beam)] hover:text-[color:var(--farol-night-deep)]"
+            className="rounded-sm border border-[color:var(--farol-beam)]/60 bg-background px-2.5 py-1 font-medium text-[color:var(--farol-beam)] transition-colors hover:bg-[color:var(--farol-beam)] hover:text-[color:var(--farol-night-deep)]"
           >
             Criar conta
           </Link>
@@ -159,7 +159,7 @@ function DemoPage() {
                     setQuery(formatCnpj(ex.cnpj));
                     void consultar(ex.cnpj);
                   }}
-                  className="rounded-sm border border-border px-2.5 py-1 text-foreground transition-colors hover:border-[color:var(--farol-beam)]/50 hover:text-[color:var(--farol-beam)]"
+                  className="rounded-sm border border-input px-2.5 py-1 text-foreground transition-colors hover:border-[color:var(--farol-beam)]/60 hover:text-[color:var(--farol-beam)]"
                 >
                   {ex.nome}
                 </button>

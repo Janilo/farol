@@ -84,6 +84,14 @@ Sobra o cache, que é o que a fase entrega:
 Nota para quem desenhar a tela: `Stone → Pagar.me` é o **único** `implies` que
 existe nos 24. Um segundo exemplo de detecção inferida seria inventado.
 
+**Dois marcadores temporários nas telas do claude.ai/design saem quando esta fase
+entrar** (registrados pelo projeto de design em 28/jul, para não virarem copy
+definitiva por esquecimento): `stack de exemplo · detector em construção` no
+cabeçalho da seção de stack, e `site não respondeu em 8s` no rodapé de procedência
+da ficha sem stack. O segundo só é verdade quando o `fetchTargetSite` existir e o
+erro for de fato `timeout` — os outros dois estados (`unreachable`, `blocked`)
+pedem outra frase, e chumbar o "8s" na copy amarra a UI ao valor do adapter.
+
 ## Fase 5 — Pré-tier interativo
 
 - `src/lib/tier.ts` (puro) — porta de `compute_pre_tier`: setor core +1;
