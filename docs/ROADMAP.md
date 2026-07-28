@@ -135,7 +135,34 @@ mais direto, não menos.
 
 Nas telas do design, `noStack` e `stackErro` como props separadas estão certos:
 lá são flags de visualização. No repo o domínio é a união, e o componente
-deriva as flags dela.
+deriva as flags dela. *(O projeto de design aceitou e passou a uma prop só,
+`stackStatus`, com a razão pendurada no `error`.)*
+
+**`empty` e `error` não são o mesmo ramo na renderização — e é fácil errar.**
+Nos três `error` a seção de stack **não existe**. No `empty` ela **existe**, com
+uma linha no lugar dos chips. "Nenhuma das 24" é achado, não ausência: diz que a
+empresa não roda nada do catálogo brasileiro, que é informação sobre a empresa.
+Se a seção sumir no `empty`, o achado vira indistinguível de "nem tentou" — o
+caso de quem não informou domínio.
+
+Token de procedência do rodapé, por status:
+
+| Status | Token |
+|---|---|
+| `ok` | `5 ferramentas` |
+| `empty` | `lido · nenhuma das 24` |
+| `error` | `sem leitura`, mais a frase do estado na segunda linha |
+
+**O `empty` não mexe no placar, e isso é correto, não omissão:** os quatro eixos
+são setor, porte, gatilho e winnability — stack não é eixo. Fica registrado
+porque a pergunta apareceu e a resposta "não muda nada" parece esquecimento
+quando não está escrita.
+
+**A frase do `empty` ainda NÃO está aprovada.** Proposta do projeto de design,
+no ar lá marcada como rascunho: *"O site foi lido. Nenhuma das 24 ferramentas do
+catálogo apareceu."* Duas sentenças curtas, com o número, sem a palavra erro, no
+registro das três aprovadas. Vai ao Janilo junto com o resto da copy da Fase 4,
+num pedido só. Até lá é rascunho — não implementar como decidida.
 
 Nota para quem desenhar a tela: `Stone → Pagar.me` é o **único** `implies` que
 existe nos 24. Um segundo exemplo de detecção inferida seria inventado.
