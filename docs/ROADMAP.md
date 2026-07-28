@@ -69,7 +69,27 @@ Sobra o cache, que é o que a fase entrega:
 
 É a cunha do produto: as ferramentas brasileiras que scanner global não vê.
 
-- `src/lib/fingerprints.ts` — porta tipada do `tecnografias_br.json`, 24 entradas.
+- `src/lib/fingerprints.ts` — porta tipada do `tecnografias_br.json`, 24 entradas
+  hoje. **Exporte `CATALOGO = FINGERPRINTS.length` e varra os literais.** O "24"
+  é o "8s" outra vez: número do adapter chumbado em prosa, que não quebra nada
+  quando muda — só passa a mentir. Hoje ele está certo, então nada a corrigir
+  agora; o momento de varrer é quando este arquivo nascer.
+
+  Já no ar, e por isso os dois primeiros são os que importam:
+
+  | Onde | Texto |
+  |---|---|
+  | `src/routes/index.tsx:80` | "A stack do site contra **24** fingerprints brasileiros" |
+  | `src/routes/index.tsx:185` | "Cadastro da fonte primária, **24** fingerprints…" |
+  | `docs/COPY.md:47` e `:102` | as mesmas duas, na fonte da copy aprovada |
+  | `DESIGN-conteudo-telas.md:114` e `:125` | "(24 ferramentas)" e "nos 24 fingerprints" |
+  | este arquivo | seis ocorrências, aceitáveis por serem datadas |
+
+  Achado pelo projeto de design na 4ª rodada — o caso que ele quase deixou
+  passar é o mais instrutivo: a nota do `Stone → Pagar.me` ("a única inferência
+  entre os 24"). É **prosa explicativa, não copy de estado**, então não caiu em
+  nenhuma varredura de string de UI. Onde o número vira argumento, ele também
+  vira dívida.
 - `src/lib/technographics.ts` (puro) — `detectTechnologies(page, fingerprints)`.
   Três correções sobre o Python: `dom` casa contra atributos `class`/`id`, não
   substring no HTML inteiro; `cookies` contra `Set-Cookie` reais; `implies` em
@@ -158,11 +178,19 @@ são setor, porte, gatilho e winnability — stack não é eixo. Fica registrado
 porque a pergunta apareceu e a resposta "não muda nada" parece esquecimento
 quando não está escrita.
 
-**A frase do `empty` ainda NÃO está aprovada.** Proposta do projeto de design,
-no ar lá marcada como rascunho: *"O site foi lido. Nenhuma das 24 ferramentas do
-catálogo apareceu."* Duas sentenças curtas, com o número, sem a palavra erro, no
-registro das três aprovadas. Vai ao Janilo junto com o resto da copy da Fase 4,
-num pedido só. Até lá é rascunho — não implementar como decidida.
+**A frase do `empty` ainda NÃO está aprovada**, e vai ao Janilo em **duas
+versões**, porque a escolha tem um custo que ele precisa ver:
+
+- **Com número:** *"O site foi lido. Nenhuma das 24 ferramentas do catálogo
+  apareceu."* — interpolado de `CATALOGO`, não literal.
+- **Sem número:** *"O site foi lido. Nenhuma ferramenta do catálogo apareceu."*
+
+Sem o número some o acoplamento **e some a informação de escala**, que é parte
+do que faz o achado ser achado: "nenhuma das 24" diz que a busca foi ampla,
+"nenhuma" não diz nada sobre o tamanho da rede. Não é só encurtar.
+
+Vai junto com o resto da copy da Fase 4, num pedido só. Até lá é rascunho — não
+implementar como decidida.
 
 Nota para quem desenhar a tela: `Stone → Pagar.me` é o **único** `implies` que
 existe nos 24. Um segundo exemplo de detecção inferida seria inventado.
