@@ -1,7 +1,7 @@
 // Página de erro de último recurso do SSR: servida quando o app nem carregou.
 // Hex cru aqui é intencional e é a única exceção da casa — a folha de estilo do
 // produto (e portanto os tokens --farol-*) pode ser exatamente o que falhou.
-// Os valores espelham Design/farol-ds-spec.md §2; se a paleta mudar, mude aqui.
+// Os valores espelham docs/DESIGN.md §2; se a paleta mudar, mude aqui.
 export function renderErrorPage(): string {
   return `<!doctype html>
 <html lang="pt-BR">

@@ -1,7 +1,7 @@
 /**
  * Farol wordmark — the beam glyph (a light source throwing a widening cone)
  * plus the "farol" lockup. The beam is --farol-beam; the tower is the
- * foreground ink. From the Farol DS spec (Design/farol-ds-spec.md §5).
+ * foreground ink. From the Farol DS spec (docs/DESIGN.md §5).
  *
  * The glyph reads at 16px: a lit point with two rays. Anything more detailed
  * turns to mush at favicon size, which is where this mark lives most.

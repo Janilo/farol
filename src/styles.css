@@ -108,7 +108,7 @@
      FAROL PRIMITIVES — noite neutra / facho âmbar
      Derivados da paleta J P Saraiva: a base vem da família --jps-ink,
      o facho da família --jps-gold clareada para contraste em escuro.
-     Ver Design/farol-ds-spec.md §2. NÃO editar primitives.css do DS-mãe.
+     Ver docs/DESIGN.md §2. NÃO editar primitives.css do DS-mãe.
      ============================================================ */
   --farol-night:        #14181B;
   --farol-night-deep:   #0D1113;
