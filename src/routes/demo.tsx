@@ -6,6 +6,7 @@ import { SiteHeader } from "@/components/brand/SiteHeader";
 import { BrandFooter } from "@/components/brand/BrandFooter";
 import { getFichaFn, type FichaError } from "@/lib/ficha.functions";
 import { describePartners, formatBRL, type Enrichment } from "@/lib/enrichment";
+import { formatFetchedAt, type Ficha } from "@/lib/ficha";
 import type { NameMatch } from "@/lib/enrichment.server";
 import { formatCnpj } from "@/lib/cnpj";
 
@@ -58,7 +59,7 @@ const EXEMPLOS = [
 type Estado =
   | { tipo: "vazio" }
   | { tipo: "carregando" }
-  | { tipo: "ficha"; enrichment: Enrichment }
+  | { tipo: "ficha"; ficha: Ficha }
   | { tipo: "escolher"; matches: NameMatch[] }
   | { tipo: "erro"; error: FichaError };
 
@@ -72,7 +73,7 @@ function DemoPage() {
     setEstado({ tipo: "carregando" });
     try {
       const r = await getFichaFn({ data: { query: t } });
-      if (r.status === "ok") setEstado({ tipo: "ficha", enrichment: r.enrichment });
+      if (r.status === "ok") setEstado({ tipo: "ficha", ficha: r.ficha });
       else if (r.status === "choose") setEstado({ tipo: "escolher", matches: r.matches });
       else setEstado({ tipo: "erro", error: r.error });
     } catch {
@@ -217,7 +218,7 @@ function DemoPage() {
               </div>
             )}
 
-            {estado.tipo === "ficha" && <FichaCard e={estado.enrichment} />}
+            {estado.tipo === "ficha" && <FichaCard ficha={estado.ficha} />}
           </div>
         </section>
 
@@ -257,14 +258,21 @@ function Linha({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-function FichaCard({ e }: { e: Enrichment }) {
+function FichaCard({ ficha }: { ficha: Ficha }) {
+  const e: Enrichment = ficha.enrichment;
+  const lidoEm = formatFetchedAt(ficha.fetchedAt);
   return (
     <div className="border border-border bg-background">
       <div className="flex items-center justify-between border-b border-border bg-muted/40 px-5 py-3">
         <span className="text-xs font-semibold uppercase tracking-[0.14em] text-foreground">
           Ficha
         </span>
-        <span className="font-mono text-xs text-muted-foreground">fonte: Receita Federal</span>
+        {/* Procedência é lista de fontes: o token diz de onde veio e de quando.
+            Não diz "do cache" de propósito — que o Farol tenha cache é problema
+            do Farol; o que muda a leitura de quem vê é a idade do dado. */}
+        <span className="font-mono text-xs text-muted-foreground">
+          fonte: Receita Federal{lidoEm ? ` · lido em ${lidoEm}` : ""}
+        </span>
       </div>
 
       <div className="p-5">

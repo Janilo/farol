@@ -10,8 +10,10 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { cleanCnpj, isValidCnpj, looksLikeCnpj } from "./cnpj";
-import { extractEnrichment, type Enrichment } from "./enrichment";
+import { extractEnrichment } from "./enrichment";
 import { fetchCnpj, searchCnpjByName, type NameMatch } from "./enrichment.server";
+import { decideFromCache, fichaFromSource, type Ficha } from "./ficha";
+import { readCachedFicha, writeCachedFicha } from "./ficha.server";
 
 export type FichaError =
   | "INVALID_CNPJ"
@@ -22,7 +24,7 @@ export type FichaError =
   | "SOURCE_UNAVAILABLE";
 
 export type FichaResult =
-  | { status: "ok"; enrichment: Enrichment }
+  | { status: "ok"; ficha: Ficha }
   | { status: "choose"; matches: NameMatch[] }
   | { status: "error"; error: FichaError };
 
@@ -33,6 +35,35 @@ function mapFetchError(error: "not_found" | "rate_limited" | "upstream_down" | "
   return "SOURCE_UNAVAILABLE" as const;
 }
 
+/**
+ * Cache → decisão → fonte, com um detalhe que não é opcional: quando a fonte
+ * falha e existe cópia velha, **serve a velha em vez de errar**. A ficha diz
+ * a data, então o visitante vê dado de 40 dias atrás rotulado como tal — o
+ * que é melhor do que "a Receita está fora do ar" quando temos a resposta.
+ *
+ * A exceção é `COMPANY_NOT_FOUND`: se a fonte afirma que o CNPJ não existe,
+ * isso é informação nova sobre o mundo e ganha do cache. Servir a cópia velha
+ * aí seria esconder uma baixa cadastral.
+ */
+async function resolverPorCnpj(cnpjDigits: string, agora: Date): Promise<FichaResult> {
+  const decisao = decideFromCache(await readCachedFicha(cnpjDigits), agora);
+  if (decisao.action === "serve") return { status: "ok", ficha: decisao.ficha };
+
+  const res = await fetchCnpj(cnpjDigits);
+  if (!res.ok) {
+    const erro = mapFetchError(res.error);
+    if (decisao.stale && erro !== "COMPANY_NOT_FOUND") {
+      return { status: "ok", ficha: decisao.stale };
+    }
+    return { status: "error", error: erro };
+  }
+
+  const ficha = fichaFromSource(cnpjDigits, extractEnrichment(res.raw), agora);
+  // Gravar é otimização: se falhar, o visitante já tem a resposta na mão.
+  await writeCachedFicha(ficha.cnpj, ficha.enrichment, ficha.fetchedAt);
+  return { status: "ok", ficha };
+}
+
 const GetFichaSchema = z.object({ query: z.string().min(1).max(120) });
 
 export const getFichaFn = createServerFn({ method: "POST" })
@@ -41,13 +72,15 @@ export const getFichaFn = createServerFn({ method: "POST" })
     const query = data.query.trim();
     if (!query) return { status: "error", error: "INVALID_CNPJ" };
 
+    // Um `agora` só para a requisição inteira: assim a decisão de frescor e o
+    // carimbo do que for gravado não podem discordar por milissegundos.
+    const agora = new Date();
+
     // Parece CNPJ (mesmo incompleto)? Então o erro certo é de CNPJ, não de
     // nome: quem digitou 13 dígitos quer saber que faltou um.
     if (looksLikeCnpj(query)) {
       if (!isValidCnpj(query)) return { status: "error", error: "INVALID_CNPJ" };
-      const res = await fetchCnpj(cleanCnpj(query));
-      if (!res.ok) return { status: "error", error: mapFetchError(res.error) };
-      return { status: "ok", enrichment: extractEnrichment(res.raw) };
+      return resolverPorCnpj(cleanCnpj(query), agora);
     }
 
     // Busca por nome depende de fonte com índice textual, que não existe nas
@@ -65,9 +98,7 @@ export const getFichaFn = createServerFn({ method: "POST" })
     // Um único candidato com CNPJ completo dispensa a escolha.
     const unico = busca.matches.length === 1 ? busca.matches[0] : null;
     if (unico && isValidCnpj(unico.cnpj)) {
-      const res = await fetchCnpj(cleanCnpj(unico.cnpj));
-      if (!res.ok) return { status: "error", error: mapFetchError(res.error) };
-      return { status: "ok", enrichment: extractEnrichment(res.raw) };
+      return resolverPorCnpj(cleanCnpj(unico.cnpj), agora);
     }
 
     return { status: "choose", matches: busca.matches };

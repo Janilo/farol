@@ -4,9 +4,9 @@ Estado das fases e o que falta. Este arquivo substitui o plano que vivia em
 `~/.claude/plans/`, fora de controle de versão — um roteiro de onze fases que
 atravessa sessões precisa de histórico.
 
-**Fases 0, 1 e 2 estão fechadas.** O produto está no ar em
+**Fases 0, 1, 2, 3 e 7 estão fechadas.** O produto está no ar em
 [farol.pereirasaraiva.com](https://farol.pereirasaraiva.com) consultando o
-cadastro da Receita Federal por CNPJ.
+cadastro da Receita Federal por CNPJ, com cache de 30 dias.
 
 As decisões travadas estão em [`DESIGN.md`](DESIGN.md); os termos, em
 [`../GLOSSARIO.md`](../GLOSSARIO.md). Nada aqui as reabre.
@@ -47,7 +47,7 @@ derivado — decisão travada nº 8.
 
 ---
 
-## Fase 3 — Cache de ficha
+## ✅ Fase 3 — Cache de ficha
 
 **A busca por nome saiu do escopo, e isso é fato sobre as fontes.** A rota
 `publica.cnpj.ws/cnpj/search`, herdada do script Python que originou o
@@ -58,12 +58,35 @@ textual: cnpj.ws pago, Casa dos Dados, ou o dataset do Minha Receita local.
 Até lá, `searchCnpjByName` devolve `unavailable` e a tela diz que só consulta
 por CNPJ, em vez de culpar a Receita por defeito nosso.
 
-Sobra o cache, que é o que a fase entrega:
+Sobra o cache, que é o que a fase entregou:
 
-- Migration `fichas` (pk `cnpj`, `enrichment jsonb`, `technographics jsonb`,
-  `domain`, `fetched_at`; RLS: só `service_role`). Cache com menos de 30 dias
-  não bate na fonte.
-- `src/lib/ficha.ts` puro (`assembleFicha`) testado com adapters falsos.
+- Migration `fichas` — pk `cnpj` com `check` de 14 dígitos, `enrichment jsonb`,
+  `technographics jsonb` e `domain` para a Fase 4, `fetched_at`. RLS ligada e
+  **zero políticas**: `anon` e `authenticated` não passam, `service_role` passa
+  por definição. Sem policy para alguém afrouxar sem perceber.
+- `src/lib/ficha.ts` puro — `decideFromCache`, `isFresh`, `cacheAgeInDays`,
+  `fichaFromSource`, `formatFetchedAt`. 15 testes, `agora` sempre injetado.
+- `src/lib/ficha.server.ts` — adapter que **nunca lança**: falha de cache vira
+  "siga sem cache", alto no log e silenciosa na tela.
+- `getFichaFn` passou a devolver `Ficha` (com `fetchedAt` e `fromCache`) em vez
+  de `Enrichment` cru, e a tela mostra "lido em DD/MM/AAAA" na procedência.
+
+Três decisões que valem mais que o código:
+
+**Cache velho + fonte fora do ar serve o velho, não erra.** É o terceiro caso
+que justifica `decideFromCache` existir: sem ele, quem orquestra escreve
+`if (fresca) servir; else buscar` e joga fora a única cópia que tinha quando a
+Brasil API responde 503. A exceção é `COMPANY_NOT_FOUND` — se a fonte afirma que
+o CNPJ não existe, isso é informação nova sobre o mundo e ganha do cache; servir
+a cópia velha ali esconderia uma baixa cadastral.
+
+**A tela diz quando a fonte foi lida, não que veio do cache.** Que o Farol tenha
+cache é problema do Farol. O que muda a leitura de quem vê é a idade do dado.
+
+**Guarda de forma na leitura.** O cache guarda o `Enrichment` já interpretado,
+então mudar `extractEnrichment` deixa linha antiga com forma velha. Um `zod`
+mínimo no esqueleto transforma isso em miss em vez de servir campo `undefined`
+na tela — prefere trabalho a mentira.
 
 ## Fase 4 — Tecnografia
 
@@ -224,32 +247,47 @@ decidido — as três frases da tabela acima.
 Hoje **não existe limite nenhum**, e a única proteção é o rate limit da própria
 fonte pública. Está registrado em [`../SEGURANCA.md`](../SEGURANCA.md).
 
+O cache da Fase 3 reduziu o problema sem resolvê-lo: CNPJ repetido em 30 dias
+não bate na fonte, mas quem varre CNPJs distintos continua batendo — e agora
+também faz nascer uma linha por consulta.
+
 1. Oito empresas pré-computadas como chips (seed em `fichas`) — caminho feliz
-   sem custo upstream.
-2. Cache compartilhado (Fase 3).
+   sem custo upstream. A tabela já existe desde a Fase 3.
+2. ~~Cache compartilhado~~ — **feito na Fase 3.**
 3. Migration `demo_lookups` com `visitor_hash` = sha256(IP + salt), **nunca IP
    cru**, e `src/lib/rate-limit.ts` puro: 5 consultas não-cacheadas por dia por
    visitante, 150/dia global. Estouro convida ao cadastro; conta aprovada tem
    50/dia.
 
-## Fase 7 — Design system no claude.ai/design
+## ✅ Fase 7 — Design system no claude.ai/design
 
-Depende de o Janilo criar o projeto "JPS DS — Farol" a partir de
-[`DESIGN.md`](DESIGN.md); as respostas de conteúdo das telas estão em
-[`DESIGN-conteudo-telas.md`](DESIGN-conteudo-telas.md).
+Projeto criado e exportado em 28/jul/2026 (`Design/JPS DS Farol.zip`): oito
+pranchas, app navegável de seis rotas, e os 25 tokens batendo com o repo.
 
-Os tokens **já estão no código e no ar** — esta fase agrega as telas
-desenhadas, o wordmark refinado e o favicon, não o funcionamento. Se o zip
-exportado divergir da §2 da spec, o repo ganha.
+O que voltou de lá e virou correção no código: o anel da lente é `currentColor`
+e não âmbar (a variante `onBrand` que eu tinha criado era desnecessária); o
+halo curto que a §5 pedia e eu tinha omitido; `--farol-rule-control` como token
+de contorno de controle; `.ico` de quatro resoluções e `apple-touch-icon`, que
+o repo não tinha.
+
+Marcador temporário que sobra nas telas: `stack de exemplo · detector em
+construção`, que sai com a Fase 4.
 
 ## Fase 8 — Área logada
 
 Migration de auth e o portão de aprovação **já existem** (Fase 1). Falta a área
 em si: `/app` com a mesma consulta da demo, quota maior e histórico das buscas.
 
-Um gatilho de segurança registrado: nenhum serverFn usa `supabaseAdmin` hoje.
-No dia em que um usar, ele **tem** que chamar `requireApprovedUser`, porque o
-admin client bypassa RLS.
+**A regra do `supabaseAdmin` mudou de forma na Fase 3**, porque o cache passou
+a usá-lo. A antiga — "quem usar `supabaseAdmin` chama `requireApprovedUser`" —
+estava certa no espírito e larga demais na letra: `fichas` não tem dono e o
+conteúdo é público, então exigir aprovação ali fecharia a demo em vez de
+protegê-la. A forma precisa está em [`../SEGURANCA.md`](../SEGURANCA.md):
+**quem usa `supabaseAdmin` tem que declarar qual autorização substitui a RLS
+que contornou.** Tabela com dono → `requireApprovedUser`. Tabela sem dono e
+pública → nenhuma, escrita. O inaceitável é não responder à pergunta.
+
+Na área logada, que **tem** dono, a resposta volta a ser `requireApprovedUser`.
 
 Teste de RLS mínimo, no padrão do Lente: `anon` não lê `fichas` nem
 `demo_lookups`; `authenticated` não escreve em `fichas`.
@@ -275,7 +313,11 @@ verificado com dado real na Fase 2; o `fetch` para host externo funciona no
 
 ## O que ainda depende do Janilo
 
-1. Criar o projeto "JPS DS — Farol" no claude.ai/design (Fase 7).
-2. Exportar o zip para a pasta de design e sincronizar.
+1. **Aprovar a copy do estado `empty`** da tecnografia, nas duas versões
+   registradas na Fase 4. Vai junto com o resto da copy dessa fase.
+2. **Conferir se `SUPABASE_SERVICE_ROLE_KEY` está no Worker.** A Fase 3 passou
+   a precisar dela. Se faltar, o produto **não quebra** — o cache vira no-op
+   silencioso na tela e ruidoso no log. É credencial, então é dele:
+   `wrangler secret put SUPABASE_SERVICE_ROLE_KEY`.
 
-Nada disso bloqueia as fases 3 a 6, que são só código.
+Nada disso bloqueia as fases 4 a 6, que são só código.
