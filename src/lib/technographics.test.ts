@@ -13,8 +13,15 @@ import {
 } from "./technographics";
 import { MAX_BYTES } from "./technographics.server";
 
+/**
+ * Retrato de teste. Quando o caso não diz o contrário, `urls` também vale como
+ * `assetUrls` — é o que estes testes sempre quiseram dizer: "a página CARREGA
+ * isto". Para exercitar hyperlink, passe `assetUrls: []` explicitamente.
+ */
 function snapshot(parcial: Partial<PageSnapshot>): PageSnapshot {
-  return { ...emptySnapshot(), ...parcial };
+  const base = { ...emptySnapshot(), ...parcial };
+  if (parcial.assetUrls === undefined) base.assetUrls = parcial.urls ?? [];
+  return base;
 }
 
 describe("catálogo", () => {
@@ -397,10 +404,14 @@ describe("entidades HTML na URL extraída", () => {
   it("decodifica &amp; para a evidência não sair garbulhada", () => {
     // Visto de verdade ao sondar o rdstation.com: a URL do href vinha com
     // `&amp;`, e ela aparece no tooltip como procedência.
+    // `<script src>` e não `<a href>`: desde 30/jul/2026 hyperlink não é prova de
+    // uso (ver `assetUrls`). A entidade a decodificar é a mesma.
     const snap = extractSnapshot(
-      '<a href="https://accounts.rdstation.com.br/?locale=pt-BR&amp;trial_origin=blog">x</a>',
+      '<script src="https://accounts.rdstation.com.br/?locale=pt-BR&amp;trial_origin=blog"></script>',
     );
-    expect(snap.urls[0]).toBe("https://accounts.rdstation.com.br/?locale=pt-BR&trial_origin=blog");
+    expect(snap.assetUrls[0]).toBe(
+      "https://accounts.rdstation.com.br/?locale=pt-BR&trial_origin=blog",
+    );
     const d = detectTechnologies(snap).find((x) => x.tool === "RD Station CRM");
     expect(d?.evidence).not.toContain("&amp;");
   });
@@ -490,5 +501,52 @@ describe("seletor dom não pode ser o slug do fornecedor", () => {
   it("o que a plataforma emite continua valendo", () => {
     const snap = extractSnapshot('<div id="jivo_chat_widget"></div>');
     expect(detectTechnologies(snap).map((d) => d.tool)).toContain("Jivochat");
+  });
+});
+
+describe("hyperlink não é prova de uso", () => {
+  /**
+   * Falso positivo medido em 30/jul/2026, ao montar os chips da Fase 6.
+   *
+   * `movidesk.com` era detectada como usuária da Zenvia, e a prova era
+   * `https://www.zenvia.com/jobs/`. A Movidesk foi comprada pela Zenvia e linka a
+   * matriz em todo lugar: redes sociais, casos de sucesso, vagas. O documento tem
+   * ZERO `<script src>` da Zenvia — conferido com `grep` no HTML servido.
+   *
+   * Linkar um fornecedor é falar dele, não usá-lo. Pior: a confusão detecta o
+   * OPOSTO do que o produto promete, porque página de parceiro, de integração e de
+   * case é onde o nome do fornecedor mais aparece. Mesma lição do seletor `dom`
+   * que era o slug do fornecedor (commit d99a363), agora pela via `script`.
+   */
+  it("`<a href>` para o fornecedor NÃO detecta", () => {
+    const html = `
+      <a href="https://www.zenvia.com/jobs/">Vagas</a>
+      <a href="https://www.zenvia.com/casos-de-sucesso/mapfre/">Case</a>
+      <a href="https://www.linkedin.com/company/zenvia-inc/">LinkedIn</a>`;
+    const snap = extractSnapshot(html);
+    expect(snap.urls.length).toBe(3);
+    expect(snap.assetUrls).toEqual([]);
+    expect(detectTechnologies(snap).map((d) => d.tool)).not.toContain("Zenvia");
+  });
+
+  it("controle positivo: `<script src>` do MESMO fornecedor detecta", () => {
+    // Sem este par, o teste acima passaria mesmo se a detecção estivesse morta.
+    const snap = extractSnapshot('<script src="https://api.zenvia.com/sdk.js"></script>');
+    expect(detectTechnologies(snap).map((d) => d.tool)).toContain("Zenvia");
+  });
+
+  it("`href` de `<link>` conta, porque o navegador carrega", () => {
+    const snap = extractSnapshot(
+      '<link rel="stylesheet" href="https://cdn.vtexassets.com/theme.css">',
+    );
+    expect(snap.assetUrls.length).toBe(1);
+    expect(detectTechnologies(snap).map((d) => d.tool)).toContain("VTEX");
+  });
+
+  it("`action` de formulário não conta", () => {
+    const snap = extractSnapshot('<form action="https://io.vtex.com.br/checkout"></form>');
+    expect(snap.urls.length).toBe(1);
+    expect(snap.assetUrls).toEqual([]);
+    expect(detectTechnologies(snap)).toEqual([]);
   });
 });

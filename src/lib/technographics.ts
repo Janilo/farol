@@ -59,6 +59,22 @@ import { FINGERPRINTS, POR_NOME, type DetectionVia, type Fingerprint } from "./f
 export interface PageSnapshot {
   /** URLs de `src`, `href` e `action` encontradas no documento. */
   urls: string[];
+  /**
+   * O subconjunto de `urls` que o navegador **carrega**: `src`, `data-src` e o
+   * `href` de `<link>`. Fora daqui ficam os hyperlinks — `<a href>` e `action`.
+   *
+   * A separação existe por um falso positivo medido em 30/jul/2026. A
+   * `movidesk.com` era detectada como usuária da Zenvia, e a prova era
+   * `https://www.zenvia.com/jobs/`: um link. A Movidesk foi comprada pela Zenvia
+   * e linka a matriz em todo lugar — redes sociais, casos de sucesso, vagas. Zero
+   * `<script src>` da Zenvia no documento.
+   *
+   * Linkar um fornecedor é falar dele, não usá-lo. E a confusão detecta o
+   * OPOSTO do que o produto promete: página de parceiros, de integrações e de
+   * cases é justamente onde o nome do fornecedor mais aparece. É a mesma lição do
+   * seletor `dom` que era o slug do fornecedor, agora pela via `script`.
+   */
+  assetUrls: string[];
   /** Valores de `id`. */
   ids: string[];
   /** Tokens de `class`, já separados por espaço. */
@@ -88,6 +104,7 @@ export interface Detection {
 export function emptySnapshot(): PageSnapshot {
   return {
     urls: [],
+    assetUrls: [],
     ids: [],
     classes: [],
     dataAttributes: [],
@@ -157,7 +174,14 @@ export function isAllowedTarget(host: string): boolean {
  * HTML → retrato
  * ------------------------------------------------------------------ */
 
-const RE_URL = /\b(?:src|href|action|data-src)\s*=\s*["']([^"']{1,2048})["']/gi;
+/**
+ * Casa a tag junto do atributo, porque `href` sozinho é ambíguo: em `<link>` é
+ * recurso que o navegador carrega, em `<a>` é para onde o visitante vai. Sem a
+ * tag não dá para separar carregar de apontar — e essa diferença é a fronteira
+ * entre "usa o fornecedor" e "fala do fornecedor".
+ */
+const RE_TAG_URL =
+  /<([a-z][a-z0-9]{0,14})\b[^>]{0,4096}?\b(src|href|action|data-src)\s*=\s*["']([^"']{1,2048})["']/gi;
 const RE_ID = /\bid\s*=\s*["']([^"']{1,256})["']/gi;
 const RE_CLASS = /\bclass\s*=\s*["']([^"']{1,2048})["']/gi;
 const RE_DATA_ATTR = /\s(data-[a-z0-9-]{1,64})\s*=/gi;
@@ -203,7 +227,18 @@ export function extractSnapshot(
   setCookies: string[] = [],
 ): PageSnapshot {
   const urls: string[] = [];
-  for (const m of html.matchAll(RE_URL)) urls.push(decodeEntities(m[1]));
+  const assetUrls: string[] = [];
+  for (const m of html.matchAll(RE_TAG_URL)) {
+    const tag = m[1].toLowerCase();
+    const attr = m[2].toLowerCase();
+    const url = decodeEntities(m[3]);
+    urls.push(url);
+    // `src` e `data-src` são sempre recurso. `href` só conta como recurso em
+    // `<link>` (stylesheet, preconnect, preload, icon). `action` é destino de
+    // formulário, nunca carga.
+    const ehRecurso = attr === "src" || attr === "data-src" || (attr === "href" && tag === "link");
+    if (ehRecurso) assetUrls.push(url);
+  }
 
   const ids: string[] = [];
   for (const m of html.matchAll(RE_ID)) ids.push(m[1].trim());
@@ -234,6 +269,7 @@ export function extractSnapshot(
   // Tetos por lista: página hostil com cem mil classes não vira consulta lenta.
   return {
     urls: unicos(urls, 3000),
+    assetUrls: unicos(assetUrls, 3000),
     ids: unicos(ids, 3000),
     classes: unicos(classes, 5000),
     dataAttributes: unicos(dataAttributes, 1000),
@@ -287,7 +323,8 @@ function matchScripts(f: Fingerprint, page: PageSnapshot): Hit {
   for (const padrao of f.scripts) {
     const re = safeRegex(padrao);
     if (!re) continue;
-    const url = page.urls.find((u) => re.test(u));
+    // `assetUrls`, nunca `urls`: hyperlink para o fornecedor é falar dele.
+    const url = page.assetUrls.find((u) => re.test(u));
     if (url) return { via: "script", evidence: url };
   }
   return null;
