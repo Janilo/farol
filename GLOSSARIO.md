@@ -2,7 +2,7 @@
 
 **Aprovado em 27/jul/2026.** No molde do `GLOSSARIO.md` do repo irmão `Janilo/lente`.
 
-⛔ **As seis armadilhas do fim deste arquivo são decisões travadas, não sugestões.** Cada uma existe porque um defeito real aconteceu ou porque a fonte foi testada e não entrega o que se supunha. Reabrir exige fato novo — fonte que mudou, medição que contradiz. Ver a tabela de decisões travadas em [`docs/DESIGN.md`](docs/DESIGN.md).
+⛔ **As sete armadilhas do fim deste arquivo são decisões travadas, não sugestões.** Cada uma existe porque um defeito real aconteceu ou porque a fonte foi testada e não entrega o que se supunha. Reabrir exige fato novo — fonte que mudou, medição que contradiz. Ver a tabela de decisões travadas em [`docs/DESIGN.md`](docs/DESIGN.md).
 
 Este arquivo existe por um motivo prático: quando eu e você (e a IA que escreve o código) usamos a mesma palavra para coisas diferentes, o bug não aparece no compilador — aparece na tela, meses depois. No Cascata isso já aconteceu: "Pocket Margin" significava reais em três telas e percentual numa quarta. Um termo, um conceito, do schema até o botão.
 
@@ -35,6 +35,9 @@ Exceção, nova em relação ao Lente: **termos jurídico-fiscais brasileiros se
 | `legalNature` | empresa | Natureza jurídica (`213-5` MEI, `206-2` LTDA…). | EN |
 | `partner` | empresa | Um sócio do QSA: nome e qualificação textual. **Sem percentual** — ver armadilha 3. | EN |
 | `rubricPorte` | empresa | O porte na linguagem da rubrica: `Early`, `Scale-up`, `Grande`. Nome híbrido de propósito: deixa explícito que é *o porte da rubrica*, não o da Receita. | híbrido |
+| `visitorHash` | visitante × dia | `sha256(IP + salt)`. **Nunca IP** — o nome diz "hash" para que ninguém escreva `visitorIp` num log achando que é a mesma coisa. | EN |
+| `plano` | visitante | `anonimo` ou `aprovado`. Define o limite diário. Não é assinatura nem produto pago: o Farol não é monetizado. | PT (próprio) |
+| `quota` | visitante × dia | O teto de **consultas que saem para a rede** por dia. Consulta servida do cache não é quota — ver armadilha 7. | EN |
 
 ## Armadilhas nomeadas
 
@@ -51,3 +54,14 @@ Por isso o tier C é **"revisitar"** e não "observar" (28/jul/2026): `scoring.m
 **5. `empty` na stack é achado, não ausência.** Site lido e nenhuma das 23 encontradas **não** é o mesmo que "não informou site". O primeiro diz algo sobre a empresa — ela não roda nada do catálogo brasileiro; o segundo diz que ninguém tentou. Por isso `StackResult` é união `ok | empty | error` e a ficha carrega `stack: StackResult | null`, onde `null` é o "nem tentou". Na tela, `empty` **desenha** a seção com uma linha e `error` **não desenha** — se as duas escondessem, o achado viraria indistinguível de omissão.
 
 **6. Winnability é premissa, não atributo.** O eixo 4 rebaixa empresa grande sem caminho quente porque a rubrica foi calibrada para um consultor solo — o centro de compra de uma empresa grande está fora do alcance dele. Para um SDR de um SaaS com time, essa regra seria falsa. A UI diz isso em texto, ao lado do score. É a diferença entre demonstrar um método e vender uma verdade.
+
+**7. `quota` conta saída de rede, não requisição.** Consulta servida do cache não
+consome nada — ela não custa a ninguém, e cobrar por ela puniria justamente o caminho
+que queremos que as pessoas usem. Por isso o portão fica depois das duas decisões de
+cache e antes de qualquer `fetch`, e não na borda do serverFn: só ali se sabe se a
+consulta vai custar. Se alguém mover a checagem para a entrada, o limite passa a
+contar recarga de página.
+
+E o contador é **pós-incremento**: `bump_demo_quota` reserva e devolve o valor já
+somado, porque `count(*)` antes de decidir tem corrida — duas requisições paralelas
+leem 4 e ambas passam. Consequência aceita: tentativa negada também consome.

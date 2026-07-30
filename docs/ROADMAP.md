@@ -264,22 +264,54 @@ existe.
   `border-border` — foi assim que os chips de exemplo nasceram em 1,49
   (DESIGN.md §2.2). No estado escolhido, o piso do texto é 4,5, não 3.
 
-## Fase 6 — Quota da demo
+## ✅ Fase 6 — Quota da demo (o item 1 continua aberto)
 
-Hoje **não existe limite nenhum**, e a única proteção é o rate limit da própria
-fonte pública. Está registrado em [`../SEGURANCA.md`](../SEGURANCA.md).
+Feita em 30/jul/2026, **antes** da Fase 9 de propósito: a 9 é o que coloca o Farol no
+site institucional e cria tráfego, e fazer a 9 primeiro seria criar a demanda antes do
+portão. O risco era teórico só porque ninguém sabia que o produto existia.
 
-O cache da Fase 3 reduziu o problema sem resolvê-lo: CNPJ repetido em 30 dias
-não bate na fonte, mas quem varre CNPJs distintos continua batendo — e agora
-também faz nascer uma linha por consulta.
-
-1. Oito empresas pré-computadas como chips (seed em `fichas`) — caminho feliz
-   sem custo upstream. A tabela já existe desde a Fase 3.
+1. **Oito empresas pré-computadas como chips — NÃO feito.** Os chips continuam três
+   (Petrobras, Ambev, Banco do Brasil), e a primeira consulta de qualquer empresa nova
+   gasta quota como qualquer outra. Falta escolher as oito, e a escolha é de produto:
+   é a vitrine do que o Farol sabe mostrar. Um par CNPJ↔site errado não pode entrar no
+   cache compartilhado — o produto existe para não afirmar quem usa o quê sem prova.
 2. ~~Cache compartilhado~~ — **feito na Fase 3.**
-3. Migration `demo_lookups` com `visitor_hash` = sha256(IP + salt), **nunca IP
-   cru**, e `src/lib/rate-limit.ts` puro: 5 consultas não-cacheadas por dia por
-   visitante, 150/dia global. Estouro convida ao cadastro; conta aprovada tem
-   50/dia.
+3. ✅ `demo_lookups` com `visitor_hash` = sha256(IP + salt) e `src/lib/rate-limit.ts`
+   puro: 5 novas/dia por visitante anônimo, 150/dia global, 50/dia para conta aprovada
+   (que só passa a ser alcançável na Fase 8).
+
+O que a implementação decidiu e o plano não previa:
+
+- **Contador, não log.** A forma óbvia — uma linha por consulta e `count(*)` na hora
+  de decidir — tem corrida: duas requisições paralelas leem 4 e ambas passam. Aqui o
+  incremento e a leitura são a mesma transação (`bump_demo_quota`), então a decisão usa
+  o número que ela mesma produziu. Efeito colateral aceito de propósito: **tentativa
+  negada também consome.** Negação de graça é convite a insistir.
+- **Falha fechado**, ao contrário de todo o resto do produto. Salt ausente, banco fora
+  do ar ou contrato quebrado da função → recusa. Quota que falha aberta é ausência de
+  quota com a tela idêntica, que é exatamente o defeito que esta fase fecha. A
+  consequência é que **`DEMO_HASH_SALT` virou requisito de deploy** — e requisito de
+  `.env` local, se quiser exercitar consulta nova fora do cache.
+- **A unidade contada é consulta que sai para a rede**, não requisição. Cache hit é
+  grátis. O portão fica depois das duas decisões de cache e antes de qualquer `fetch`.
+- **Nega a consulta inteira** quando só a stack precisaria de rede e o cadastro estava
+  em cache. Servir o cadastro com `stack: null` seria pior: `null` significa "nem
+  tentou" (armadilha 5 do glossário), e usá-lo para "não te deixei tentar" devolve
+  silêncio a quem digitou um site.
+- **O nome do secret veio do `.env.example`**, que já reservava `DEMO_HASH_SALT` antes
+  de existir código lendo. Eu tinha escrito `DEMO_QUOTA_SALT` e o exemplo apontaria
+  para variável que ninguém lê — sintoma seria a quota "não funcionar" em produção com
+  o secret configurado.
+- **O dia é o de Brasília, não UTC.** Em UTC o dia viraria às 21h de quem está usando,
+  e quota nova de madrugada é o furo mais óbvio de um limite diário.
+
+**O que NÃO foi verificado no navegador, e por quê.** O botão de preview não sobe:
+ele falha com `This project is configured to use 10.18.0 of pnpm. Your current pnpm is
+v11.17.0` **antes** de chegar ao comando — trocar `runtimeExecutable` para o binário do
+vite não muda nada, testado em 30/jul/2026 com caminho relativo e absoluto. Ou seja,
+`.claude/launch.json` não é a alavanca; o pnpm do ambiente do preview é que resolve por
+corepack para outra versão. No terminal normal `pnpm --version` devolve 10.18.0 e tudo
+roda. A verificação da quota é em produção, depois do secret.
 
 ## ✅ Fase 7 — Design system no claude.ai/design
 
@@ -335,7 +367,20 @@ verificado com dado real na Fase 2; o `fetch` para host externo funciona no
 
 ## O que ainda depende do Janilo
 
-**Nada.** As duas pendências anteriores fecharam em 28/jul/2026: a copy do estado
+**Uma coisa, e ela bloqueia a Fase 6 em produção: o secret `DEMO_HASH_SALT` no
+Worker.** Qualquer string longa e aleatória serve; ela nunca sai do servidor. Sem
+ela, a demo passa a recusar consulta de empresa nova com "não consegui apurar o
+limite de consultas agora" — porque a quota falha fechado, por desenho. Consulta de
+empresa já em cache continua funcionando.
+
+Fora isso, duas escolhas de produto, nenhuma bloqueante:
+
+- **Quais oito empresas viram chip** (item 1 da Fase 6). É vitrine, então é decisão
+  dele. Cada uma precisa do par CNPJ↔site conferido.
+- **A copy dos três estados de quota** em `demo.tsx` (`QUOTA_VISITANTE`,
+  `QUOTA_GLOBAL`, `QUOTA_INDISPONIVEL`), escrita mas não aprovada.
+
+As duas pendências anteriores fecharam em 28/jul/2026: a copy do estado
 `empty` foi aprovada (com o número), e a `SUPABASE_SERVICE_ROLE_KEY` está no
 Worker — verificado em produção, com linha nascendo na tabela e a segunda consulta
 vindo do cache.

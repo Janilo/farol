@@ -8,6 +8,7 @@ import { getFichaFn, type FichaError } from "@/lib/ficha.functions";
 import { describePartners, formatBRL, type Enrichment } from "@/lib/enrichment";
 import { formatFetchedAt, type Ficha } from "@/lib/ficha";
 import { CATALOGO } from "@/lib/fingerprints";
+import { QUOTA_ANONIMO } from "@/lib/rate-limit";
 import {
   countLabel,
   type Detection,
@@ -50,6 +51,11 @@ const ERROR_COPY: Record<FichaError, string> = {
     "Por ora o Farol consulta só por CNPJ. As fontes públicas gratuitas não têm busca por nome, e eu prefiro dizer isso a te devolver resultado ruim.",
   SOURCE_RATE_LIMITED: "A fonte pública limitou as consultas por agora. Tente em alguns minutos.",
   SOURCE_UNAVAILABLE: "A fonte da Receita está fora do ar. Não é você, é ela.",
+  QUOTA_VISITANTE: `Você usou as ${QUOTA_ANONIMO} consultas novas de hoje. Empresa que já está em cache continua liberada, como os exemplos acima.`,
+  QUOTA_GLOBAL:
+    "A demo bateu o teto de consultas do dia. O limite é da casa, não seu: o Farol lê fontes públicas de graça e não repassa a conta para elas.",
+  QUOTA_INDISPONIVEL:
+    "Não consegui apurar o limite de consultas agora, e prefiro recusar a consultar sem contar. Tente em alguns minutos.",
 };
 
 /**

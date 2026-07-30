@@ -6,6 +6,8 @@
 // shared_links, org_nodes, current_department — herdado no clone e nunca
 // atualizado. Nada tinha quebrado porque ninguém consultava aquelas tabelas,
 // mas tipo que descreve um banco inexistente mente para quem confiar nele.
+//
+// Atualizado em 30/jul/2026, na Fase 6: `demo_lookups` e `bump_demo_quota`.
 
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
@@ -17,6 +19,24 @@ export type Database = {
   };
   public: {
     Tables: {
+      demo_lookups: {
+        Row: {
+          dia: string;
+          n: number;
+          visitor_hash: string;
+        };
+        Insert: {
+          dia: string;
+          n?: number;
+          visitor_hash: string;
+        };
+        Update: {
+          dia?: string;
+          n?: number;
+          visitor_hash?: string;
+        };
+        Relationships: [];
+      };
       fichas: {
         Row: {
           cnpj: string;
@@ -88,6 +108,13 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      bump_demo_quota: {
+        Args: { p_dia: string; p_visitor: string };
+        Returns: {
+          n_global: number;
+          n_visitante: number;
+        }[];
+      };
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"];

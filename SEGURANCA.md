@@ -17,6 +17,8 @@ quê" para "quanto alguém pode consumir".
 | **Novo usuário entra sem acesso** | `handle_new_user` cria o perfil com `is_approved = false` e role `member` | mesma migration |
 | **Papéis** | `user_roles` é legível só pelo próprio usuário; escrita e leitura ampla exigem `admin` | RLS na mesma migration |
 | **Cache de ficha** | `fichas` tem RLS ligada e **zero políticas**: `anon` e `authenticated` não leem nem escrevem; só `service_role` passa | `supabase/migrations/20260728140000_farol_fichas_cache.sql` |
+| **Contador de quota** | `demo_lookups` idem — RLS ligada, zero políticas. O `EXECUTE` de `bump_demo_quota` é só do `service_role`, com `anon` e `authenticated` nomeados no `REVOKE` | `supabase/migrations/20260730120000_farol_demo_quota.sql` |
+| **Teto global protegido** | `bump_demo_quota` recusa `visitor_hash` que não seja hex de 64 caracteres, o que impede alguém passar a sentinela `__global__` como se fosse visitante | mesma migration |
 | **Alvo da leitura de site** | o servidor só busca **nome de domínio público**: todo literal de IP é recusado, e sufixo de rede interna também | `src/lib/technographics.ts` (`isAllowedTarget`) |
 | **Redirecionamento** | seguido **à mão**, com o alvo revalidado a cada salto e teto de 3 saltos | `src/lib/technographics.server.ts` |
 
@@ -110,38 +112,71 @@ payload nunca vem do cliente, então não há como envenenar o cache. O que rest
 em aberto é volume — quantas linhas um visitante insistente faz nascer — e isso
 é a quota da Fase 6, listada abaixo como ausente.
 
-## Limites que ainda não existem
-
-Estão no plano e não estão implementados. Não conte com eles:
-
-- **Quota da demo.** A intenção é 5 consultas não-cacheadas por dia por
-  visitante, identificado por hash do IP com salt secreto. Hoje **não há
-  limite nenhum**.
-
-O cache de ficha **passou a existir na Fase 3** e reduz o problema sem
-resolvê-lo: CNPJ repetido em 30 dias não bate na fonte, mas quem varrer CNPJs
-distintos continua batendo — e agora também faz nascer uma linha por consulta.
+## Quota — o limite de volume (Fase 6)
 
 **A Fase 4 somou uma segunda saída de rede por consulta**, e essa é mais sensível
 que a primeira: a leitura do site alvo é uma requisição que o servidor faz em nome
 de quem pediu, para um endereço que quem pediu escolheu. Os portões da seção de
-SSRF limitam **para onde**; não limitam **quantas**. Sem quota, o Farol pode ser
-usado como varredor de terceiros a partir do IP da Cloudflare — e esse é o
-argumento mais forte a favor da Fase 6, mais forte do que economizar chamada à
-Brasil API.
+SSRF limitam **para onde**; não limitavam **quantas**. Sem quota, o Farol podia ser
+usado como varredor de terceiros a partir do IP da Cloudflare — argumento mais forte
+a favor desta fase do que economizar chamada à Brasil API.
 
-A proteção contra insistência continua sendo só o rate limit da fonte pública, e
-o efeito visível continua sendo "a fonte pública limitou as consultas por agora".
+| Limite | Valor | Onde |
+|---|---|---|
+| Visitante anônimo | 5 consultas **novas** por dia | `QUOTA_ANONIMO` em `src/lib/rate-limit.ts` |
+| Conta aprovada | 50 por dia | `QUOTA_APROVADO` (só entra em uso na Fase 8) |
+| Teto da casa | 150 por dia, **só sobre tráfego anônimo** | `QUOTA_GLOBAL` |
 
-## Sobre o hash de IP, quando existir
+**A unidade contada é consulta que sai para a rede, não requisição.** Cache hit não
+consome: ele não custa nada a ninguém, e cobrar por ele puniria justamente o caminho
+que queremos que as pessoas usem. O portão fica em `ficha.functions.ts`, depois de as
+duas decisões de cache saírem e antes de qualquer `fetch` — o único ponto do fluxo em
+que se sabe se a consulta vai custar.
 
-O compromisso registrado é **não guardar endereço IP**, e sim o resultado de um
-hash com salt que vive só no servidor. O propósito é contar consultas por
-visitante no dia, nada além. Sem o salt, o hash não volta a ser IP.
+**O incremento e a leitura são a mesma operação.** `bump_demo_quota` é uma função
+`SECURITY DEFINER` que faz os dois `upsert` e devolve os contadores já incrementados.
+Contar com `select count(*)` antes de decidir teria corrida: duas requisições
+paralelas leem 4 e ambas passam. O preço é que a tentativa negada também consome — e
+isso é intencional: negação de graça é convite a insistir.
+
+**Este é o único lugar do código que falha FECHADO.** A regra do `ficha.server.ts` é
+que o cache nunca derruba a consulta, porque cache fora do ar é lentidão. Aqui é o
+contrário: quota fora do ar é ausência de quota, com a tela idêntica. Então salt
+ausente, banco fora do ar ou contrato quebrado da função → recusa, com a frase "não
+consegui apurar o limite de consultas agora". A consequência operacional é que
+**`DEMO_HASH_SALT` é requisito de deploy**, não enfeite.
+
+### O hash de visitante
+
+O IP **não é gravado em lugar nenhum**. O que entra na tabela é
+`sha256(IP + ":" + salt)`, com o salt vivendo só como secret do Worker. Sem salt, o
+hash de um IPv4 é enumerável em minutos — o espaço é 2³², e é por isso que a ausência
+do salt recusa a consulta em vez de seguir com hash pelado.
+
+A origem do IP é `CF-Connecting-IP`, posto pela borda da Cloudflare.
+**`X-Forwarded-For` não é consultado**, de propósito: qualquer cliente pode inventá-lo,
+e um limite por IP falsificável não é limite. Requisição sem o header cai num bucket
+único compartilhado — bounded, e sinal de que não passou pela borda.
 
 Isso é tratamento de dado pessoal sob a LGPD, com base legal em legítimo
 interesse (art. 7º, IX). A política de privacidade tem uma seção dedicada
 explicando o mecanismo, porque explicar é parte da base legal.
+
+**Retenção ainda não está implementada.** A tabela é um contador por
+`(visitor_hash, dia)`, então ela cresce devagar — um punhado de linhas por dia, não
+uma por consulta — mas linha de dia passado não tem propósito depois que o dia virou.
+Apagar o que passou de 7 dias é trabalho de rotina agendada, e não existe rotina
+agendada neste produto. Está listado abaixo como ausente.
+
+## Limites que ainda não existem
+
+Estão no plano e não estão implementados. Não conte com eles:
+
+- **Retenção da `demo_lookups`.** Contador de dia passado fica na tabela até alguém
+  apagar à mão. O propósito declarado é contar o dia corrente; guardar além disso não
+  tem base.
+- **Oito fichas pré-computadas** (item 1 da Fase 6). Os chips de exemplo hoje são
+  três, e cada primeira consulta de uma empresa nova gasta quota como qualquer outra.
 
 ## Chaves
 
@@ -159,3 +194,9 @@ log traz `[farol] erro inesperado ao ler cache de ficha … ConfigError`.
 A consequência de faltar é silenciosa, então é a primeira coisa a conferir se o
 cache parecer não funcionar: **cache que não grava é indistinguível de cache que
 não existe**, pela tela.
+
+**Desde a Fase 6 há um segundo secret obrigatório: `DEMO_HASH_SALT`.** A diferença
+entre os dois é o modo de falhar, e vale ter em mente na hora de debugar: sem a
+service role o produto degrada em silêncio; sem o salt ele **recusa consulta nova e
+diz na tela**. Se a demo estiver respondendo "não consegui apurar o limite de
+consultas agora", o salt é o primeiro lugar a olhar.

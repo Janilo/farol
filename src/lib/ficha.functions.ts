@@ -19,8 +19,10 @@ import {
   isFresh,
   type CachedRow,
   type Ficha,
+  type StackCacheDecision,
 } from "./ficha";
 import { readCachedFicha, writeCachedFicha } from "./ficha.server";
+import { consumirQuota } from "./rate-limit.server";
 import { normalizeDomain, stackFromSnapshot, type StackResult } from "./technographics";
 import { fetchTargetSite } from "./technographics.server";
 
@@ -30,7 +32,10 @@ export type FichaError =
   | "NAME_NO_MATCH"
   | "NAME_SEARCH_UNAVAILABLE"
   | "SOURCE_RATE_LIMITED"
-  | "SOURCE_UNAVAILABLE";
+  | "SOURCE_UNAVAILABLE"
+  | "QUOTA_VISITANTE"
+  | "QUOTA_GLOBAL"
+  | "QUOTA_INDISPONIVEL";
 
 export type FichaResult =
   | { status: "ok"; ficha: Ficha }
@@ -45,17 +50,26 @@ function mapFetchError(error: "not_found" | "rate_limited" | "upstream_down" | "
 }
 
 /**
+ * Três códigos e não um, porque são três conversas diferentes: o visitante estourou
+ * o dele (e cadastro resolve), a casa estourou o do dia (e nada que ele faça
+ * resolve), ou a quota não pôde ser apurada (culpa nossa, e a frase tem que dizer
+ * isso em vez de acusá-lo de ter consultado demais).
+ */
+function quotaErro(reason: "visitante" | "global" | "indisponivel") {
+  if (reason === "visitante") return "QUOTA_VISITANTE" as const;
+  if (reason === "global") return "QUOTA_GLOBAL" as const;
+  return "QUOTA_INDISPONIVEL" as const;
+}
+
+/**
  * Resolve a stack a partir do cache ou do site. **Nunca lança e nunca vira erro
  * da ficha**: a tecnografia é a segunda fonte, e o cadastro da Receita não
  * depende dela. Falha vira `{ status: "error", reason }`, que na tela é uma
  * frase — não uma ficha quebrada.
  */
 async function resolverStack(
-  row: CachedRow | null,
-  domainPedido: string | null,
-  cacheServivel: boolean,
+  decisao: StackCacheDecision,
 ): Promise<{ stack: StackResult | null; domain: string | null; leuAgora: boolean }> {
-  const decisao = decideStackFromCache(row, domainPedido, cacheServivel);
   if (decisao.action === "serve") {
     return { stack: decisao.stack, domain: decisao.domain, leuAgora: false };
   }
@@ -85,10 +99,29 @@ async function resolverPorCnpj(
   const row = await readCachedFicha(cnpjDigits);
   const decisao = decideFromCache(row, agora);
   const cacheServivel = row ? isFresh(row.fetchedAt, agora) : false;
+  const stackDecisao = decideStackFromCache(row, domainPedido, cacheServivel);
+
+  // O portão da quota fica AQUI, depois de as duas decisões de cache saírem e antes
+  // de qualquer `fetch`. É o único ponto do fluxo em que se sabe se a consulta vai
+  // custar saída de rede — e a unidade contada é isso, não requisição.
+  //
+  // Nega a consulta inteira, inclusive quando só a stack precisaria de rede e o
+  // cadastro estava em cache. A alternativa era servir o cadastro com `stack: null`,
+  // e ela é pior por um motivo de tipo: `null` significa "nem tentou" (armadilha 5
+  // do GLOSSARIO), e usá-lo para "não te deixei tentar" faz o visitante que digitou
+  // um site receber silêncio sem explicação. Frase clara ganha de ficha parcial muda.
+  if (decisao.action === "refetch" || stackDecisao.action === "fetch") {
+    // `anonimo` fixo: a área logada é a Fase 8, e é lá que este argumento passa a
+    // depender de quem está pedindo.
+    const quota = await consumirQuota("anonimo", agora);
+    if (quota.action === "deny") {
+      return { status: "error", error: quotaErro(quota.reason) };
+    }
+  }
 
   // A stack roda em paralelo com o cadastro: são fontes independentes, e
   // esperar uma pela outra só soma latência.
-  const stackPromise = resolverStack(row, domainPedido, cacheServivel);
+  const stackPromise = resolverStack(stackDecisao);
 
   if (decisao.action === "serve") {
     const { stack, domain, leuAgora } = await stackPromise;
