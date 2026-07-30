@@ -1,6 +1,6 @@
 /**
  * Fatia vertical da consulta. Orquestra: valida, resolve nome → CNPJ quando
- * preciso, chama a fonte e devolve a ficha montada.
+ * preciso, chama as fontes, monta a ficha.
  *
  * O resultado é união discriminada em vez de exceção: cada falha da fonte
  * pública tem uma frase diferente na tela, e o cliente decide qual mostrar
@@ -12,8 +12,17 @@ import { z } from "zod";
 import { cleanCnpj, isValidCnpj, looksLikeCnpj } from "./cnpj";
 import { extractEnrichment } from "./enrichment";
 import { fetchCnpj, searchCnpjByName, type NameMatch } from "./enrichment.server";
-import { decideFromCache, fichaFromSource, type Ficha } from "./ficha";
+import {
+  decideFromCache,
+  decideStackFromCache,
+  fichaFromSource,
+  isFresh,
+  type CachedRow,
+  type Ficha,
+} from "./ficha";
 import { readCachedFicha, writeCachedFicha } from "./ficha.server";
+import { normalizeDomain, stackFromSnapshot, type StackResult } from "./technographics";
+import { fetchTargetSite } from "./technographics.server";
 
 export type FichaError =
   | "INVALID_CNPJ"
@@ -36,6 +45,29 @@ function mapFetchError(error: "not_found" | "rate_limited" | "upstream_down" | "
 }
 
 /**
+ * Resolve a stack a partir do cache ou do site. **Nunca lança e nunca vira erro
+ * da ficha**: a tecnografia é a segunda fonte, e o cadastro da Receita não
+ * depende dela. Falha vira `{ status: "error", reason }`, que na tela é uma
+ * frase — não uma ficha quebrada.
+ */
+async function resolverStack(
+  row: CachedRow | null,
+  domainPedido: string | null,
+  cacheServivel: boolean,
+): Promise<{ stack: StackResult | null; domain: string | null; leuAgora: boolean }> {
+  const decisao = decideStackFromCache(row, domainPedido, cacheServivel);
+  if (decisao.action === "serve") {
+    return { stack: decisao.stack, domain: decisao.domain, leuAgora: false };
+  }
+
+  const res = await fetchTargetSite(decisao.domain);
+  const stack: StackResult = res.ok
+    ? stackFromSnapshot(res.snapshot)
+    : { status: "error", reason: res.error };
+  return { stack, domain: decisao.domain, leuAgora: true };
+}
+
+/**
  * Cache → decisão → fonte, com um detalhe que não é opcional: quando a fonte
  * falha e existe cópia velha, **serve a velha em vez de errar**. A ficha diz
  * a data, então o visitante vê dado de 40 dias atrás rotulado como tal — o
@@ -45,32 +77,67 @@ function mapFetchError(error: "not_found" | "rate_limited" | "upstream_down" | "
  * isso é informação nova sobre o mundo e ganha do cache. Servir a cópia velha
  * aí seria esconder uma baixa cadastral.
  */
-async function resolverPorCnpj(cnpjDigits: string, agora: Date): Promise<FichaResult> {
-  const decisao = decideFromCache(await readCachedFicha(cnpjDigits), agora);
-  if (decisao.action === "serve") return { status: "ok", ficha: decisao.ficha };
+async function resolverPorCnpj(
+  cnpjDigits: string,
+  domainPedido: string | null,
+  agora: Date,
+): Promise<FichaResult> {
+  const row = await readCachedFicha(cnpjDigits);
+  const decisao = decideFromCache(row, agora);
+  const cacheServivel = row ? isFresh(row.fetchedAt, agora) : false;
+
+  // A stack roda em paralelo com o cadastro: são fontes independentes, e
+  // esperar uma pela outra só soma latência.
+  const stackPromise = resolverStack(row, domainPedido, cacheServivel);
+
+  if (decisao.action === "serve") {
+    const { stack, domain, leuAgora } = await stackPromise;
+    const ficha: Ficha = { ...decisao.ficha, stack, domain };
+    if (leuAgora) await writeCachedFicha(ficha);
+    return { status: "ok", ficha };
+  }
 
   const res = await fetchCnpj(cnpjDigits);
   if (!res.ok) {
     const erro = mapFetchError(res.error);
     if (decisao.stale && erro !== "COMPANY_NOT_FOUND") {
-      return { status: "ok", ficha: decisao.stale };
+      const { stack, domain } = await stackPromise;
+      return { status: "ok", ficha: { ...decisao.stale, stack, domain } };
     }
+    // A leitura do site não interessa mais, mas precisa ser aguardada para não
+    // deixar promessa solta no Worker.
+    await stackPromise.catch(() => {});
     return { status: "error", error: erro };
   }
 
-  const ficha = fichaFromSource(cnpjDigits, extractEnrichment(res.raw), agora);
+  const { stack, domain } = await stackPromise;
+  const ficha: Ficha = {
+    ...fichaFromSource(cnpjDigits, extractEnrichment(res.raw), agora),
+    stack,
+    domain,
+  };
   // Gravar é otimização: se falhar, o visitante já tem a resposta na mão.
-  await writeCachedFicha(ficha.cnpj, ficha.enrichment, ficha.fetchedAt);
+  await writeCachedFicha(ficha);
   return { status: "ok", ficha };
 }
 
-const GetFichaSchema = z.object({ query: z.string().min(1).max(120) });
+const GetFichaSchema = z.object({
+  query: z.string().min(1).max(120),
+  /** Site da empresa, opcional. Sem ele não há tecnografia — e isso é `null`,
+   *  não erro: "nem tentou" é diferente de "leu e não achou". */
+  domain: z.string().max(253).optional(),
+});
 
 export const getFichaFn = createServerFn({ method: "POST" })
   .validator((d) => GetFichaSchema.parse(d))
   .handler(async ({ data }): Promise<FichaResult> => {
     const query = data.query.trim();
     if (!query) return { status: "error", error: "INVALID_CNPJ" };
+
+    // Normaliza aqui, na borda: o núcleo e o adapter recebem host, nunca o que
+    // o visitante digitou. `null` quando não dá para extrair host — campo
+    // opcional preenchido com lixo não deve virar erro da consulta.
+    const domain = data.domain ? normalizeDomain(data.domain) : null;
 
     // Um `agora` só para a requisição inteira: assim a decisão de frescor e o
     // carimbo do que for gravado não podem discordar por milissegundos.
@@ -80,7 +147,7 @@ export const getFichaFn = createServerFn({ method: "POST" })
     // nome: quem digitou 13 dígitos quer saber que faltou um.
     if (looksLikeCnpj(query)) {
       if (!isValidCnpj(query)) return { status: "error", error: "INVALID_CNPJ" };
-      return resolverPorCnpj(cleanCnpj(query), agora);
+      return resolverPorCnpj(cleanCnpj(query), domain, agora);
     }
 
     // Busca por nome depende de fonte com índice textual, que não existe nas
@@ -98,7 +165,7 @@ export const getFichaFn = createServerFn({ method: "POST" })
     // Um único candidato com CNPJ completo dispensa a escolha.
     const unico = busca.matches.length === 1 ? busca.matches[0] : null;
     if (unico && isValidCnpj(unico.cnpj)) {
-      return resolverPorCnpj(cleanCnpj(unico.cnpj), agora);
+      return resolverPorCnpj(cleanCnpj(unico.cnpj), domain, agora);
     }
 
     return { status: "choose", matches: busca.matches };

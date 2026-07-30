@@ -16,8 +16,9 @@ quê" para "quanto alguém pode consumir".
 | **Ninguém se auto-aprova** | mudar `is_approved` ou `is_guest` exige role `admin` | trigger `protect_profile_flags` em `supabase/migrations/20260727120000_farol_auth_base.sql` |
 | **Novo usuário entra sem acesso** | `handle_new_user` cria o perfil com `is_approved = false` e role `member` | mesma migration |
 | **Papéis** | `user_roles` é legível só pelo próprio usuário; escrita e leitura ampla exigem `admin` | RLS na mesma migration |
-
 | **Cache de ficha** | `fichas` tem RLS ligada e **zero políticas**: `anon` e `authenticated` não leem nem escrevem; só `service_role` passa | `supabase/migrations/20260728140000_farol_fichas_cache.sql` |
+| **Alvo da leitura de site** | o servidor só busca **nome de domínio público**: todo literal de IP é recusado, e sufixo de rede interna também | `src/lib/technographics.ts` (`isAllowedTarget`) |
+| **Redirecionamento** | seguido **à mão**, com o alvo revalidado a cada salto e teto de 3 saltos | `src/lib/technographics.server.ts` |
 
 `has_role`, `is_approved` e `is_guest` são `SECURITY DEFINER` com
 `search_path = public` fixo, e o `EXECUTE` delas está revogado de `anon`.
@@ -43,6 +44,36 @@ quê" para "quanto alguém pode consumir".
 > O controle positivo do diagnóstico estava três linhas abaixo na mesma
 > migration: a de `is_guest` nomeia o `anon` e funcionou. Mesmo mecanismo, mesma
 > forma, uma palavra a mais.
+
+## SSRF — a fronteira que a Fase 4 criou
+
+A tecnografia inverte quem escolhe o destino: **o visitante informa um endereço e
+o servidor busca.** Sem portão, a demo seria um proxy para dentro da rede de quem
+hospeda — bastaria pedir `169.254.169.254` para tentar o endpoint de metadados da
+nuvem, ou `localhost` para sondar o que roda ao lado.
+
+Duas travas, e a segunda é a que costuma faltar:
+
+**1. O alvo tem que ser domínio público.** `isAllowedTarget` exige rótulo com TLD
+alfabético e **recusa todo literal de IP**, v4 e v6, mais os sufixos que nomeiam
+rede interna (`.localhost`, `.local`, `.internal`, `.intranet`, `.home.arpa`).
+A regra é grosseira de propósito: empresa tem domínio, ninguém digita o IP da
+própria loja. Recusar IP de uma vez mata a classe inteira sem depender de acertar
+cada faixa reservada — que é onde essas listas falham, por uma faixa esquecida.
+
+**2. Redirecionamento é seguido à mão, revalidando cada salto.** `fetch` segue
+redirect por padrão, e é assim que se fura o portão: um domínio público devolve
+`302 → http://169.254.169.254/` e o servidor vai. Aqui o redirect é `manual`, só
+`https` passa, cada destino volta pelo `isAllowedTarget` e há teto de 3 saltos.
+**Validar só o endereço digitado é a forma clássica de achar que se defendeu.**
+
+Verificado com site real em 28/jul/2026: `resultadosdigitais.com.br` redireciona
+para `www.rdstation.com` — outro domínio — e a leitura seguiu depois de
+revalidar. O teste `o caminho completo` em `technographics.test.ts` cobre o par
+`normalizeDomain` → `isAllowedTarget` com o endereço de metadados.
+
+O corpo é lido com teto de **500 KB** e timeout de **8s**. Página maior é
+truncada, não recusada.
 
 ## O que NÃO é fronteira
 
@@ -90,9 +121,17 @@ Estão no plano e não estão implementados. Não conte com eles:
 O cache de ficha **passou a existir na Fase 3** e reduz o problema sem
 resolvê-lo: CNPJ repetido em 30 dias não bate na fonte, mas quem varrer CNPJs
 distintos continua batendo — e agora também faz nascer uma linha por consulta.
-A proteção contra insistência continua sendo só o rate limit da fonte pública,
-e o efeito visível continua sendo "a fonte pública limitou as consultas por
-agora".
+
+**A Fase 4 somou uma segunda saída de rede por consulta**, e essa é mais sensível
+que a primeira: a leitura do site alvo é uma requisição que o servidor faz em nome
+de quem pediu, para um endereço que quem pediu escolheu. Os portões da seção de
+SSRF limitam **para onde**; não limitam **quantas**. Sem quota, o Farol pode ser
+usado como varredor de terceiros a partir do IP da Cloudflare — e esse é o
+argumento mais forte a favor da Fase 6, mais forte do que economizar chamada à
+Brasil API.
+
+A proteção contra insistência continua sendo só o rate limit da fonte pública, e
+o efeito visível continua sendo "a fonte pública limitou as consultas por agora".
 
 ## Sobre o hash de IP, quando existir
 

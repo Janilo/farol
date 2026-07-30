@@ -1,5 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Eye } from "lucide-react";
+
+import { CATALOGO } from "@/lib/fingerprints";
 import { BrandFooter } from "@/components/brand/BrandFooter";
 import { SiteHeader } from "@/components/brand/SiteHeader";
 
@@ -77,7 +79,7 @@ const AFTER_BLOCKS = [
   },
   {
     label: "TECNOGRAFIA",
-    body: "A stack do site contra 24 fingerprints brasileiros. RD Station, Totvs, VTEX e Pagar.me não aparecem em scanner global.",
+    body: `A stack do site contra ${CATALOGO} fingerprints brasileiros. RD Station, Totvs, VTEX e Pagar.me não aparecem em scanner global.`,
   },
   {
     label: "PRIORIDADE",
@@ -182,7 +184,7 @@ function LandingPage() {
                 </h2>
               </div>
               <p className="hidden md:block text-sm text-muted-foreground max-w-xs">
-                Cadastro da fonte primária, 24 fingerprints de ferramentas brasileiras e a rubrica
+                Cadastro da fonte primária, {CATALOGO} fingerprints de ferramentas brasileiras e a rubrica
                 de priorização com os quatro eixos abertos.
               </p>
             </div>

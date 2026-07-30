@@ -4,11 +4,13 @@ import {
   CACHE_MAX_AGE_DAYS,
   cacheAgeInDays,
   decideFromCache,
+  decideStackFromCache,
   fichaFromSource,
   formatFetchedAt,
   isFresh,
   type CachedRow,
 } from "./ficha";
+import type { StackResult } from "./technographics";
 import { extractEnrichment, type BrasilApiCnpj } from "./enrichment";
 import petrobras from "./__fixtures__/cnpj-petrobras.json";
 
@@ -18,7 +20,13 @@ const AGORA = new Date("2026-07-28T12:00:00.000Z");
 /** Linha de cache com a idade que o teste quiser, em dias. */
 function linhaCom(idadeEmDias: number): CachedRow {
   const t = AGORA.getTime() - idadeEmDias * 24 * 60 * 60 * 1000;
-  return { cnpj: "33000167000101", enrichment: ENRICHMENT, fetchedAt: new Date(t).toISOString() };
+  return {
+    cnpj: "33000167000101",
+    enrichment: ENRICHMENT,
+    fetchedAt: new Date(t).toISOString(),
+    domain: null,
+    stack: null,
+  };
 }
 
 describe("cacheAgeInDays", () => {
@@ -125,9 +133,82 @@ describe("fichaFromSource", () => {
     // Fecha o ciclo: o que sai da fonte, se voltar como linha, é servível.
     const f = fichaFromSource("33000167000101", ENRICHMENT, AGORA);
     const d = decideFromCache(
-      { cnpj: f.cnpj, enrichment: f.enrichment, fetchedAt: f.fetchedAt },
+      { cnpj: f.cnpj, enrichment: f.enrichment, fetchedAt: f.fetchedAt, domain: null, stack: null },
       AGORA,
     );
     expect(d.action).toBe("serve");
+  });
+});
+
+describe("decideStackFromCache · a stack tem chave diferente do cadastro", () => {
+  const STACK_A: StackResult = {
+    status: "ok",
+    technologies: [{ tool: "VTEX", category: "E-commerce", via: "header", evidence: "x-vtex" }],
+  };
+  function linhaComStack(domain: string | null, stack: StackResult | null): CachedRow {
+    return { ...linhaCom(1), domain, stack };
+  }
+
+  it("mesmo domínio e cache servível: reaproveita", () => {
+    const d = decideStackFromCache(linhaComStack("vtex.com", STACK_A), "vtex.com", true);
+    expect(d.action).toBe("serve");
+    if (d.action === "serve") expect(d.stack).toEqual(STACK_A);
+  });
+
+  it("DOMÍNIO DIFERENTE: lê o site, nunca serve a stack do outro domínio", () => {
+    // É o defeito que a função existe para fechar: servir a stack de a.com
+    // rotulada como sendo de b.com é dado errado com cara de procedência.
+    const d = decideStackFromCache(linhaComStack("a.com", STACK_A), "b.com", true);
+    expect(d.action).toBe("fetch");
+    if (d.action === "fetch") expect(d.domain).toBe("b.com");
+  });
+
+  it("cache tem o domínio mas não tem stack: lê o site", () => {
+    const d = decideStackFromCache(linhaComStack("vtex.com", null), "vtex.com", true);
+    expect(d.action).toBe("fetch");
+  });
+
+  it("cache velho: lê o site mesmo com o domínio igual", () => {
+    const d = decideStackFromCache(linhaComStack("vtex.com", STACK_A), "vtex.com", false);
+    expect(d.action).toBe("fetch");
+  });
+
+  it("sem linha no cache: lê o site", () => {
+    const d = decideStackFromCache(null, "vtex.com", true);
+    expect(d.action).toBe("fetch");
+  });
+
+  it("sem domínio pedido: serve o que estiver guardado, porque stack é da empresa", () => {
+    // Escolha de produto: o cache é compartilhado e a stack é atributo da
+    // empresa, não da consulta. É disso que os chips da Fase 6 dependem.
+    const d = decideStackFromCache(linhaComStack("vtex.com", STACK_A), null, true);
+    expect(d.action).toBe("serve");
+    if (d.action === "serve") {
+      expect(d.stack).toEqual(STACK_A);
+      expect(d.domain).toBe("vtex.com");
+    }
+  });
+
+  it("sem domínio pedido e sem cache: nem tentou, e isso é `null`", () => {
+    const d = decideStackFromCache(null, null, true);
+    expect(d.action).toBe("serve");
+    if (d.action === "serve") {
+      expect(d.stack).toBeNull();
+      expect(d.domain).toBeNull();
+    }
+  });
+
+  it("sem domínio pedido e cache velho: nem tentou", () => {
+    const d = decideStackFromCache(linhaComStack("vtex.com", STACK_A), null, false);
+    expect(d.action).toBe("serve");
+    if (d.action === "serve") expect(d.stack).toBeNull();
+  });
+});
+
+describe("fichaFromSource · nasce sem stack", () => {
+  it("stack e domain começam nulos — nem tentou", () => {
+    const f = fichaFromSource("33000167000101", ENRICHMENT, AGORA);
+    expect(f.stack).toBeNull();
+    expect(f.domain).toBeNull();
   });
 });

@@ -8,6 +8,7 @@
  * resposta certa não é erro nem é recusa, é servir o velho dizendo que é velho.
  */
 import type { Enrichment } from "./enrichment";
+import type { StackResult } from "./technographics";
 
 /** Janela de frescor. 30 dias é o que a Fase 3 fixou no roadmap. */
 export const CACHE_MAX_AGE_DAYS = 30;
@@ -25,6 +26,14 @@ export interface Ficha {
   /** ISO 8601. Quando a FONTE foi lida — não quando a linha foi escrita. */
   fetchedAt: string;
   fromCache: boolean;
+  /** Host lido, quando houve leitura. `null` = ninguém informou site. */
+  domain: string | null;
+  /**
+   * `null` significa **nem tentou** — o quarto estado, e o que separa "não
+   * informou site" de "leu e não achou nada" (`empty`). A tela usa a diferença:
+   * `null` não desenha seção de stack, `empty` desenha com uma linha.
+   */
+  stack: StackResult | null;
 }
 
 /** A linha crua do cache, como o adapter a entrega. */
@@ -32,6 +41,8 @@ export interface CachedRow {
   cnpj: string;
   enrichment: Enrichment;
   fetchedAt: string;
+  domain: string | null;
+  stack: StackResult | null;
 }
 
 export type CacheDecision =
@@ -62,6 +73,8 @@ function toFicha(row: CachedRow, fromCache: boolean): Ficha {
     enrichment: row.enrichment,
     fetchedAt: row.fetchedAt,
     fromCache,
+    domain: row.domain,
+    stack: row.stack,
   };
 }
 
@@ -91,7 +104,58 @@ export function decideFromCache(
 
 /** Ficha recém-lida da fonte. `fromCache` é falso por construção. */
 export function fichaFromSource(cnpj: string, enrichment: Enrichment, agora: Date): Ficha {
-  return { cnpj, enrichment, fetchedAt: agora.toISOString(), fromCache: false };
+  return {
+    cnpj,
+    enrichment,
+    fetchedAt: agora.toISOString(),
+    fromCache: false,
+    domain: null,
+    stack: null,
+  };
+}
+
+/* ------------------------------------------------------------------ *
+ * A stack tem chave diferente do cadastro
+ * ------------------------------------------------------------------ */
+
+export type StackCacheDecision =
+  /** Reaproveita o que está guardado. `stack` pode ser `null` = nem tentou. */
+  | { action: "serve"; stack: StackResult | null; domain: string | null }
+  /** Precisa ler o site. */
+  | { action: "fetch"; domain: string };
+
+/**
+ * **A armadilha que esta função existe para fechar:** a linha do cache é
+ * indexada por CNPJ, mas a stack depende do *domínio*. Sem esta separação, quem
+ * consultasse o CNPJ X informando `a.com` e depois o mesmo X informando `b.com`
+ * receberia a stack de `a.com` rotulada como sendo de `b.com` — dado errado com
+ * cara de procedência, que é o pior defeito possível neste produto.
+ *
+ * As três saídas:
+ *
+ * - **domínio pedido igual ao guardado**, e o cache serve → devolve o guardado;
+ * - **domínio pedido diferente** (ou o cache não tinha stack) → lê o site;
+ * - **nenhum domínio pedido** → devolve o que estiver guardado, inclusive `null`.
+ *
+ * O terceiro caso é escolha de produto: o cache é compartilhado e a stack é
+ * atributo da empresa, não da consulta. Se alguém já informou o site da empresa,
+ * mostrar isso a quem consultou depois é o cache fazendo o trabalho dele — e é
+ * disso que a Fase 6 depende para pré-computar os chips de exemplo.
+ */
+export function decideStackFromCache(
+  row: CachedRow | null,
+  domainPedido: string | null,
+  podeServirCache: boolean,
+): StackCacheDecision {
+  if (!domainPedido) {
+    return podeServirCache && row
+      ? { action: "serve", stack: row.stack, domain: row.domain }
+      : { action: "serve", stack: null, domain: null };
+  }
+  if (podeServirCache && row && row.domain === domainPedido && row.stack) {
+    return { action: "serve", stack: row.stack, domain: row.domain };
+  }
+  return { action: "fetch", domain: domainPedido };
 }
 
 /**

@@ -18,7 +18,8 @@ import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import type { Json } from "@/integrations/supabase/types";
 import type { Enrichment } from "./enrichment";
-import type { CachedRow } from "./ficha";
+import type { CachedRow, Ficha } from "./ficha";
+import type { StackResult } from "./technographics";
 
 /**
  * Guarda de forma na leitura. O cache guarda o `Enrichment` já interpretado,
@@ -39,6 +40,27 @@ const EnrichmentShape = z.object({
 });
 
 /**
+ * Mesma guarda para a stack. A união discriminada tem que voltar do `jsonb`
+ * como união, senão a tela recebe `status` que não existe e cai no `else`
+ * errado — que aqui significaria esconder a seção quando devia mostrar.
+ */
+const StackShape = z.discriminatedUnion("status", [
+  z.object({
+    status: z.literal("ok"),
+    technologies: z.array(
+      z.object({
+        tool: z.string(),
+        category: z.string(),
+        via: z.enum(["script", "header", "meta", "cookie", "dom", "implied"]),
+        evidence: z.string(),
+      }),
+    ),
+  }),
+  z.object({ status: z.literal("empty") }),
+  z.object({ status: z.literal("error"), reason: z.enum(["unreachable", "timeout", "blocked"]) }),
+]);
+
+/**
  * Lê a linha do cache. `null` significa "siga sem cache" e cobre três casos
  * que o chamador não precisa distinguir: não existe, o banco falhou, ou a
  * forma guardada não é mais a de hoje.
@@ -47,7 +69,7 @@ export async function readCachedFicha(cnpjDigits: string): Promise<CachedRow | n
   try {
     const { data, error } = await supabaseAdmin
       .from("fichas")
-      .select("cnpj, enrichment, fetched_at")
+      .select("cnpj, enrichment, fetched_at, domain, technographics")
       .eq("cnpj", cnpjDigits)
       .maybeSingle();
 
@@ -62,10 +84,21 @@ export async function readCachedFicha(cnpjDigits: string): Promise<CachedRow | n
       return null;
     }
 
+    // Stack com forma inesperada vira "nem tentou" em vez de derrubar a ficha:
+    // o cadastro vale sem ela.
+    let stack: StackResult | null = null;
+    if (data.technographics !== null && data.technographics !== undefined) {
+      const parsed = StackShape.safeParse(data.technographics);
+      if (parsed.success) stack = parsed.data as StackResult;
+      else console.error("[farol] stack em cache com forma inesperada", cnpjDigits);
+    }
+
     return {
       cnpj: data.cnpj,
       enrichment: data.enrichment as unknown as Enrichment,
       fetchedAt: data.fetched_at,
+      domain: data.domain,
+      stack,
     };
   } catch (e) {
     console.error("[farol] erro inesperado ao ler cache de ficha", cnpjDigits, e);
@@ -74,30 +107,31 @@ export async function readCachedFicha(cnpjDigits: string): Promise<CachedRow | n
 }
 
 /**
- * Grava o que acabou de vir da fonte. Não devolve nada e não lança: gravar é
- * otimização, e falhar em otimizar não é falhar em responder.
+ * Grava a ficha inteira. Não devolve nada e não lança: gravar é otimização, e
+ * falhar em otimizar não é falhar em responder.
  *
  * `upsert` porque a chave é o CNPJ e reescrever é o comportamento certo — a
- * linha nova é mais recente por construção.
+ * linha nova é mais recente por construção. Recebe a `Ficha` montada em vez de
+ * campos soltos: com campos soltos, cada novo dado da ficha exige mudar a
+ * assinatura e todos os pontos de chamada, e é assim que um deles fica para trás.
  */
-export async function writeCachedFicha(
-  cnpjDigits: string,
-  enrichment: Enrichment,
-  fetchedAt: string,
-): Promise<void> {
+export async function writeCachedFicha(ficha: Ficha): Promise<void> {
   try {
     const { error } = await supabaseAdmin.from("fichas").upsert(
       {
-        cnpj: cnpjDigits,
-        // `Enrichment` é serializável por construção (só string/número/nulo e
-        // arrays disso), mas o TS não consegue provar isso contra `Json`.
-        enrichment: enrichment as unknown as Json,
-        fetched_at: fetchedAt,
+        cnpj: ficha.cnpj,
+        // `Enrichment` e `StackResult` são serializáveis por construção (só
+        // string/número/booleano/nulo e arrays disso), mas o TS não consegue
+        // provar isso contra `Json`.
+        enrichment: ficha.enrichment as unknown as Json,
+        technographics: (ficha.stack ?? null) as unknown as Json,
+        domain: ficha.domain,
+        fetched_at: ficha.fetchedAt,
       },
       { onConflict: "cnpj" },
     );
-    if (error) console.error("[farol] falha ao gravar cache de ficha", cnpjDigits, error.message);
+    if (error) console.error("[farol] falha ao gravar cache de ficha", ficha.cnpj, error.message);
   } catch (e) {
-    console.error("[farol] erro inesperado ao gravar cache de ficha", cnpjDigits, e);
+    console.error("[farol] erro inesperado ao gravar cache de ficha", ficha.cnpj, e);
   }
 }

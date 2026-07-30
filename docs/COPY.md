@@ -44,7 +44,9 @@ Registro calibrado nos irmãos: eyebrow é a categoria do método (Lente: "Pesqu
 > Uma ficha **por empresa**, da Receita à stack.
 
 **Nota lateral**
-> Cadastro da fonte primária, 24 fingerprints de ferramentas brasileiras e a rubrica de priorização com os quatro eixos abertos.
+> Cadastro da fonte primária, {CATALOGO} fingerprints de ferramentas brasileiras e a rubrica de priorização com os quatro eixos abertos.
+
+*(`{CATALOGO}` é interpolado de `fingerprints.ts`, hoje 23. Não escrever o número: ele muda e a prosa não avisa.)*
 
 **Mock da ficha** (substitui `PREVIEW_LINES`; empresa fictícia, como a "Acme Distribuidora" do Cascata)
 
@@ -99,7 +101,7 @@ planilha_prospects_v4.xlsx — copiar e colar campo por campo
 Label: `Depois — ficha montada`
 
 - `CADASTRO` — CNPJ resolvido na Receita Federal: razão social, CNAE, porte, capital, sócios e situação cadastral.
-- `TECNOGRAFIA` — a stack do site contra 24 fingerprints brasileiros. RD Station, Totvs, VTEX e Pagar.me não aparecem em scanner global.
+- `TECNOGRAFIA` — a stack do site contra `{CATALOGO}` fingerprints brasileiros. RD Station, Totvs, VTEX e Pagar.me não aparecem em scanner global.
 - `PRIORIDADE` — pré-tier A, B ou C com os quatro eixos abertos. Você vê o que somou ponto e o que rebaixou.
 
 ### 1.5 Seção "Método"

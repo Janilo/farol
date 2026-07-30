@@ -2,7 +2,7 @@
 
 **Aprovado em 27/jul/2026.** No molde do `GLOSSARIO.md` do repo irmão `Janilo/lente`.
 
-⛔ **As cinco armadilhas do fim deste arquivo são decisões travadas, não sugestões.** Cada uma existe porque um defeito real aconteceu ou porque a fonte foi testada e não entrega o que se supunha. Reabrir exige fato novo — fonte que mudou, medição que contradiz. Ver a tabela de decisões travadas em [`docs/DESIGN.md`](docs/DESIGN.md).
+⛔ **As seis armadilhas do fim deste arquivo são decisões travadas, não sugestões.** Cada uma existe porque um defeito real aconteceu ou porque a fonte foi testada e não entrega o que se supunha. Reabrir exige fato novo — fonte que mudou, medição que contradiz. Ver a tabela de decisões travadas em [`docs/DESIGN.md`](docs/DESIGN.md).
 
 Este arquivo existe por um motivo prático: quando eu e você (e a IA que escreve o código) usamos a mesma palavra para coisas diferentes, o bug não aparece no compilador — aparece na tela, meses depois. No Cascata isso já aconteceu: "Pocket Margin" significava reais em três telas e percentual numa quarta. Um termo, um conceito, do schema até o botão.
 
@@ -20,7 +20,7 @@ Exceção, nova em relação ao Lente: **termos jurídico-fiscais brasileiros se
 | `enrichment` | ficha | O bloco de dados cadastrais vindo da Brasil API: razão social, CNAE, porte, capital, sócios. | EN |
 | `technographic` | ficha × ferramenta | Uma ferramenta detectada no site da empresa. O plural `technographics` é o bloco inteiro da ficha. | EN |
 | `detection` | technographic | Uma ocorrência: a ferramenta **e por qual via** foi encontrada (`script`, `header`, `meta`, `dom`, `cookie`, `implied`). A via importa e aparece na UI. | EN |
-| `fingerprint` | ferramenta | A assinatura que permite detectar uma ferramenta. São 24, todas brasileiras. Fingerprint é a *regra*; detection é o *achado*. | EN |
+| `fingerprint` | ferramenta | A assinatura que permite detectar uma ferramenta. São 23, todas brasileiras — o número vem de `CATALOGO` em `fingerprints.ts`, nunca digitado. Fingerprint é a *regra*; detection é o *achado*. | EN |
 | `tier` | ficha | A saída da rubrica: `A`, `B` ou `C`. **Na v1 é sempre pré-tier** — ver abaixo. Rótulos fixos na UI: **A · abordar agora**, **B · nutrir**, **C · revisitar**. | EN código / PT UI |
 | `preTier` | ficha | O tier calculado só com o que a máquina consegue ver. O tier definitivo exige julgamento humano e não existe neste produto. Todo `tier` da v1 é `preTier`; o tipo carrega `partial: true` quando falta gatilho. | EN |
 | `trigger` | evento | O gatilho de timing da rubrica (`G1`…`G19`). Na UI é sempre **"gatilho"**. | EN código / PT UI |
@@ -48,4 +48,6 @@ Exceção, nova em relação ao Lente: **termos jurídico-fiscais brasileiros se
 
 Por isso o tier C é **"revisitar"** e não "observar" (28/jul/2026): `scoring.md` chama o C de "Watch / adjacente", e `watch` no método do Janilo é um valor de `Estagio_pipeline` — uma das subpastas de `Leads/`. Traduzir o rótulo do tier com a palavra do estágio importa a confusão que esta armadilha existe para impedir. "Revisitar" vem da mesma linha da fonte ("Fit parcial; revisitar no refresh") e não colide com nada. Os outros dois saem literais de `scoring.md`: A "Abordar agora", B "Nutrir / aquecer" → **abordar agora**, **nutrir**.
 
-**5. Winnability é premissa, não atributo.** O eixo 4 rebaixa empresa grande sem caminho quente porque a rubrica foi calibrada para um consultor solo — o centro de compra de uma empresa grande está fora do alcance dele. Para um SDR de um SaaS com time, essa regra seria falsa. A UI diz isso em texto, ao lado do score. É a diferença entre demonstrar um método e vender uma verdade.
+**5. `empty` na stack é achado, não ausência.** Site lido e nenhuma das 23 encontradas **não** é o mesmo que "não informou site". O primeiro diz algo sobre a empresa — ela não roda nada do catálogo brasileiro; o segundo diz que ninguém tentou. Por isso `StackResult` é união `ok | empty | error` e a ficha carrega `stack: StackResult | null`, onde `null` é o "nem tentou". Na tela, `empty` **desenha** a seção com uma linha e `error` **não desenha** — se as duas escondessem, o achado viraria indistinguível de omissão.
+
+**6. Winnability é premissa, não atributo.** O eixo 4 rebaixa empresa grande sem caminho quente porque a rubrica foi calibrada para um consultor solo — o centro de compra de uma empresa grande está fora do alcance dele. Para um SDR de um SaaS com time, essa regra seria falsa. A UI diz isso em texto, ao lado do score. É a diferença entre demonstrar um método e vender uma verdade.

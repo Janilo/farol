@@ -7,6 +7,13 @@ import { BrandFooter } from "@/components/brand/BrandFooter";
 import { getFichaFn, type FichaError } from "@/lib/ficha.functions";
 import { describePartners, formatBRL, type Enrichment } from "@/lib/enrichment";
 import { formatFetchedAt, type Ficha } from "@/lib/ficha";
+import { CATALOGO } from "@/lib/fingerprints";
+import {
+  countLabel,
+  type Detection,
+  type SiteFetchError,
+  type StackResult,
+} from "@/lib/technographics";
 import type { NameMatch } from "@/lib/enrichment.server";
 import { formatCnpj } from "@/lib/cnpj";
 
@@ -51,9 +58,9 @@ const ERROR_COPY: Record<FichaError, string> = {
  * consultei ao vivo e conferi.
  */
 const EXEMPLOS = [
-  { nome: "Petrobras", cnpj: "33000167000101" },
-  { nome: "Ambev", cnpj: "07526557000100" },
-  { nome: "Banco do Brasil", cnpj: "00000000000191" },
+  { nome: "Petrobras", cnpj: "33000167000101", site: "petrobras.com.br" },
+  { nome: "Ambev", cnpj: "07526557000100", site: "ambev.com.br" },
+  { nome: "Banco do Brasil", cnpj: "00000000000191", site: "bb.com.br" },
 ];
 
 type Estado =
@@ -65,14 +72,16 @@ type Estado =
 
 function DemoPage() {
   const [query, setQuery] = useState("");
+  const [site, setSite] = useState("");
   const [estado, setEstado] = useState<Estado>({ tipo: "vazio" });
 
-  async function consultar(termo: string) {
+  async function consultar(termo: string, dominio: string) {
     const t = termo.trim();
     if (!t) return;
     setEstado({ tipo: "carregando" });
     try {
-      const r = await getFichaFn({ data: { query: t } });
+      const d = dominio.trim();
+      const r = await getFichaFn({ data: { query: t, ...(d ? { domain: d } : {}) } });
       if (r.status === "ok") setEstado({ tipo: "ficha", ficha: r.ficha });
       else if (r.status === "choose") setEstado({ tipo: "escolher", matches: r.matches });
       else setEstado({ tipo: "erro", error: r.error });
@@ -116,38 +125,53 @@ function DemoPage() {
               Aponte o farol para uma empresa.
             </h1>
             <p className="mt-3 max-w-xl text-muted-foreground">
-              Digite o CNPJ. O cadastro vem da Receita Federal, via Brasil API.
+              Digite o CNPJ. Se souber o site, informe também: é dele que sai a stack.
             </p>
 
             <form
-              className="mt-8 flex flex-col gap-3 sm:flex-row"
+              className="mt-8 flex flex-col gap-3"
               onSubmit={(e) => {
                 e.preventDefault();
-                void consultar(query);
+                void consultar(query, site);
               }}
             >
-              <label className="sr-only" htmlFor="q">
-                CNPJ da empresa
-              </label>
-              <input
-                id="q"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="33.000.167/0001-01"
-                className="h-11 flex-1 border border-input bg-card px-4 text-base transition-colors placeholder:text-[color:var(--farol-fog)] focus-visible:border-[color:var(--farol-beam)] focus-visible:outline-none"
-              />
-              <button
-                type="submit"
-                disabled={estado.tipo === "carregando" || !query.trim()}
-                className="inline-flex h-11 items-center justify-center gap-2 bg-primary px-6 text-xs font-semibold uppercase tracking-[0.18em] text-primary-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {estado.tipo === "carregando" ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Search className="h-4 w-4" />
-                )}
-                Consultar
-              </button>
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <label className="sr-only" htmlFor="q">
+                  CNPJ da empresa
+                </label>
+                <input
+                  id="q"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="33.000.167/0001-01"
+                  className="h-11 flex-1 border border-input bg-card px-4 text-base transition-colors placeholder:text-[color:var(--farol-fog)] focus-visible:border-[color:var(--farol-beam)] focus-visible:outline-none"
+                />
+                <label className="sr-only" htmlFor="site">
+                  Site da empresa (opcional)
+                </label>
+                <input
+                  id="site"
+                  value={site}
+                  onChange={(e) => setSite(e.target.value)}
+                  placeholder="Site (opcional) — petrobras.com.br"
+                  className="h-11 flex-1 border border-input bg-card px-4 text-base transition-colors placeholder:text-[color:var(--farol-fog)] focus-visible:border-[color:var(--farol-beam)] focus-visible:outline-none"
+                />
+                <button
+                  type="submit"
+                  disabled={estado.tipo === "carregando" || !query.trim()}
+                  className="inline-flex h-11 items-center justify-center gap-2 bg-primary px-6 text-xs font-semibold uppercase tracking-[0.18em] text-primary-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {estado.tipo === "carregando" ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Search className="h-4 w-4" />
+                  )}
+                  Consultar
+                </button>
+              </div>
+              <p className="text-xs text-[color:var(--farol-fog)]">
+                Sem o site, a ficha sai sem a seção de stack.
+              </p>
             </form>
 
             <div className="mt-4 flex flex-wrap items-center gap-2 text-xs">
@@ -158,7 +182,8 @@ function DemoPage() {
                   type="button"
                   onClick={() => {
                     setQuery(formatCnpj(ex.cnpj));
-                    void consultar(ex.cnpj);
+                    setSite(ex.site);
+                    void consultar(ex.cnpj, ex.site);
                   }}
                   className="rounded-sm border border-input px-2.5 py-1 text-foreground transition-colors hover:border-[color:var(--farol-beam)]/60 hover:text-[color:var(--farol-beam)]"
                 >
@@ -195,7 +220,7 @@ function DemoPage() {
                     <li key={m.cnpj}>
                       <button
                         type="button"
-                        onClick={() => void consultar(m.cnpj)}
+                        onClick={() => void consultar(m.cnpj, site)}
                         className="flex w-full items-center justify-between gap-4 px-4 py-3 text-left transition-colors hover:bg-muted/40"
                       >
                         <span>
@@ -225,11 +250,11 @@ function DemoPage() {
         <section className="border-t border-border bg-card/40 py-10">
           <div className="mx-auto max-w-3xl px-6">
             <p className="text-xs leading-relaxed text-[color:var(--farol-fog)]">
-              Dados públicos da Receita Federal, consultados via Brasil API. O Farol não guarda nada
-              além da consulta feita.
+              Cadastro público da Receita Federal via Brasil API; a stack sai da leitura do próprio
+              site, contra {CATALOGO} fingerprints de ferramentas brasileiras.
             </p>
             <p className="mt-4 text-sm text-muted-foreground">
-              A stack do site e o cálculo de prioridade entram na próxima fase.{" "}
+              O cálculo de prioridade entra na próxima fase.{" "}
               <Link
                 to="/metodologia"
                 className="text-[color:var(--farol-beam)] underline underline-offset-4"
@@ -254,6 +279,125 @@ function Linha({ label, children }: { label: string; children: React.ReactNode }
         {label}
       </span>
       <span className="flex-1 text-sm">{children}</span>
+    </div>
+  );
+}
+
+/**
+ * Frase por estado de falha de leitura. Aprovadas em 28/jul/2026 — implementar
+ * literal. O contrato é o `SiteFetchError`: estado novo lá, o TypeScript cobra
+ * a frase aqui.
+ *
+ * Nenhuma diz "erro", de propósito: não houve erro. A stack é opcional na ficha,
+ * e a ficha entregue está completa no que prometeu — é isso que a linha fixa
+ * abaixo sustenta.
+ */
+const STACK_ERROR_COPY: Record<SiteFetchError, string> = {
+  unreachable: "O site não respondeu ao endereço informado.",
+  timeout: "O site demorou demais para responder.",
+  blocked: "O site recusou a leitura.",
+};
+
+/** Rótulo da via, para o chip dizer COMO foi detectado. */
+const VIA_LABEL: Record<Detection["via"], string> = {
+  script: "script",
+  header: "header",
+  meta: "meta",
+  cookie: "cookie",
+  dom: "dom",
+  implied: "inferido",
+};
+
+/**
+ * A seção de stack. Quatro caminhos, e a diferença entre dois deles é a decisão
+ * de produto que mais importa aqui:
+ *
+ * - `null` — **nem tentou**: ninguém informou site. Seção não existe.
+ * - `error` — não conseguiu ler. Seção não existe; a frase vai no rodapé.
+ * - `empty` — **leu e não achou nada**. Seção EXISTE, com uma linha no lugar dos
+ *   chips. "Nenhuma das N" é achado, não ausência: diz que a empresa não roda
+ *   nada do catálogo brasileiro, o que é informação sobre a empresa. Se a seção
+ *   sumisse aqui, o achado ficaria indistinguível de "nem tentou".
+ * - `ok` — os chips, agrupados por categoria.
+ */
+function SecaoStack({ stack, domain }: { stack: StackResult | null; domain: string | null }) {
+  if (!stack) return null;
+
+  if (stack.status === "error") {
+    return (
+      <div className="border-t border-border px-5 py-4">
+        {/* Hierarquia deliberada: o estado em `fog`, a linha fixa em `mist`, um
+            passo mais clara. Com o mesmo tom, o visitante lê a de cima e para —
+            e a de cima é a que não interessa. Quem faz o trabalho é a segunda:
+            ela impede a leitura de que a ficha inteira falhou. */}
+        <p className="text-xs text-[color:var(--farol-fog)]">
+          {STACK_ERROR_COPY[stack.reason]}
+        </p>
+        <p className="mt-1 text-xs text-[color:var(--farol-mist)]">
+          O cadastro da Receita não depende disso.
+        </p>
+      </div>
+    );
+  }
+
+  const total = stack.status === "ok" ? stack.technologies.length : 0;
+  const porCategoria =
+    stack.status === "ok"
+      ? stack.technologies.reduce<Record<string, Detection[]>>((acc, d) => {
+          (acc[d.category] ??= []).push(d);
+          return acc;
+        }, {})
+      : {};
+
+  return (
+    <div className="border-t border-border">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border bg-muted/40 px-5 py-3">
+        <span className="text-xs font-semibold uppercase tracking-[0.14em] text-foreground">
+          Stack
+        </span>
+        <span className="font-mono text-xs text-muted-foreground">
+          {domain ? `fonte: ${domain}` : "fonte: site da empresa"} ·{" "}
+          {stack.status === "ok" ? countLabel(total) : `lido · nenhuma das ${CATALOGO}`}
+        </span>
+      </div>
+
+      <div className="p-5">
+        {stack.status === "empty" ? (
+          <p className="text-sm text-[color:var(--farol-mist)]">
+            O site foi lido. Nenhuma das {CATALOGO} ferramentas do catálogo apareceu.
+          </p>
+        ) : (
+          <div className="space-y-4">
+            {Object.entries(porCategoria).map(([categoria, itens]) => (
+              <div key={categoria}>
+                <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
+                  {categoria}
+                </p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {itens.map((d) => (
+                    <span
+                      key={d.tool}
+                      title={`${d.via}: ${d.evidence}`}
+                      className="inline-flex items-baseline gap-2 rounded-sm border border-border bg-[color:var(--farol-surface-alt)] px-2.5 py-1.5 text-xs"
+                    >
+                      <span className="font-medium text-foreground">{d.tool}</span>
+                      {/* Detecção inferida ganha o marcador visualmente mais
+                          fraco: honestidade de procedência na UI. */}
+                      <span
+                        className={`rounded-sm px-1.5 py-0.5 text-[10px] ${
+                          d.via === "implied" ? "chip-implied" : "chip-direct"
+                        }`}
+                      >
+                        {VIA_LABEL[d.via]}
+                      </span>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -329,6 +473,8 @@ function FichaCard({ ficha }: { ficha: Ficha }) {
           quem é o sócio majoritário. Os destacados são os que administram.
         </p>
       </div>
+
+      <SecaoStack stack={ficha.stack} domain={ficha.domain} />
 
       <div className="flex flex-wrap items-center gap-3 border-t border-border px-5 py-4">
         <span className="pill-tier-c rounded-sm px-2 py-0.5 text-xs font-semibold">Sem tier</span>

@@ -4,9 +4,10 @@ Estado das fases e o que falta. Este arquivo substitui o plano que vivia em
 `~/.claude/plans/`, fora de controle de versão — um roteiro de onze fases que
 atravessa sessões precisa de histórico.
 
-**Fases 0, 1, 2, 3 e 7 estão fechadas.** O produto está no ar em
+**Fases 0, 1, 2, 3, 4 e 7 estão fechadas.** O produto está no ar em
 [farol.pereirasaraiva.com](https://farol.pereirasaraiva.com) consultando o
-cadastro da Receita Federal por CNPJ, com cache de 30 dias.
+cadastro da Receita Federal por CNPJ, com cache de 30 dias e detecção de
+tecnografia brasileira a partir do site.
 
 As decisões travadas estão em [`DESIGN.md`](DESIGN.md); os termos, em
 [`../GLOSSARIO.md`](../GLOSSARIO.md). Nada aqui as reabre.
@@ -88,142 +89,163 @@ então mudar `extractEnrichment` deixa linha antiga com forma velha. Um `zod`
 mínimo no esqueleto transforma isso em miss em vez de servir campo `undefined`
 na tela — prefere trabalho a mentira.
 
-## Fase 4 — Tecnografia
+## ✅ Fase 4 — Tecnografia
 
 É a cunha do produto: as ferramentas brasileiras que scanner global não vê.
+**Fechada em 28/jul/2026.**
 
-- `src/lib/fingerprints.ts` — porta tipada do `tecnografias_br.json`, 24 entradas
-  hoje. **Exporte `CATALOGO = FINGERPRINTS.length` e varra os literais.** O "24"
-  é o "8s" outra vez: número do adapter chumbado em prosa, que não quebra nada
-  quando muda — só passa a mentir. Hoje ele está certo, então nada a corrigir
-  agora; o momento de varrer é quando este arquivo nascer.
+### O que a fase entregou
 
-  Já no ar, e por isso os dois primeiros são os que importam:
+- `src/lib/fingerprints.ts` — porta **gerada** do `tecnografias_br.json`, com
+  `CATALOGO` exportado. Todos os literais do tamanho do catálogo foram varridos
+  do código e da copy aprovada: nenhum número digitado sobrou.
+- `src/lib/technographics.ts` (puro) — `extractSnapshot` (HTML → retrato),
+  `detectTechnologies`, `stackFromSnapshot`, `normalizeDomain`, `isAllowedTarget`,
+  `countLabel`. 44 testes.
+- `src/lib/technographics.server.ts` — `fetchTargetSite`: 8s, teto de 500 KB lido
+  em fluxo, redirect manual revalidado, erro como estado de primeira classe.
+- `decideStackFromCache` em `ficha.ts` — a stack tem chave diferente do cadastro.
+- Seção de stack na `/demo`, campo de site opcional, chips por categoria com o
+  marcador da via e a evidência no tooltip.
 
-  | Onde | Texto |
-  |---|---|
-  | `src/routes/index.tsx:80` | "A stack do site contra **24** fingerprints brasileiros" |
-  | `src/routes/index.tsx:185` | "Cadastro da fonte primária, **24** fingerprints…" |
-  | `docs/COPY.md:47` e `:102` | as mesmas duas, na fonte da copy aprovada |
-  | `DESIGN-conteudo-telas.md:114` e `:125` | "(24 ferramentas)" e "nos 24 fingerprints" |
-  | este arquivo | seis ocorrências, aceitáveis por serem datadas |
+### Cinco defeitos do motor Python, não três
 
-  Achado pelo projeto de design na 4ª rodada — o caso que ele quase deixou
-  passar é o mais instrutivo: a nota do `Stone → Pagar.me` ("a única inferência
-  entre os 24"). É **prosa explicativa, não copy de estado**, então não caiu em
-  nenhuma varredura de string de UI. Onde o número vira argumento, ele também
-  vira dívida.
-- `src/lib/technographics.ts` (puro) — `detectTechnologies(page, fingerprints)`.
-  Três correções sobre o Python: `dom` casa contra atributos `class`/`id`, não
-  substring no HTML inteiro; `cookies` contra `Set-Cookie` reais; `implies` em
-  duas passadas até ponto fixo, sem depender de ordem de iteração.
-- `src/lib/technographics.server.ts` — `fetchTargetSite`, timeout 8s, cap
-  500 KB, com erro como estado de primeira classe
-  (`unreachable | timeout | blocked`). Ficha sem stack nunca quebra.
+O roadmap previa três correções. Ao ler o `detectar_tecnografias.py` apareceram
+cinco, e as duas novas são as piores.
 
-  **A frase de cada estado, aprovada pelo Janilo em 28/jul/2026** — copy
-  fechada, implementar literal:
+**`implies` estava invertido.** O JSON diz `Stone: implies: ["Pagar.me"]`, que na
+convenção do Wappalyzer significa "se Stone foi detectado, Pagar.me também está".
+O Python fazia `if implied in detected: matched = true` — concluía **Stone** a
+partir de Pagar.me. Pagar.me é o adquirido e existe sem Stone, então a inferência
+criava uma relação comercial que o dado não sustenta.
 
-  | Estado | Frase |
-  |---|---|
-  | `unreachable` | O site não respondeu ao endereço informado. |
-  | `timeout` | O site demorou demais para responder. |
-  | `blocked` | O site recusou a leitura. |
+**O padrão de PIX era o literal `pix`.** Casa com `pixel.gif`, `pixi.js`, Facebook
+Pixel e Pixabay — falso positivo em quase todo site com rastreamento. **PIX saiu do
+catálogo** (decisão do Janilo, 28/jul), e não pelo padrão quebrado, que era
+consertável: é que PIX **não discrimina nada**. Todo e-commerce brasileiro aceita,
+então o achado não move priorização de conta nenhuma. E PIX é método de pagamento
+— as outras 23 são empresas que a companhia contratou.
 
-  Abaixo das três, fixa: **"O cadastro da Receita não depende disso."**
+As três previstas: `dom` era substring no HTML inteiro, e errava nas duas direções
+(`.vtex` casava com a palavra em prosa ou num comentário; `[data-pix]` **nunca**
+casava, porque o `lstrip("#.")` deixava os colchetes e a string literal com
+colchetes não existe no HTML); `cookies` era substring no HTML em vez dos
+`Set-Cookie`; `implies` dependia da ordem de iteração do dicionário.
 
-  **Hierarquia, não quatro frases de igual peso** (projeto de design, 28/jul):
-  a frase de estado sai em `--farol-fog` e a linha fixa em `--farol-mist`, um
-  passo mais clara. A inversão é de propósito — com o mesmo tom, o visitante lê
-  a de cima e para, e a de cima é a que não interessa. Quem faz o trabalho é a
-  linha fixa: ela impede a leitura de que a ficha inteira falhou. Medido nos
-  dois: `fog` 5,58 e `mist` 8,44 sobre o fundo do cartão, ambos AA.
+E uma sexta que o roadmap também não previa: **`scripts` casava contra o HTML
+inteiro**, então `pagar\.me` casava com a palavra em prosa. Aqui casa contra as
+URLs extraídas do documento.
 
-  No token de procedência do rodapé vai só **`Tecnografia · sem leitura`**. A
-  sentença desce para uma segunda linha: o rodapé é lista de fontes, e sentença
-  dentro de token estoura a linha e mistura dois registros.
+### Ordem das vias é força de prova
 
-  Por que estas palavras, para ninguém "melhorar" depois: *"não respondeu ao
-  endereço informado"* e não "não resolveu", porque resolver é vocabulário de
-  DNS e a frase devolve a dúvida ao lugar útil — domínio errado no formulário
-  é o caso comum e o único que o visitante conserta sozinho. *"demorou demais"*
-  **sem número**, porque chumbar "8s" amarra a copy ao valor do adapter e a
-  frase passa a mentir quando o timeout mudar. *"recusou a leitura"* e não
-  "bloqueou", porque bloquear soa a acusação e o site está funcionando
-  perfeitamente — só não quer ser lido por robô. E nenhuma das três diz
-  "erro": não houve erro, a stack é opcional e a ficha entregue está completa
-  no que prometeu.
-- Domínio vem de campo opcional no formulário. Detecção por CNAME via
-  DNS-over-HTTPS fica para depois: são 8 dos 24 fingerprints e uma chamada
-  extra por consulta.
+Header → script → meta → cookie → dom, e **não** a ordem do Python. Header
+proprietário como `X-VTEX` é quase conclusivo: só o próprio produto o emite. Nome
+de classe de CSS é o mais fraco — é escolha de quem escreveu o HTML e pode
+coincidir. Cada ferramenta aparece uma vez, com a via mais forte que casou,
+porque é um marcador por chip na tela.
 
-**O tipo da stack é união discriminada, não dois campos opcionais.** O projeto
-de design propôs `stackError?: 'unreachable' | 'timeout' | 'blocked'` ao lado
-de `stack`, para a UI não ter que destrinchar um campo só na renderização.
-Recusado, e a razão é a mesma que já governa `FichaResult`:
+`Stone → Pagar.me` é o **único** `implies` do catálogo, e há teste fixando isso.
+Um segundo exemplo de detecção inferida na tela seria inventado.
 
-```ts
-type StackResult =
-  | { status: "ok"; technologies: Detection[] }
-  | { status: "empty" }        // leu o site e não achou nenhuma das 24
-  | { status: "error"; reason: "unreachable" | "timeout" | "blocked" };
-```
+### `empty` é achado, não ausência — e por isso é ramo próprio
 
-Dois campos opcionais deixam representar estado ilegal — os dois preenchidos,
-ou nenhum — e a UI passa a confiar numa combinação que o tipo não garante. E o
-modelo de dois campos **perde um estado**: site lido com sucesso e nenhuma das
-24 ferramentas encontrada. Isso não é erro nem é stack; com dois opcionais fica
-indistinguível de "nem tentou". Com a união, o `switch` é um só e cobre tudo —
-mais direto, não menos.
+`StackResult` é união `ok | empty | error`, e a ficha carrega
+`stack: StackResult | null`, onde `null` é **nem tentou**. Dois campos opcionais
+(`technologies?` + `error?`) deixariam representar estado ilegal e perderiam
+justamente o `empty`.
 
-Nas telas do design, `noStack` e `stackErro` como props separadas estão certos:
-lá são flags de visualização. No repo o domínio é a união, e o componente
-deriva as flags dela. *(O projeto de design aceitou e passou a uma prop só,
-`stackStatus`, com a razão pendurada no `error`.)*
+Na tela: nos três `error` a seção **não existe**; no `empty` ela **existe**, com
+uma linha no lugar dos chips. "Nenhuma das 23" diz que a empresa não roda nada do
+catálogo brasileiro, o que é informação sobre a empresa. Se a seção sumisse nos
+dois, o achado ficaria indistinguível de "nem tentou".
 
-**`empty` e `error` não são o mesmo ramo na renderização — e é fácil errar.**
-Nos três `error` a seção de stack **não existe**. No `empty` ela **existe**, com
-uma linha no lugar dos chips. "Nenhuma das 24" é achado, não ausência: diz que a
-empresa não roda nada do catálogo brasileiro, que é informação sobre a empresa.
-Se a seção sumir no `empty`, o achado vira indistinguível de "nem tentou" — o
-caso de quem não informou domínio.
+`stackFromSnapshot` existe para tornar `{ status: "ok", technologies: [] }`
+inatingível: zero detecções é `empty`, e quem chama não escolhe.
 
-Token de procedência do rodapé, por status:
+### Copy, aprovada e travada
 
-| Status | Token |
+Frases por estado de falha (28/jul/2026) — implementadas literais:
+
+| Estado | Frase |
 |---|---|
-| `ok` | `5 ferramentas` |
-| `empty` | `lido · nenhuma das 24` |
-| `error` | `sem leitura`, mais a frase do estado na segunda linha |
+| `unreachable` | O site não respondeu ao endereço informado. |
+| `timeout` | O site demorou demais para responder. |
+| `blocked` | O site recusou a leitura. |
 
-**O `empty` não mexe no placar, e isso é correto, não omissão:** os quatro eixos
-são setor, porte, gatilho e winnability — stack não é eixo. Fica registrado
-porque a pergunta apareceu e a resposta "não muda nada" parece esquecimento
-quando não está escrita.
+Abaixo das três, fixa: **"O cadastro da Receita não depende disso."**
 
-**A frase do `empty` ainda NÃO está aprovada**, e vai ao Janilo em **duas
-versões**, porque a escolha tem um custo que ele precisa ver:
+Estado `empty` (aprovado 28/jul, **com** o número): *"O site foi lido. Nenhuma das
+{CATALOGO} ferramentas do catálogo apareceu."* O número carrega a informação de
+escala, que é parte do que faz o achado ser achado — "nenhuma das 23" diz que a
+busca foi ampla. Interpolado de `CATALOGO`, nunca literal.
 
-- **Com número:** *"O site foi lido. Nenhuma das 24 ferramentas do catálogo
-  apareceu."* — interpolado de `CATALOGO`, não literal.
-- **Sem número:** *"O site foi lido. Nenhuma ferramenta do catálogo apareceu."*
+**Hierarquia, não frases de igual peso:** o estado sai em `--farol-fog` e a linha
+fixa em `--farol-mist`, um passo mais clara. A inversão é de propósito — com o
+mesmo tom o visitante lê a de cima e para, e a de cima é a que não interessa. Quem
+faz o trabalho é a linha fixa: ela impede a leitura de que a ficha inteira falhou.
+Medido: `fog` 5,58 e `mist` 8,44 sobre o fundo do cartão, ambos AA.
 
-Sem o número some o acoplamento **e some a informação de escala**, que é parte
-do que faz o achado ser achado: "nenhuma das 24" diz que a busca foi ampla,
-"nenhuma" não diz nada sobre o tamanho da rede. Não é só encurtar.
+Token de procedência por status: `ok` → `N ferramentas` (singular em 1, e há
+teste); `empty` → `lido · nenhuma das N`; `error` → a frase no rodapé, fora do
+token, porque rodapé é lista de fontes e sentença dentro de token mistura dois
+registros.
 
-Vai junto com o resto da copy da Fase 4, num pedido só. Até lá é rascunho — não
-implementar como decidida.
+Por que estas palavras, para ninguém "melhorar" depois: *"não respondeu ao
+endereço informado"* e não "não resolveu", porque resolver é vocabulário de DNS e
+a frase devolve a dúvida ao lugar útil — domínio errado no formulário é o caso
+comum e o único que o visitante conserta sozinho. *"demorou demais"* **sem
+número**, porque chumbar "8s" amarra a copy ao valor do adapter. *"recusou a
+leitura"* e não "bloqueou", porque o site está funcionando e só não quer ser lido
+por robô. Nenhuma diz "erro": a stack é opcional e a ficha entregue está completa
+no que prometeu.
 
-Nota para quem desenhar a tela: `Stone → Pagar.me` é o **único** `implies` que
-existe nos 24. Um segundo exemplo de detecção inferida seria inventado.
+### O portão de SSRF
 
-**Dois marcadores temporários nas telas do claude.ai/design saem quando esta fase
-entrar** (registrados pelo projeto de design em 28/jul, para não virarem copy
-definitiva por esquecimento): `stack de exemplo · detector em construção` no
-cabeçalho da seção de stack, e o rodapé de procedência da ficha sem stack, que
-hoje diz `site não respondeu` para os três estados. O segundo já tem substituto
-decidido — as três frases da tabela acima.
+A fase inverteu quem escolhe o destino da requisição: o visitante informa o
+endereço e **o servidor busca**. Duas travas, detalhadas em
+[`../SEGURANCA.md`](../SEGURANCA.md) — e a segunda é a que costuma faltar:
+**redirect é seguido à mão com revalidação a cada salto**, porque `fetch` seguindo
+redirect sozinho fura qualquer validação feita só na entrada.
+
+### Por que regex e não HTMLRewriter
+
+`HTMLRewriter` seria o caminho nativo da Cloudflare, e **não existe no Node** —
+então `pnpm dev` quebraria e o desenvolvimento deixaria de exercitar este caminho.
+Paridade dev/produção venceu elegância de parser. O alvo é curto (atributos e
+`<meta>`) e o corpo já vem com teto. O que se perde ao não ter árvore é
+aninhamento e ordem, e a detecção não usa nenhum dos dois.
+
+### Verificado com site real (28/jul/2026)
+
+Os quatro estados, contra sites de verdade, através do adapter:
+
+| Alvo | Resultado |
+|---|---|
+| `omie.com.br` | `ok` — Omie via script; redirect para `www` seguido; corpo truncado no teto |
+| `resultadosdigitais.com.br` | `ok` — RD Station CRM; **redirect entre domínios** para `www.rdstation.com`, revalidado |
+| `ambev.com.br` | `empty` — leu e não achou nada do catálogo |
+| `bb.com.br`, `petrobras.com.br` | `blocked` — recusaram a leitura |
+
+**Uma sonda de rede foi escrita e removida.** Teste que bate em site de terceiro
+não entra no CI: deixaria o CI instável e faria requisição a terceiros a cada push.
+
+### O que ficou de fora, e o custo
+
+**Detecção por CNAME não roda.** Oito dos 23 têm padrão de `cname` (Sankhya, Omie,
+Conta Azul, Loja Integrada, VTEX, PipeRun, Moskit, Ploomes) e exigiria uma chamada
+DNS-over-HTTPS por consulta. **Custa sensibilidade, não cobertura:** os oito têm
+padrão de `scripts` também, então nenhuma ferramenta fica indetectável — só fica
+mais difícil de achar quando a empresa usa o produto em subdomínio próprio sem
+carregar script do fornecedor.
+
+**5xx cai em `unreachable`.** A frase fica esticada para um 500, que respondeu com
+erro. Esticada de propósito: um quarto estado exigiria copy nova e aprovação, e o
+efeito para quem lê é idêntico (ficha sem stack). Se a distinção passar a importar,
+o conserto é um estado e uma frase, não uma gambiarra.
+
+**O marcador `stack de exemplo · detector em construção` sai das telas do
+claude.ai/design** — é o último temporário que restava lá, e agora o detector
+existe.
 
 ## Fase 5 — Pré-tier interativo
 
@@ -313,11 +335,15 @@ verificado com dado real na Fase 2; o `fetch` para host externo funciona no
 
 ## O que ainda depende do Janilo
 
-1. **Aprovar a copy do estado `empty`** da tecnografia, nas duas versões
-   registradas na Fase 4. Vai junto com o resto da copy dessa fase.
-2. **Conferir se `SUPABASE_SERVICE_ROLE_KEY` está no Worker.** A Fase 3 passou
-   a precisar dela. Se faltar, o produto **não quebra** — o cache vira no-op
-   silencioso na tela e ruidoso no log. É credencial, então é dele:
-   `wrangler secret put SUPABASE_SERVICE_ROLE_KEY`.
+**Nada.** As duas pendências anteriores fecharam em 28/jul/2026: a copy do estado
+`empty` foi aprovada (com o número), e a `SUPABASE_SERVICE_ROLE_KEY` está no
+Worker — verificado em produção, com linha nascendo na tabela e a segunda consulta
+vindo do cache.
 
-Nada disso bloqueia as fases 4 a 6, que são só código.
+Uma nota de ambiente: o `.env` local tem a linha da service role **comentada**, de
+propósito ou não. O efeito é que `pnpm dev` roda com o cache em no-op — a consulta
+funciona e o log traz `ConfigError`. Quem desenvolver aqui exercita o caminho sem
+cache, que é o que mais quebra; quem quiser exercitar o cache localmente
+descomenta a linha.
+
+As fases 5, 6, 8, 9 e 10 são só código.

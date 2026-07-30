@@ -111,7 +111,7 @@ Cobrem fintech, varejo, SaaS/ERP e CPG. Totvs e VTEX têm a vantagem de serem el
 
 ## 8. Stack de exemplo, com procedência
 
-As categorias são as reais do `tecnografias_br.json` (24 ferramentas). Sugestão para a tela:
+As categorias são as reais do `tecnografias_br.json` (**23 ferramentas desde 28/jul/2026** — PIX saiu, ver ROADMAP Fase 4; nas telas o número vem da prop `catalogo`, não literal). Sugestão para a tela:
 
 **Procedência forte** (evidência direta no site)
 - `RD Station Marketing` — Marketing Automation — via **script**
@@ -122,7 +122,7 @@ As categorias são as reais do `tecnografias_br.json` (24 ferramentas). Sugestã
 **Procedência inferida** (`implies`, visualmente mais fraca)
 - `Pagar.me` — Payment Processor — **inferido de Stone**
 
-Detalhe que importa: **`Stone → Pagar.me` é o único `implies` que existe** nos 24 fingerprints. Se a tela precisar de um segundo exemplo de inferência, ele seria inventado — melhor mostrar um só e deixar a assimetria visível, porque ela é verdadeira.
+Detalhe que importa: **`Stone → Pagar.me` é o único `implies` que existe** entre os fingerprints do catálogo. Se a tela precisar de um segundo exemplo de inferência, ele seria inventado — melhor mostrar um só e deixar a assimetria visível, porque ela é verdadeira.
 
 O marcador de procedência não é decoração. Ele existe para o usuário saber o que foi visto e o que foi deduzido.
 
