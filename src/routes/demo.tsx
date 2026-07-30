@@ -148,7 +148,16 @@ function DemoPage() {
                 <input
                   id="q"
                   value={query}
-                  onChange={(e) => setQuery(e.target.value)}
+                  onChange={(e) => {
+                    // Trocar de empresa limpa o site. Sem isto, clicar num exemplo
+                    // (que preenche os dois campos) e digitar outro CNPJ manda o par
+                    // errado ao servidor — e foi assim que um MEI de São Vicente foi
+                    // consultado como se o site dele fosse ambev.com.br, em 30/jul.
+                    // O servidor tem a trava que importa; esta evita o engano antes
+                    // de ele virar consulta.
+                    if (site && e.target.value !== query) setSite("");
+                    setQuery(e.target.value);
+                  }}
                   placeholder="33.000.167/0001-01"
                   className="h-11 flex-1 border border-input bg-card px-4 text-base transition-colors placeholder:text-[color:var(--farol-fog)] focus-visible:border-[color:var(--farol-beam)] focus-visible:outline-none"
                 />

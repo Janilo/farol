@@ -178,15 +178,29 @@ describe("decideStackFromCache · a stack tem chave diferente do cadastro", () =
     expect(d.action).toBe("fetch");
   });
 
-  it("sem domínio pedido: serve o que estiver guardado, porque stack é da empresa", () => {
-    // Escolha de produto: o cache é compartilhado e a stack é atributo da
-    // empresa, não da consulta. É disso que os chips da Fase 6 dependem.
+  it("SEM DOMÍNIO PEDIDO: não serve o guardado, nem quando existe", () => {
+    // Regra invertida em 30/jul/2026, depois de reproduzir o defeito em produção.
+    // A regra antiga servia o par guardado a quem não pediu site, apoiada em
+    // "stack é atributo da empresa". Mas quem informa o site é um anônimo, e o
+    // campo não limpava ao trocar o CNPJ: bastou clicar no exemplo da Ambev e
+    // digitar outro CNPJ para o cache gravar um MEI com `domain: ambev.com.br`.
+    // A regra antiga espalharia essa associação por 30 dias com cara de apuração.
+    //
+    // Se este teste voltar a esperar `STACK_A`, o defeito voltou.
     const d = decideStackFromCache(linhaComStack("vtex.com", STACK_A), null, true);
     expect(d.action).toBe("serve");
     if (d.action === "serve") {
-      expect(d.stack).toEqual(STACK_A);
-      expect(d.domain).toBe("vtex.com");
+      expect(d.stack).toBeNull();
+      expect(d.domain).toBeNull();
     }
+  });
+
+  it("o par guardado ainda é reaproveitado quando o MESMO site é pedido de novo", () => {
+    // A trava é sobre afirmar por conta própria, não sobre cachear. Quem pergunta
+    // por `vtex.com` recebe a leitura de `vtex.com` sem nova saída de rede.
+    const d = decideStackFromCache(linhaComStack("vtex.com", STACK_A), "vtex.com", true);
+    expect(d.action).toBe("serve");
+    if (d.action === "serve") expect(d.stack).toEqual(STACK_A);
   });
 
   it("sem domínio pedido e sem cache: nem tentou, e isso é `null`", () => {

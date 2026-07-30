@@ -135,23 +135,38 @@ export type StackCacheDecision =
  *
  * - **domínio pedido igual ao guardado**, e o cache serve → devolve o guardado;
  * - **domínio pedido diferente** (ou o cache não tinha stack) → lê o site;
- * - **nenhum domínio pedido** → devolve o que estiver guardado, inclusive `null`.
+ * - **nenhum domínio pedido** → `null`, sempre. Nem tentou.
  *
- * O terceiro caso é escolha de produto: o cache é compartilhado e a stack é
- * atributo da empresa, não da consulta. Se alguém já informou o site da empresa,
- * mostrar isso a quem consultou depois é o cache fazendo o trabalho dele — e é
- * disso que a Fase 6 depende para pré-computar os chips de exemplo.
+ * O terceiro caso mudou em 30/jul/2026, e a razão é um defeito reproduzido em
+ * produção. A regra antiga era servir o domínio guardado a quem não pediu site,
+ * apoiada na premissa de que "a stack é atributo da empresa, não da consulta".
+ * A premissa é falsa aqui: quem informa o site é um visitante anônimo, e o campo
+ * de site não limpava ao trocar o CNPJ. Bastou clicar no exemplo da Ambev e
+ * digitar outro CNPJ para o cache compartilhado gravar um MEI de São Vicente
+ * com `domain: ambev.com.br` — e a regra antiga serviria essa associação a todo
+ * mundo que consultasse aquele CNPJ pelos 30 dias seguintes, com cara de fato
+ * apurado.
+ *
+ * A trava não podia ficar só na gravação: o servidor não tem como saber se o par
+ * digitado é verdadeiro. Então ela fica na afirmação. **O Farol nunca afirma por
+ * conta própria qual é o site de uma empresa**; ele só reporta a leitura do site
+ * que o próprio visitante informou. Quem digitar o par errado vê o próprio erro;
+ * mais ninguém vê.
+ *
+ * O `domain` continua sendo gravado, porque é a chave que permite reaproveitar a
+ * leitura quando o mesmo site for pedido de novo. O que deixou de existir é
+ * oferecê-lo sem que alguém tenha perguntado.
+ *
+ * Os chips de exemplo não perdem nada: eles carregam o site junto do CNPJ, então
+ * caem no primeiro caso.
  */
 export function decideStackFromCache(
   row: CachedRow | null,
   domainPedido: string | null,
   podeServirCache: boolean,
 ): StackCacheDecision {
-  if (!domainPedido) {
-    return podeServirCache && row
-      ? { action: "serve", stack: row.stack, domain: row.domain }
-      : { action: "serve", stack: null, domain: null };
-  }
+  if (!domainPedido) return { action: "serve", stack: null, domain: null };
+
   if (podeServirCache && row && row.domain === domainPedido && row.stack) {
     return { action: "serve", stack: row.stack, domain: row.domain };
   }

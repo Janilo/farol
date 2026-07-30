@@ -2,7 +2,7 @@
 
 **Aprovado em 27/jul/2026.** No molde do `GLOSSARIO.md` do repo irmão `Janilo/lente`.
 
-⛔ **As sete armadilhas do fim deste arquivo são decisões travadas, não sugestões.** Cada uma existe porque um defeito real aconteceu ou porque a fonte foi testada e não entrega o que se supunha. Reabrir exige fato novo — fonte que mudou, medição que contradiz. Ver a tabela de decisões travadas em [`docs/DESIGN.md`](docs/DESIGN.md).
+⛔ **As oito armadilhas do fim deste arquivo são decisões travadas, não sugestões.** Cada uma existe porque um defeito real aconteceu ou porque a fonte foi testada e não entrega o que se supunha. Reabrir exige fato novo — fonte que mudou, medição que contradiz. Ver a tabela de decisões travadas em [`docs/DESIGN.md`](docs/DESIGN.md).
 
 Este arquivo existe por um motivo prático: quando eu e você (e a IA que escreve o código) usamos a mesma palavra para coisas diferentes, o bug não aparece no compilador — aparece na tela, meses depois. No Cascata isso já aconteceu: "Pocket Margin" significava reais em três telas e percentual numa quarta. Um termo, um conceito, do schema até o botão.
 
@@ -61,6 +61,12 @@ que queremos que as pessoas usem. Por isso o portão fica depois das duas decis�
 cache e antes de qualquer `fetch`, e não na borda do serverFn: só ali se sabe se a
 consulta vai custar. Se alguém mover a checagem para a entrada, o limite passa a
 contar recarga de página.
+
+**8. O Farol nunca afirma qual é o site de uma empresa.** Ele reporta a leitura do site que o **próprio visitante** informou, e só para quem informou. Consulta sem site devolve `stack: null` mesmo quando o cache tem um par guardado para aquele CNPJ.
+
+A regra nasceu de um defeito reproduzido em produção em 30/jul/2026. O campo de site não limpava ao trocar o CNPJ, então bastou clicar no exemplo da Ambev e digitar outro CNPJ para o cache compartilhado gravar um MEI de São Vicente com `domain: ambev.com.br`. Pela regra anterior — "stack é atributo da empresa, não da consulta" — essa associação seria servida a todo mundo que consultasse aquele CNPJ pelos 30 dias seguintes, com cara de fato apurado.
+
+A premissa antiga só valeria se quem informa o site fosse confiável, e quem informa é um anônimo. **A trava não pode ficar na gravação**, porque o servidor não tem como saber se o par digitado é verdadeiro — ela fica na afirmação. O `domain` continua sendo gravado, porque é a chave que evita reler o mesmo site; o que deixou de existir é oferecê-lo sem que alguém tenha perguntado.
 
 E o contador é **pós-incremento**: `bump_demo_quota` reserva e devolve o valor já
 somado, porque `count(*)` antes de decidir tem corrida — duas requisições paralelas

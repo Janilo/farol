@@ -305,6 +305,20 @@ O que a implementação decidiu e o plano não previa:
 - **O dia é o de Brasília, não UTC.** Em UTC o dia viraria às 21h de quem está usando,
   e quota nova de madrugada é o furo mais óbvio de um limite diário.
 
+**O teste em produção achou um defeito da Fase 4, corrigido no mesmo dia.** O campo
+de site não limpava ao trocar o CNPJ. Clicar num exemplo (que preenche os dois
+campos) e digitar outro CNPJ mandava o par errado ao servidor, e o cache
+compartilhado gravou um MEI de São Vicente com `domain: ambev.com.br`. A linha foi
+apagada. Duas travas: a UI limpa o site quando o CNPJ muda, e `decideStackFromCache`
+deixou de servir o par guardado a quem não pediu site. A segunda é a que vale — o
+servidor não tem como saber se o par digitado é verdadeiro, então a trava fica na
+afirmação, não na gravação. Ver armadilha 8 do glossário.
+
+Sobra dali um flanco menor, **não corrigido**: quando o cadastro vence os 30 dias e é
+relido sem site informado, a gravação zera `domain` e `technographics` da linha. Não
+afirma nada falso, só perde a leitura e obriga a reler o site depois. Comportamento
+anterior a esta fase.
+
 **O que NÃO foi verificado no navegador, e por quê.** O botão de preview não sobe:
 ele falha com `This project is configured to use 10.18.0 of pnpm. Your current pnpm is
 v11.17.0` **antes** de chegar ao comando — trocar `runtimeExecutable` para o binário do
