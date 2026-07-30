@@ -59,14 +59,38 @@ const ERROR_COPY: Record<FichaError, string> = {
 };
 
 /**
- * Exemplos com CNPJ real, para o primeiro clique não gastar digitação. Os oito
- * definidos na copy entram quando existir o cache; estes três são os que já
- * consultei ao vivo e conferi.
+ * Os oito exemplos (item 1 da Fase 6). Todos já estão no cache, então clicar num
+ * deles é cache hit: não bate na Brasil API, não lê o site e não gasta quota de
+ * ninguém — ver a armadilha 7 do GLOSSARIO.
+ *
+ * **Procedência de cada par CNPJ↔site**, apurada em 30/jul/2026 e não suposta: o
+ * CNPJ foi lido do rodapé do próprio site (loja virtual é obrigada a publicá-lo,
+ * Decreto 7.962/2013, então o par se autovalida), conferido na Brasil API contra
+ * a marca, e a stack saiu do detector deste repo rodando contra o site de verdade.
+ *
+ * Petrobras e Banco do Brasil saíram. Eram exemplos ruins: nenhuma das 23
+ * ferramentas do catálogo aparece em empresa daquele porte, que roda SAP e Adobe,
+ * então os chips demonstravam o produto NÃO achando nada. E são empresas que
+ * ninguém prospecta com este método.
+ *
+ * A Ambev fica, e fica como `empty` de propósito: o site foi lido e nada apareceu.
+ * É verdade e diz algo — o catálogo é de mercado médio brasileiro. Vitrine que só
+ * mostra vitória convence menos que a que admite o limite.
+ *
+ * Três marcas têm razão social que não parece com o nome fantasia — Farm é
+ * Cidade Maravilhosa, Telhanorte é Saint-Gobain, Duloren é Moni 2001. Isso não é
+ * ruído: é a demonstração mais forte da lista, porque quem prospecta por nome
+ * fantasia não acha a empresa.
  */
 const EXEMPLOS = [
-  { nome: "Petrobras", cnpj: "33000167000101", site: "petrobras.com.br" },
+  { nome: "Farm", cnpj: "09611669000518", site: "farmrio.com.br" },
+  { nome: "Telhanorte", cnpj: "03840986005670", site: "telhanorte.com.br" },
+  { nome: "Hering", cnpj: "78876950000171", site: "hering.com.br" },
+  { nome: "C&A", cnpj: "45242914000105", site: "cea.com.br" },
+  { nome: "Drogaria São Paulo", cnpj: "61412110056533", site: "drogariasaopaulo.com.br" },
+  { nome: "Malwee", cnpj: "84429737000114", site: "malwee.com.br" },
+  { nome: "Duloren", cnpj: "04591133000130", site: "duloren.com.br" },
   { nome: "Ambev", cnpj: "07526557000100", site: "ambev.com.br" },
-  { nome: "Banco do Brasil", cnpj: "00000000000191", site: "bb.com.br" },
 ];
 
 type Estado =

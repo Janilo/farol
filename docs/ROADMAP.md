@@ -318,17 +318,34 @@ está — nunca foi commitado. O arquivo foi gerado uma vez e hoje é mantido à
 o que significa que mudar um fingerprint exige mudar também o JSON, senão o motor
 Python e o Farol discordam em silêncio.
 
-## ✅ Fase 6 — Quota da demo (o item 1 continua aberto)
+## ✅ Fase 6 — Quota da demo
 
 Feita em 30/jul/2026, **antes** da Fase 9 de propósito: a 9 é o que coloca o Farol no
 site institucional e cria tráfego, e fazer a 9 primeiro seria criar a demanda antes do
 portão. O risco era teórico só porque ninguém sabia que o produto existia.
 
-1. **Oito empresas pré-computadas como chips — NÃO feito.** Os chips continuam três
-   (Petrobras, Ambev, Banco do Brasil), e a primeira consulta de qualquer empresa nova
-   gasta quota como qualquer outra. Falta escolher as oito, e a escolha é de produto:
-   é a vitrine do que o Farol sabe mostrar. Um par CNPJ↔site errado não pode entrar no
-   cache compartilhado — o produto existe para não afirmar quem usa o quê sem prova.
+1. ✅ **Oito empresas pré-computadas como chips**, fechado em 30/jul/2026. Seed em
+   `supabase/migrations/20260730180000_farol_seed_chips.sql`, e cada par CNPJ↔site tem
+   procedência: o CNPJ saiu do rodapé do próprio site (loja virtual é obrigada a
+   publicá-lo, Decreto 7.962/2013, então o par se autovalida), foi conferido na Brasil
+   API contra a marca, e a stack veio do detector rodando contra o site.
+
+   **Petrobras e Banco do Brasil saíram.** Eram anti-exemplos: nenhuma das 23
+   ferramentas aparece em empresa daquele porte, então os chips demonstravam o produto
+   não achando nada — e são empresas que ninguém prospecta com este método. A Ambev
+   ficou como `empty` deliberado.
+
+   **Sete dos oito são VTEX, e isso é limite do produto, não da curadoria.** Em ~50
+   empresas varridas, nenhuma detecção de terceiro fora de VTEX sobreviveu ao
+   escrutínio. Ler HTML inicial enxerga bem plataforma de e-commerce e quase nada mais:
+   ERP não aparece em site institucional, CRM idem, SDK de pagamento carrega no
+   checkout e chat entra por JS assíncrono. Isso pesa no discurso da Fase 9.
+
+   A varredura pagou por si: achou os dois falsos positivos consertados na Fase 4.2 e o
+   teto de leitura. **Uma candidata foi descartada por julgamento, não por medição** —
+   a Movidesk detecta Zenvia por `<iframe src>`, o que está correto, mas a Zenvia é
+   dona da Movidesk e aquilo é infra da matriz. Tecnografia não distingue fornecedor de
+   controlador, e nenhum código conserta isso.
 2. ~~Cache compartilhado~~ — **feito na Fase 3.**
 3. ✅ `demo_lookups` com `visitor_hash` = sha256(IP + salt) e `src/lib/rate-limit.ts`
    puro: 5 novas/dia por visitante anônimo, 150/dia global, 50/dia para conta aprovada
