@@ -475,7 +475,10 @@ describe("seletor dom não pode ser o slug do fornecedor", () => {
     for (const f of FINGERPRINTS) {
       const slug = f.name.toLowerCase().replace(/[^a-z0-9]/g, "");
       for (const sel of f.dom) {
-        const token = sel.replace(/^[.#]/, "").toLowerCase().replace(/[^a-z0-9]/g, "");
+        const token = sel
+          .replace(/^[.#]/, "")
+          .toLowerCase()
+          .replace(/[^a-z0-9]/g, "");
         // Igualdade exata é o caso ruim. `.mercadopago-button` e `#jivo_chat_widget`
         // contêm o slug mas nomeiam o que a plataforma EMITE, e isso é legítimo.
         if (token === slug) ofensores.push(`${f.name}: ${sel}`);
