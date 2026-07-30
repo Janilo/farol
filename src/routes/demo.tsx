@@ -330,9 +330,7 @@ function SecaoStack({ stack, domain }: { stack: StackResult | null; domain: stri
             passo mais clara. Com o mesmo tom, o visitante lê a de cima e para —
             e a de cima é a que não interessa. Quem faz o trabalho é a segunda:
             ela impede a leitura de que a ficha inteira falhou. */}
-        <p className="text-xs text-[color:var(--farol-fog)]">
-          {STACK_ERROR_COPY[stack.reason]}
-        </p>
+        <p className="text-xs text-[color:var(--farol-fog)]">{STACK_ERROR_COPY[stack.reason]}</p>
         <p className="mt-1 text-xs text-[color:var(--farol-mist)]">
           O cadastro da Receita não depende disso.
         </p>

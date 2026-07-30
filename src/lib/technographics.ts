@@ -86,7 +86,15 @@ export interface Detection {
 
 /** Retrato vazio — o ponto de partida do adapter e dos testes. */
 export function emptySnapshot(): PageSnapshot {
-  return { urls: [], ids: [], classes: [], dataAttributes: [], headers: {}, metas: {}, cookieNames: [] };
+  return {
+    urls: [],
+    ids: [],
+    classes: [],
+    dataAttributes: [],
+    headers: {},
+    metas: {},
+    cookieNames: [],
+  };
 }
 
 /* ------------------------------------------------------------------ *
@@ -131,7 +139,16 @@ export function isAllowedTarget(host: string): boolean {
   // Precisa de rótulo + TLD alfabético de 2+ letras.
   if (!/^([a-z0-9](-*[a-z0-9])*\.)+[a-z]{2,}$/.test(host)) return false;
   // Sufixos que nomeiam rede interna, não a internet pública.
-  const internos = [".localhost", ".local", ".internal", ".intranet", ".home.arpa", ".test", ".invalid", ".example"];
+  const internos = [
+    ".localhost",
+    ".local",
+    ".internal",
+    ".intranet",
+    ".home.arpa",
+    ".test",
+    ".invalid",
+    ".example",
+  ];
   if (internos.some((s) => host.endsWith(s))) return false;
   return true;
 }
@@ -240,13 +257,10 @@ function safeRegex(pattern: string): RegExp | null {
  * e há teste sobre os dados reais para que um seletor novo fora dessas formas
  * quebre o CI em vez de nunca casar em silêncio.
  */
-function parseSelector(
-  selector: string,
-): { kind: "id" | "class" | "attr"; value: string } | null {
+function parseSelector(selector: string): { kind: "id" | "class" | "attr"; value: string } | null {
   if (/^#[A-Za-z0-9_-]+$/.test(selector)) return { kind: "id", value: selector.slice(1) };
   if (/^\.[A-Za-z0-9_-]+$/.test(selector)) return { kind: "class", value: selector.slice(1) };
-  if (/^\[[A-Za-z0-9_-]+\]$/.test(selector))
-    return { kind: "attr", value: selector.slice(1, -1) };
+  if (/^\[[A-Za-z0-9_-]+\]$/.test(selector)) return { kind: "attr", value: selector.slice(1, -1) };
   return null;
 }
 
@@ -373,7 +387,8 @@ export function detectTechnologies(
 
   // Ordem estável para a tela e para o cache: categoria, depois nome.
   return [...achados.values()].sort(
-    (a, b) => a.category.localeCompare(b.category, "pt-BR") || a.tool.localeCompare(b.tool, "pt-BR"),
+    (a, b) =>
+      a.category.localeCompare(b.category, "pt-BR") || a.tool.localeCompare(b.tool, "pt-BR"),
   );
 }
 

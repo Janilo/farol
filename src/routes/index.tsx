@@ -184,8 +184,8 @@ function LandingPage() {
                 </h2>
               </div>
               <p className="hidden md:block text-sm text-muted-foreground max-w-xs">
-                Cadastro da fonte primária, {CATALOGO} fingerprints de ferramentas brasileiras e a rubrica
-                de priorização com os quatro eixos abertos.
+                Cadastro da fonte primária, {CATALOGO} fingerprints de ferramentas brasileiras e a
+                rubrica de priorização com os quatro eixos abertos.
               </p>
             </div>
 

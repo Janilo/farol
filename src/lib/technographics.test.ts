@@ -31,7 +31,8 @@ describe("catálogo", () => {
   it("toda regex do catálogo compila", () => {
     for (const f of FINGERPRINTS) {
       for (const p of f.scripts) expect(() => new RegExp(p, "i")).not.toThrow();
-      for (const p of Object.values(f.headers)) if (p) expect(() => new RegExp(p, "i")).not.toThrow();
+      for (const p of Object.values(f.headers))
+        if (p) expect(() => new RegExp(p, "i")).not.toThrow();
       for (const p of Object.values(f.meta)) if (p) expect(() => new RegExp(p, "i")).not.toThrow();
     }
   });
@@ -293,13 +294,26 @@ describe("isAllowedTarget · o portão de SSRF", () => {
   it("recusa TODO literal de IP, e é aí que mora o endpoint de metadados", () => {
     // Recusar IP de uma vez mata a classe inteira sem depender de acertar cada
     // faixa reservada — que é onde essas listas falham, por uma faixa esquecida.
-    for (const h of ["169.254.169.254", "127.0.0.1", "10.0.0.5", "192.168.1.1", "172.16.0.1", "8.8.8.8"]) {
+    for (const h of [
+      "169.254.169.254",
+      "127.0.0.1",
+      "10.0.0.5",
+      "192.168.1.1",
+      "172.16.0.1",
+      "8.8.8.8",
+    ]) {
       expect(isAllowedTarget(h), h).toBe(false);
     }
   });
 
   it("recusa host sem TLD e sufixo de rede interna", () => {
-    for (const h of ["localhost", "supabase", "db.internal", "impressora.local", "algo.localhost"]) {
+    for (const h of [
+      "localhost",
+      "supabase",
+      "db.internal",
+      "impressora.local",
+      "algo.localhost",
+    ]) {
       expect(isAllowedTarget(h), h).toBe(false);
     }
   });
@@ -329,7 +343,10 @@ describe("extractSnapshot", () => {
     <!-- comentário citando vtex e rdtrk em prosa -->
   </body></html>`;
 
-  const snap = extractSnapshot(HTML, { "X-VTEX": "io" }, ["vtex_segment=abc; Path=/", "jv_visits=2"]);
+  const snap = extractSnapshot(HTML, { "X-VTEX": "io" }, [
+    "vtex_segment=abc; Path=/",
+    "jv_visits=2",
+  ]);
 
   it("colhe URLs de src, href e action", () => {
     expect(snap.urls).toContain("https://d335luupugsy2.cloudfront.net/js/loader.js");
