@@ -264,6 +264,37 @@ existe.
   `border-border` — foi assim que os chips de exemplo nasceram em 1,49
   (DESIGN.md §2.2). No estado escolhido, o piso do texto é 4,5, não 3.
 
+## ✅ Fase 4.2 — O teto de leitura escondia achado
+
+Aberta em 30/jul/2026 pela varredura de candidatos a chip da Fase 6, que rendeu
+duas detecções de terceiro em 24 sites. Investigando o motivo, o defeito apareceu:
+
+| Medida | Valor |
+|---|---|
+| HTML de `farmrio.com.br` | 609.886 bytes |
+| `MAX_BYTES` de então | 512.000 |
+| Onde aparece `vtexassets.com` | byte 609.358 |
+
+O fingerprint do VTEX **já casava** esse padrão. O detector devolvia `empty`, que
+na tela diz "li o site e não achei nada", quando o certo era "li menos da metade
+do site". Vitrine moderna embute JSON grande no documento — a Farm roda deco.cx —
+e as URLs de CDN do fornecedor caem no fim.
+
+Teto para 2 MB. Efeito medido na re-varredura: Farm passou de `empty` a VTEX, e a
+C&A também apareceu. Extração mais lenta ficou em 1,7 s com o fetch incluso.
+
+**Uma hipótese minha que a medição derrubou**, e que teria virado código à toa: eu
+tinha diagnosticado dois defeitos, o segundo sendo ocorrência percent-encoded
+(`vtex%2Floaders%2F`, no byte 172.118). Fui ver em que atributo estava: em nenhum —
+está dentro de um `<script>`. O detector lê URLs e não corpo de JS, de propósito,
+porque ler JS traz falso positivo em massa. Era um defeito só.
+
+**Correção de fato falso no repo**, achada no mesmo caminho: o cabeçalho de
+`fingerprints.ts` afirmava que o script de geração estava no commit da Fase 4. Não
+está — nunca foi commitado. O arquivo foi gerado uma vez e hoje é mantido à mão,
+o que significa que mudar um fingerprint exige mudar também o JSON, senão o motor
+Python e o Farol discordam em silêncio.
+
 ## ✅ Fase 6 — Quota da demo (o item 1 continua aberto)
 
 Feita em 30/jul/2026, **antes** da Fase 9 de propósito: a 9 é o que coloca o Farol no

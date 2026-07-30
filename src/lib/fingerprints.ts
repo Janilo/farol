@@ -1,9 +1,19 @@
 /**
  * Porta tipada de `Clientes/Leads/tecnografias_br.json` — as ferramentas
- * brasileiras que scanner global não reconhece. Este arquivo é GERADO a partir
- * daquele JSON; não editar à mão, e sim regerar (o script de geração está no
- * commit da Fase 4). O JSON continua sendo a fonte, porque é ele que o motor
- * Python original lê.
+ * brasileiras que scanner global não reconhece. O JSON continua sendo a fonte,
+ * porque é ele que o motor Python original lê.
+ *
+ * ⚠️ **Correção de 30/jul/2026.** Este cabeçalho dizia "este arquivo é GERADO;
+ * não editar à mão, e sim regerar (o script de geração está no commit da Fase
+ * 4)". A segunda metade era falsa: o script nunca foi commitado, e nenhum commit
+ * do repo contém arquivo de geração. Verificado com `git log --all` sobre
+ * `scripts/` e sobre todo padrão de nome plausível.
+ *
+ * Na prática, então: este arquivo foi gerado **uma vez** e hoje é mantido à mão.
+ * Quem mudar um fingerprint tem que mudar nos DOIS lugares — aqui e no JSON —
+ * senão o motor Python e o Farol passam a discordar em silêncio. Um controle
+ * declarado que não existe é pior que a fuga, porque a decisão seguinte se apoia
+ * nele; foi a mesma lição do `EXECUTE` do `is_approved` em SEGURANCA.md.
  *
  * Duas diferenças deliberadas em relação à fonte, as duas registradas em
  * docs/ROADMAP.md Fase 4:

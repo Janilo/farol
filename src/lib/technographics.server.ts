@@ -30,8 +30,24 @@ import {
 } from "./technographics";
 
 const TIMEOUT_MS = 8_000;
-/** Teto do corpo lido. Página maior é truncada, não recusada. */
-const MAX_BYTES = 500 * 1024;
+/**
+ * Teto do corpo lido. Página maior é truncada, não recusada.
+ *
+ * Era 500 KB e **isso causava falso negativo silencioso**, medido em 30/jul/2026:
+ * `farmrio.com.br` devolve 609.886 bytes de HTML, e a única ocorrência de
+ * `vtexassets.com` — que o fingerprint do VTEX já casava — está no byte 609.358.
+ * Fora do teto por 98 KB. O detector dizia `empty`, que na tela significa "li o
+ * site e não achei nada", quando o certo era "li menos da metade do site".
+ *
+ * Vitrine moderna embute JSON grande no documento (a Farm roda deco.cx), então
+ * as URLs de CDN do fornecedor caem no fim. Truncar por tamanho é razoável;
+ * truncar em 500 KB não é.
+ *
+ * 2 MB cobre a Farm com folga de 3×. O custo é CPU de regex sobre mais bytes —
+ * o teste `extractSnapshot aguenta documento no teto` mede isso e falha se passar
+ * de um segundo.
+ */
+export const MAX_BYTES = 2 * 1024 * 1024;
 const MAX_SALTOS = 3;
 
 export type FetchSiteResult =

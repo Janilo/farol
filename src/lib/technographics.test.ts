@@ -11,6 +11,7 @@ import {
   unsupportedSelectors,
   type PageSnapshot,
 } from "./technographics";
+import { MAX_BYTES } from "./technographics.server";
 
 function snapshot(parcial: Partial<PageSnapshot>): PageSnapshot {
   return { ...emptySnapshot(), ...parcial };
@@ -402,5 +403,44 @@ describe("entidades HTML na URL extraída", () => {
     expect(snap.urls[0]).toBe("https://accounts.rdstation.com.br/?locale=pt-BR&trial_origin=blog");
     const d = detectTechnologies(snap).find((x) => x.tool === "RD Station CRM");
     expect(d?.evidence).not.toContain("&amp;");
+  });
+});
+
+describe("documento grande — o teto que escondia achado", () => {
+  /**
+   * Regressão de um falso negativo medido em produção em 30/jul/2026.
+   *
+   * O teto de leitura era 500 KB. A `farmrio.com.br` devolve 609.886 bytes, e a
+   * única ocorrência de `vtexassets.com` — que o fingerprint do VTEX já casava —
+   * está no byte 609.358. Fora do teto por 98 KB. O detector dizia `empty`, e
+   * `empty` na tela significa "li o site e não achei nada", quando o certo era
+   * "li menos da metade do site". Truncar por tamanho é razoável; truncar antes
+   * de a vitrine terminar de listar seus assets não é.
+   *
+   * Se `MAX_BYTES` voltar a encolher abaixo do documento da Farm, este teste cai.
+   */
+  it("MAX_BYTES cobre a página que expôs o defeito, com folga", () => {
+    const FARM_BYTES = 609_886;
+    expect(MAX_BYTES).toBeGreaterThan(FARM_BYTES);
+    // Folga de pelo menos 2×: a Farm não é o maior documento do mundo.
+    expect(MAX_BYTES).toBeGreaterThanOrEqual(FARM_BYTES * 2);
+  });
+
+  it("acha a evidência no ÚLTIMO byte de um documento do tamanho do teto", () => {
+    // Enchimento sem URL nenhuma, e a prova só no fim — que é a forma exata do
+    // defeito: vitrine embute JSON grande e o CDN do fornecedor fica por último.
+    const enchimento = "<p>lorem ipsum dolor sit amet consectetur</p>".repeat(45_000);
+    const html = `<html><body>${enchimento}<img src="https://lojafarm.vtexassets.com/arquivos/let.png?v=1"></body></html>`;
+    expect(html.length).toBeGreaterThan(1_500_000);
+
+    const inicio = performance.now();
+    const snap = extractSnapshot(html);
+    const detectado = detectTechnologies(snap);
+    const ms = performance.now() - inicio;
+
+    expect(detectado.map((d) => d.tool)).toContain("VTEX");
+    // O teto maior custa CPU de regex, e o Worker tem orçamento. Um segundo é
+    // folgado para 1,5 MB; se passar disso, o teto ficou caro demais.
+    expect(ms).toBeLessThan(1_000);
   });
 });
