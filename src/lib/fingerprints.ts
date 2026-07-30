@@ -15,6 +15,21 @@
  * declarado que não existe é pior que a fuga, porque a decisão seguinte se apoia
  * nele; foi a mesma lição do `EXECUTE` do `is_approved` em SEGURANCA.md.
  *
+ * **Seletor `dom` não pode ser o slug do fornecedor** (30/jul/2026). `.vtex` saiu
+ * do VTEX e `.nuvemshop`/`.nuvem-shop` saíram do Nuvemshop, aqui e no JSON.
+ *
+ * O motivo é medido: `octadesk.com` carrega 6 classes exatamente `vtex` e 7
+ * exatamente `nuvemshop` — a seção de integrações da Octadesk, que *integra* com
+ * as duas e não *roda* nenhuma. O nome da classe é o slug do logotipo. Uma classe
+ * chamada como o produto é o que a página de integrações de qualquer concorrente
+ * vai usar, então esse seletor detecta o oposto do que promete: quem fala do
+ * fornecedor, não quem o usa.
+ *
+ * O que fica são seletores que a plataforma **emite**: `.mercadopago-button` é
+ * classe do SDK, `#jivo_chat_widget` e `#blip-chat` são ids de widget, e id não
+ * vira nome de logotipo. Custo em recall: zero observado — nas 68 sondagens de
+ * 30/jul, toda detecção legítima veio por `script`, nenhuma por `dom`.
+ *
  * Duas diferenças deliberadas em relação à fonte, as duas registradas em
  * docs/ROADMAP.md Fase 4:
  *
@@ -222,7 +237,8 @@ export const FINGERPRINTS: Fingerprint[] = [
     category: "E-commerce",
     scripts: ["nuvemshop\\.com\\.br", "nuvemshop\\.com\\/checkout", "nuvem\\.shop"],
     headers: {},
-    dom: [".nuvemshop", ".nuvem-shop"],
+    // Os dois seletores eram o slug puro e saíram em 30/jul/2026 — ver o cabeçalho.
+    dom: [],
     cookies: [],
     meta: { generator: "Nuvemshop" },
     implies: [],
@@ -261,7 +277,8 @@ export const FINGERPRINTS: Fingerprint[] = [
     category: "E-commerce",
     scripts: ["vtex\\.com\\.br", "vtexassets\\.com", "vtex\\.io", "vtexcommerce"],
     headers: { "X-VTEX": "", "X-Powered-By": "VTEX" },
-    dom: [".vtex", ".vtex-store"],
+    // `.vtex` saiu em 30/jul/2026 — ver a nota de seletor-slug no cabeçalho.
+    dom: [".vtex-store"],
     cookies: ["VtexRCMacId", "vtex_segment"],
     meta: {},
     implies: [],

@@ -289,6 +289,29 @@ tinha diagnosticado dois defeitos, o segundo sendo ocorrência percent-encoded
 está dentro de um `<script>`. O detector lê URLs e não corpo de JS, de propósito,
 porque ler JS traz falso positivo em massa. Era um defeito só.
 
+**Segunda rodada, 44 sites, e um falso positivo.** A varredura ampla rendeu quatro
+detecções boas (Telhanorte, Pague Menos, Oceane por VTEX; Movidesk por Zenvia) e
+uma falsa: `octadesk.com` como VTEX + Nuvemshop, pela via `dom`. A Octadesk carrega
+6 classes exatamente `vtex` e 7 exatamente `nuvemshop` — é a seção de integrações.
+Ela integra com as duas e não roda nenhuma.
+
+O seletor que é o **slug do fornecedor** detecta o oposto do que promete: quem fala
+dele, não quem o usa — e página de integrações de concorrente é o lugar onde esse
+nome mais aparece. `.vtex`, `.nuvemshop` e `.nuvem-shop` saíram, aqui e no
+`tecnografias_br.json`. Ficam os seletores que a plataforma **emite**:
+`.mercadopago-button` é classe do SDK, `#jivo_chat_widget` e `#blip-chat` são ids de
+widget, e id não vira nome de logotipo. Custo em recall: zero observado — nas 68
+sondagens do dia, toda detecção legítima veio por `script`.
+
+**O achado maior é sobre o método, não sobre um bug.** Das 8 detecções reais
+acumuladas, 7 são VTEX; a exceção é Movidesk → Zenvia. VTEX serve assets de
+`vtexassets.com` e por isso aparece na URL. RD Station, Omie, Totvs, Sankhya, Conta
+Azul e os CRMs rodam no servidor ou entram por gerenciador de tags depois do
+documento inicial. Ler só o documento inicial é decisão de projeto — sem navegador,
+sem execução de JS —, e a consequência é que **a tecnografia demonstra bem
+plataforma de e-commerce e mal o resto do catálogo.** Isso vai para a tela em vez de
+ficar implícito: a demo diz o viés.
+
 **Correção de fato falso no repo**, achada no mesmo caminho: o cabeçalho de
 `fingerprints.ts` afirmava que o script de geração estava no commit da Fase 4. Não
 está — nunca foi commitado. O arquivo foi gerado uma vez e hoje é mantido à mão,

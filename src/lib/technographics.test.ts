@@ -444,3 +444,48 @@ describe("documento grande — o teto que escondia achado", () => {
     expect(ms).toBeLessThan(1_000);
   });
 });
+
+describe("seletor dom não pode ser o slug do fornecedor", () => {
+  /**
+   * Falso positivo medido em 30/jul/2026 na varredura de candidatos a chip.
+   *
+   * `octadesk.com` carregava 6 classes exatamente `vtex` e 7 exatamente
+   * `nuvemshop`, e o detector concluía que a Octadesk rodava as duas plataformas.
+   * Ela não roda nenhuma: aquilo é a seção de integrações, e a classe é o slug do
+   * logotipo. O seletor detectava o oposto do que prometia — quem FALA do
+   * fornecedor, não quem o USA.
+   *
+   * Se alguém repuser `.vtex` ou `.nuvemshop` no catálogo, este teste cai.
+   */
+  const PAGINA_DE_INTEGRACOES = `
+    <section class="integracoes">
+      <div class="card vtex"><img alt="VTEX"></div>
+      <div class="card nuvemshop"><img alt="Nuvemshop"></div>
+      <div class="card nuvem-shop"><img alt="Nuvem Shop"></div>
+    </section>`;
+
+  it("página que só LISTA integrações não detecta nada", () => {
+    const detectado = detectTechnologies(extractSnapshot(PAGINA_DE_INTEGRACOES));
+    expect(detectado.map((d) => d.tool)).not.toContain("VTEX");
+    expect(detectado.map((d) => d.tool)).not.toContain("Nuvemshop");
+  });
+
+  it("o catálogo não tem seletor dom igual ao slug do fornecedor", () => {
+    const ofensores: string[] = [];
+    for (const f of FINGERPRINTS) {
+      const slug = f.name.toLowerCase().replace(/[^a-z0-9]/g, "");
+      for (const sel of f.dom) {
+        const token = sel.replace(/^[.#]/, "").toLowerCase().replace(/[^a-z0-9]/g, "");
+        // Igualdade exata é o caso ruim. `.mercadopago-button` e `#jivo_chat_widget`
+        // contêm o slug mas nomeiam o que a plataforma EMITE, e isso é legítimo.
+        if (token === slug) ofensores.push(`${f.name}: ${sel}`);
+      }
+    }
+    expect(ofensores).toEqual([]);
+  });
+
+  it("o que a plataforma emite continua valendo", () => {
+    const snap = extractSnapshot('<div id="jivo_chat_widget"></div>');
+    expect(detectTechnologies(snap).map((d) => d.tool)).toContain("Jivochat");
+  });
+});
