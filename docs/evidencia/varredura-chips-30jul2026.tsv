@@ -1,0 +1,73 @@
+# Varredura de candidatos a chip — 30/jul/2026
+#
+# Evidência do claim que está em docs/ROADMAP.md Fase 6: em ~50 empresas,
+# nenhuma detecção de terceiro fora de VTEX sobreviveu ao escrutínio.
+# Guardado no repo porque afirmação sem a medição atrás vira folclore.
+
+## 1. Primeira varredura, ANTES de subir o teto de leitura (MAX_BYTES 500 KB)
+usereserva.com	blocked
+tracknfield.com.br	unreachable
+insiderstore.com.br	empty
+cacaushow.com.br	unreachable
+petz.com.br	blocked
+farmrio.com.br	empty
+amaro.com	empty
+zeedog.com.br	empty
+hering.com.br	OK 1	VTEX(script)
+arezzo.com.br	empty
+granado.com.br	OK 1	VTEX(script)
+chilibeans.com.br	unreachable
+oboticario.com.br	timeout
+lojasrenner.com.br	empty
+omie.com.br	OK 1	Omie(script)
+contaazul.com	OK 1	Conta Azul(script)
+nuvemshop.com.br	OK 1	Nuvemshop(script)
+piperun.com	OK 1	PipeRun(script)
+ploomes.com	OK 1	Ploomes(script)
+moskitcrm.com	empty
+jivochat.com.br	OK 1	Jivochat(script)
+westwing.com.br	unreachable
+mobly.com.br	empty
+epocacosmeticos.com.br	unreachable
+## 2. Varredura por diversidade de categoria, com teto de 2 MB
+telhanorte.com.br	OK	VTEX[script]
+movidesk.com	OK	Zenvia[script]
+farmrio.com.br	OK	VTEX[script]
+cea.com.br	OK	VTEX[script]
+hering.com.br	OK	VTEX[script]
+puket.com.br	OK	VTEX[script]
+lojasmm.com	unreachable
+camicado.com.br	empty
+ludi.com.br	unreachable
+cobasi.com.br	empty
+petlove.com.br	blocked
+drogariasaopaulo.com.br	OK	VTEX[script]
+grupoboticario.com.br	empty
+usaflex.com.br	unreachable
+malwee.com.br	OK	VTEX[script]
+lupo.com.br	unreachable
+duloren.com.br	OK	VTEX[script]
+olympikus.com.br	unreachable
+contabilizei.com.br	empty
+solides.com.br	empty
+gupy.io	empty
+sympla.com.br	empty
+hotmart.com	empty
+vindi.com.br	empty
+superlogica.com	empty
+resultadosdigitais.com.br	OK	RD Station CRM[script]
+nuvemshop.com.br	OK	Nuvemshop[script]
+lojaintegrada.com.br	OK	Loja Integrada[script]
+tray.com.br	OK	Tray[script]
+zenvia.com	OK	Zenvia[script]
+## 3. Varredura final, DEPOIS de separar assetUrls de hyperlink
+farmrio.com.br	OK	urls=369 assets=33	VTEX[script] https://lojafarm.vtexassets.com/arquivos/let.png?v=637949560347830000
+telhanorte.com.br	OK	urls=809 assets=122	VTEX[script] https://telhanorte.vtexassets.com/_v/public/assets/v1/bundle/css/asset.min.css?v=3&files=theme,telhanorte.telha-store-theme@5.7.7$style.common,telhanorte.telha-store-theme@5.7.7$style.small,telhanorte.telha-store-theme@5.7.7$style.notsmall,telhanorte.telha-store-theme@5.7.7$style.large,telhanorte.telha-store-theme@5.7.7$style.xlarge&files=fonts,989db2448f309bfdd99b513f37c84b8f5794d2b5&files=npm,animate.css@3.7.0/animate.min.css&files=react~vtex.render-runtime@8.136.2,common&files=react~vtex.store-components@3.178.5,Container,4,SearchBar,3,DiscountBadge&files=react~vtex.styleguide@9.146.16,0,1,Spinner,Tooltip,NumericStepper&files=react~vtex.rich-text@0.16.1,index&files=react~telhanorte.telha-store-app@1.27.6,SliderTelha,Menu&files=react~vtex.flex-layout@0.21.6,0&files=react~vtex.admin-pages@4.59.2,HighlightOverlay&files=react~vtex.minicart@2.68.0,Minicart&files=react~telhanorte.wish-list@2.0.0,AddProductBtn&files=react~vtex.search@2.18.9,Autocomplete&files=react~vtex.product-summary@2.92.0,ProductSummaryLegacy&files=overrides,vtex.product-list@0.37.5$overrides,vtex.minicart@2.68.0$overrides,telhanorte.telha-store-theme@5.7.7$overrides,telhanorte.telha-store-theme@5.7.7$fonts&workspace=master
+movidesk.com	OK	urls=126 assets=67	Zenvia[script] https://docs.zenvia.com/l/843713/2024-09-26/q9p68n
+drogariasaopaulo.com.br	OK	urls=719 assets=328	VTEX[script] https://io.vtex.com.br/front-libs/jquery/1.8.3/jquery-1.8.3.min.js?v=1.0.0.0
+malwee.com.br	OK	urls=366 assets=123	VTEX[script] https://malwee.vtexassets.com/_v/public/vtex.styles-graphql/v1/style/malwee.mz-builder-theme@11.3.16$style.common.min.css?v=1&workspace=master
+duloren.com.br	OK	urls=211 assets=106	VTEX[script] https://io.vtex.com.br/v3/polyfill.min.js?version=3.89.4&features=Object.keys,document.currentScript,CustomEvent&flags=gated,always
+hering.com.br	OK	urls=25 assets=25	VTEX[script] https://io.vtex.com.br/rc/rc.js
+cea.com.br	OK	urls=578 assets=122	VTEX[script] https://cea.vtexassets.com/_v/public/assets/v1/bundle/css/asset.min.css?v=3&files=theme,cea.cea-store-theme@2.83.0$style.common,cea.cea-store-theme@2.83.0$style.small,cea.cea-store-theme@2.83.0$style.notsmall,cea.cea-store-theme@2.83.0$style.large,cea.cea-store-theme@2.83.0$style.xlarge&files=fonts,989db2448f309bfdd99b513f37c84b8f5794d2b5&files=npm,animate.css@3.7.0/animate.min.css&files=react~vtex.render-runtime@8.136.2,common&files=react~vtex.store-components@3.178.5,Container&files=react~vtex.styleguide@9.146.16,0,Spinner&files=react~cea.cea-wishlist@0.11.0,0,2,MyWishlistAccount&files=react~cea.store-ds@0.47.0,Footer,16,PersonalShopper,SocialMedia,FooterMenu,FooterMenuMobile,Glossary,FooterNotes,FlexBanner,3,8,9,MainBanner,SEOTextModuleHome,BackToTopButton,Breadcrumb,SEOTextModule,InformationBar,InspirationalBanner,BracketsBanner,CeaTooltip,DSCeaNewsLetter,ProgressiveBubbles,19,LabelStamps,17,DesktopMenu,MobileMenu,WishlistHeader,12,DesktopSearch,MobileSearch,SearchbarForm,SearchbarResults,SearchbarSuggestion,Login&files=react~vtex.flex-layout@0.21.6,0&files=react~cea.minha-cea-novo-modelo@0.3.1,0,2,TabbarConsultora&files=react~vtex.admin-pages@4.59.2,HighlightOverlay&files=react~cea.cea-store-theme@2.83.0,SkipToContent,HeaderWrapper,CeaSliderLayout,MinicartTitle,IconCart,HeadingTagH1,8,RedirectButton,CeaEvcMenuServices&files=react~cea.store-modules@0.25.0,0&files=react~cea.store-components@0.22.0,Topbar&files=react~vtex.minicart@2.68.0,Minicart&files=react~cea.header-components@0.12.1,SearchBar&files=react~vtex.rich-text@0.16.1,index&files=react~cea.mdm-login@0.4.0,LogoutButton&files=overrides,cea.app-first-booster@0.0.7$overrides,vtex.product-list@0.37.5$overrides,vtex.minicart@2.68.0$overrides,cea.cea-store-theme@2.83.0$overrides,cea.cea-store-theme@2.83.0$fonts&workspace=master
+puket.com.br	OK	urls=209 assets=132	VTEX[script] https://lojapuket.vtexassets.com/_v/public/assets/v1/bundle/css/asset.min.css?v=3&files=theme,lojapuket.store-theme@4.0.17$style.common,lojapuket.store-theme@4.0.17$style.small,lojapuket.store-theme@4.0.17$style.notsmall,lojapuket.store-theme@4.0.17$style.large,lojapuket.store-theme@4.0.17$style.xlarge&files=fonts,989db2448f309bfdd99b513f37c84b8f5794d2b5&files=npm,animate.css@3.7.0/animate.min.css&files=react~vtex.render-runtime@8.136.2,common&files=react~vtex.store-components@3.178.5,Container,4,SearchBar,Logo,DiscountBadge,SKUSelector&files=react~vtex.styleguide@9.146.16,0,1,Spinner,15,Tooltip&files=react~vtex.flex-layout@0.21.6,0&files=react~lojapuket.store-theme@4.0.17,CampanhaPage,RenderFAQ,NeoAssistScript,PopupCPG,CheckLogin,WhatsappComponent,Cookies,3,CustomMenu,MinicartBanner,ShelfBuyButton,7&files=react~vtex.rich-text@0.16.1,index&files=react~vtex.admin-pages@4.59.2,HighlightOverlay&files=react~lemoneybr.opencashback-plugin@2.4.7,index&files=react~vtex.search@2.18.9,Autocomplete&files=react~vtex.login@2.70.0,1&files=react~vtex.minicart@2.68.0,Minicart&files=react~lojapuket.product-card-badge@1.1.1,ProductBadgeContainer,ProductBadge&files=react~vtex.product-summary@2.92.0,ProductSummaryImage&files=overrides,vtex.product-list@0.37.5$overrides,vtex.minicart@2.68.0$overrides,lojapuket.store-theme@4.0.17$overrides,lojapuket.store-theme@4.0.17$fonts&workspace=master
+ambev.com.br	empty	urls=1 assets=0

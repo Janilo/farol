@@ -31,6 +31,11 @@
 -- writeCachedFicha. As duas rotas produzem a mesma forma de linha — é o mesmo
 -- conjunto de campos e o mesmo dado de origem. Esta migration é o artefato
 -- reproduzível para um ambiente novo.
+--
+-- GERADO por scripts/gerar-seed-chips.cjs a partir de scripts/seed-chips.json.
+-- Editar aqui à mão é perder a edição na próxima geração — foi o que aconteceu
+-- com esta própria nota, em 30/jul/2026, minutos depois de eu criticar o gerador
+-- de fingerprints por não ter sido versionado.
 
 -- Farm · CIDADE MARAVILHOSA INDUSTRIA E COMERCIO DE ROUPAS SA
 insert into public.fichas (cnpj, enrichment, technographics, domain, fetched_at) values (
