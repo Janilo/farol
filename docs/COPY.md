@@ -157,7 +157,9 @@ Label: `Depois — ficha montada`
 | `SOURCE_RATE_LIMITED` | A fonte pública limitou as consultas por agora. Tente em alguns minutos. |
 | `SOURCE_UNAVAILABLE` | A fonte da Receita está fora do ar. Não é você, é ela. |
 | `SITE_UNREACHABLE` | O site não respondeu, então a stack não entrou. O cadastro está completo. |
-| `DEMO_QUOTA_EXCEEDED` | Você usou as consultas da demo de hoje. Criar conta libera mais. |
+| `QUOTA_VISITANTE` | Você usou as 5 consultas novas de hoje. Empresa que já está em cache continua liberada, como os exemplos acima. |
+| `QUOTA_GLOBAL` | A demo bateu o teto de consultas do dia. O limite é da casa, não seu: o Farol lê fontes públicas de graça e não repassa a conta para elas. |
+| `QUOTA_INDISPONIVEL` | Não consegui apurar o limite de consultas agora, e prefiro recusar a consultar sem contar. Tente em alguns minutos. |
 
 **Rodapé da demo**
 > Dados públicos da Receita Federal, consultados via Brasil API. O Farol não guarda nada além da consulta feita.
