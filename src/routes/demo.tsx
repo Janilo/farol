@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { Search, ArrowRight, Loader2 } from "lucide-react";
 
+import { PreTier } from "@/components/PreTier";
 import { SiteHeader } from "@/components/brand/SiteHeader";
 import { BrandFooter } from "@/components/brand/BrandFooter";
 import { getFichaFn, type FichaError } from "@/lib/ficha.functions";
@@ -286,21 +287,17 @@ function DemoPage() {
           </div>
         </section>
 
+        <section className="border-t border-border py-12">
+          <div className="mx-auto max-w-3xl px-6">
+            <PreTier />
+          </div>
+        </section>
+
         <section className="border-t border-border bg-card/40 py-10">
           <div className="mx-auto max-w-3xl px-6">
             <p className="text-xs leading-relaxed text-[color:var(--farol-fog)]">
               Cadastro público da Receita Federal via Brasil API; a stack sai da leitura do próprio
               site, contra {CATALOGO} fingerprints de ferramentas brasileiras.
-            </p>
-            <p className="mt-4 text-sm text-muted-foreground">
-              O cálculo de prioridade entra na próxima fase.{" "}
-              <Link
-                to="/metodologia"
-                className="text-[color:var(--farol-beam)] underline underline-offset-4"
-              >
-                Como a rubrica funciona
-              </Link>
-              .
             </p>
           </div>
         </section>

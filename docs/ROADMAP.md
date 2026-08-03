@@ -4,14 +4,15 @@ Estado das fases e o que falta. Este arquivo substitui o plano que vivia em
 `~/.claude/plans/`, fora de controle de versão — um roteiro de onze fases que
 atravessa sessões precisa de histórico.
 
-**Fases 0, 1, 2, 3, 4, 4.2, 6 e 7 estão fechadas.** O produto está no ar em
+**Fases 0, 1, 2, 3, 4, 4.2, 5, 6 e 7 estão fechadas.** O produto está no ar em
 [farol.pereirasaraiva.com](https://farol.pereirasaraiva.com) consultando o
 cadastro da Receita Federal por CNPJ, com cache de 30 dias e detecção de
 tecnografia brasileira a partir do site.
 
-**Ordem do que resta, decidida com o Janilo em 03/ago/2026: 5 → 9 → 10.** A
-Fase 5 vem antes da 9 porque é ela que constrói a rubrica, e a rubrica é o que
-sustenta o discurso da página institucional: a tecnografia tem recall baixa fora
+**Ordem do que resta, decidida com o Janilo em 03/ago/2026: 5 → 9 → 10** — e a
+**Fase 5 fechou no mesmo dia, então o que resta é 9 → 10.** A 5 veio antes da 9
+porque é ela que constrói a rubrica, e a rubrica é o que sustenta o discurso da
+página institucional: a tecnografia tem recall baixa fora
 de e-commerce (§Fase 6, item 1 — em ~50 empresas, nenhuma detecção de terceiro
 fora de VTEX sobreviveu ao escrutínio). A **Fase 8 está suspensa**, com o
 gatilho de reabertura escrito na própria seção.
@@ -254,7 +255,42 @@ o conserto é um estado e uma frase, não uma gambiarra.
 claude.ai/design** — é o último temporário que restava lá, e agora o detector
 existe.
 
-## Fase 5 — Pré-tier interativo
+## ✅ Fase 5 — Pré-tier interativo
+
+Feita em 03/ago/2026. `src/lib/tier.ts`, `src/lib/triggers.ts` e
+`src/components/PreTier.tsx`, montado na `/demo` — a seção substituiu a linha que
+prometia "o cálculo de prioridade entra na próxima fase".
+
+**A porta foi verificada contra o Python, não contra a leitura do plano.** Um
+harness rodou `compute_pre_tier` de `Clientes/Leads/fechar_ciclo.py` sobre a
+matriz de 9 setores × 4 portes × 21 gatilhos × 3 trechos de rodada — **2268
+casos, 100% de paridade** em score e tier, incluindo os ramos que a tela não
+expõe. O harness é descartável e não ficou no repo (depende de caminho absoluto
+fora dele); o que ficou é `tier.test.ts`, com 28 casos, entre eles um espelho
+das constantes `GATILHOS_URGENTES` / `GATILHOS_MEDIOS` / `GATILHOS_QUENTES`.
+**Esse espelho é o alarme:** mudar a urgência de um gatilho de um lado só faz a
+esteira e o Farol darem tiers diferentes para o mesmo sinal, em silêncio.
+
+Verificado na tela, em **dev local** (não em produção): os 19 gatilhos no
+seletor, o recálculo ao vivo, e os dois casos que definem o eixo 4 — G12 (quente)
+com porte Grande dá **A/4 sem teto**, e G1 (urgente mas frio) com porte Grande dá
+score 2, que seria B, e a tela mostra **C** com a razão do teto. Cores lidas do
+DOM: cada tier no seu par `--farol-tier-*` / `--farol-tier-*-soft`, que é como o
+contraste foi medido no DESIGN.md §2; a borda dos seletores é `#69808d`
+(`border-input`), como a spec exige.
+
+**Dívida que a fase criou, de propósito:** `triggers.ts` é a **terceira** cópia
+do catálogo. G1–G14 vivem em `Clientes/Leads/gatilhos.md` (que se apresenta como
+o catálogo e para no G14) e G15–G19 em `Clientes/Leads/farol.md`. Consolidar
+ficou para depois — está escrito no cabeçalho de `triggers.ts` e no handover.
+
+Três decisões da rubrica que a porta preserva e que parecem bug para quem lê
+rápido: **G8, G9 e G10 não pontuam** (não estão em nenhum dos dois conjuntos do
+Python); **setor core e oportunístico valem o mesmo ponto** (a distinção é do
+dossiê); e **porte consolidado é avaliado antes da rodada**, então uma Scale-up
+que captou pouco não é penalizada pelo piso.
+
+A spec original, mantida como registro:
 
 - `src/lib/tier.ts` (puro) — porta de `compute_pre_tier`: setor core +1;
   Scale-up ou Grande +1; gatilho urgente {G1,G4,G7,G12,G13,G15,G19} +2 e médio
