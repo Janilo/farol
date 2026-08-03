@@ -11,26 +11,33 @@ Registro calibrado nos irmãos: eyebrow é a categoria do método (Lente: "Pesqu
 ### 1.1 Meta e SEO
 
 **Title** (também og:title e twitter:title)
+
 > Farol · Ficha instantânea de empresas brasileiras
 
 **Description** (também og e twitter)
+
 > Digite um nome ou um CNPJ. O Farol lê o cadastro público da Receita Federal, detecta a stack do site e devolve razão social, CNAE, porte, quadro societário e ferramentas em uso, com uma prioridade calculada e a conta aberta de como chegou nela.
 
 **JSON-LD, WebSite.description**
+
 > Ficha de empresa brasileira a partir de CNPJ ou nome: cadastro da Receita, tecnografia do site e priorização por rubrica.
 
 ### 1.2 Hero
 
 **Eyebrow**
+
 > Ficha de empresa brasileira
 
 **H1** (a parte em destaque vai em `--farol-beam`)
+
 > O que as ferramentas globais **não veem** no Brasil.
 
 **Lede**
+
 > Ferramentas globais inferem a identidade de uma empresa brasileira por scraping. O Farol lê a fonte primária: CNPJ na Receita, CNAE, capital, quadro societário. Some a isso a stack que roda no site, incluindo as ferramentas brasileiras que scanner global não reconhece, e uma prioridade calculada com a rubrica que eu uso na consultoria.
 
 **CTAs** (mantêm os labels do container)
+
 - Primário: `Criar conta`
 - Secundário: `Ver demo` + microcópia `Não precisa de cadastro`
 - Terciário: `Entrar`
@@ -38,48 +45,57 @@ Registro calibrado nos irmãos: eyebrow é a categoria do método (Lente: "Pesqu
 ### 1.3 Seção "O que você recebe"
 
 **Eyebrow**
+
 > O que você recebe
 
 **H2** (destaque em `--farol-beam`)
+
 > Uma ficha **por empresa**, da Receita à stack.
 
 **Nota lateral**
+
 > Cadastro da fonte primária, {CATALOGO} fingerprints de ferramentas brasileiras e a rubrica de priorização com os quatro eixos abertos.
 
-*(`{CATALOGO}` é interpolado de `fingerprints.ts`, hoje 23. Não escrever o número: ele muda e a prosa não avisa.)*
+_(`{CATALOGO}` é interpolado de `fingerprints.ts`, hoje 23. Não escrever o número: ele muda e a prosa não avisa.)_
 
 **Mock da ficha** (substitui `PREVIEW_LINES`; empresa fictícia, como a "Acme Distribuidora" do Cascata)
 
-| Campo | Valor |
-|---|---|
-| Razão social | ACME SAÚDE DIGITAL LTDA |
-| CNPJ | 12.345.678/0001-90 |
-| CNAE principal | 6201-5/01 · Desenvolvimento de programas de computador sob encomenda |
-| Porte (Receita) | Demais · nem micro, nem pequeno porte |
-| Capital social | R$ 4.200.000 |
-| Quadro societário | 3 sócios · 1 administrador |
-| Stack detectada | RD Station Marketing · Pagar.me · VTEX |
-| Pré-tier | **B** · 3 de 5 · parcial |
+| Campo             | Valor                                                                |
+| ----------------- | -------------------------------------------------------------------- |
+| Razão social      | ACME SAÚDE DIGITAL LTDA                                              |
+| CNPJ              | 12.345.678/0001-90                                                   |
+| CNAE principal    | 6201-5/01 · Desenvolvimento de programas de computador sob encomenda |
+| Porte (Receita)   | Demais · nem micro, nem pequeno porte                                |
+| Capital social    | R$ 4.200.000                                                         |
+| Quadro societário | 3 sócios · 1 administrador                                           |
+| Stack detectada   | RD Station Marketing · Pagar.me · VTEX                               |
+| Pré-tier          | **B** · 3 de 5 · parcial                                             |
 
 Cabeçalho da janela do mock:
+
 > Acme Saúde Digital · consulta de 27/jul/2026 · fonte: Receita Federal
 
 Linha do drill-down (o equivalente ao "33 sublinhas" do Cascata):
+
 > ↳ os quatro eixos que formaram o score…
 
 **Seletores ao lado do score** (as duas entradas que não vêm de cadastro público):
+
 - `Porte` · early · **scale-up** · grande
 - `Gatilho` · nenhum observado · G1 rodada · G4 troca de C-level · … (19 opções)
 
 Microcópia sob os dois:
+
 > Porte e gatilho não estão em cadastro público. Escolha e veja o tier recalcular.
 
 ### 1.4 Seção "Antes / depois"
 
 **Eyebrow**
+
 > Antes / depois
 
 **H2** (destaque em `--farol-beam`)
+
 > De quatro abas abertas a **uma consulta**.
 
 **Card "Antes"**
@@ -107,15 +123,19 @@ Label: `Depois — ficha montada`
 ### 1.5 Seção "Método"
 
 **Eyebrow**
+
 > Método
 
 **01 — Digite o nome ou o CNPJ**
+
 > CNPJ vai direto. Nome cai numa busca que devolve até cinco candidatos com razão social, pra você escolher a empresa certa antes de gastar a consulta.
 
 **02 — O Farol lê as fontes**
+
 > Cadastro na Receita Federal via Brasil API. Se você informar o site, a stack sai da própria página: scripts, cabeçalhos, cookies e o que uma ferramenta implica sobre a outra.
 
 **03 — A rubrica calcula a prioridade**
+
 > Setor, porte, gatilho e alcance do comprador. Porte e gatilho você informa, porque nenhum dos dois está em cadastro público. O score aparece com a conta na frente, e o eixo de alcance está calibrado para consultor solo, não para time de vendas. Isso é premissa, e a tela diz isso.
 
 ---
@@ -123,45 +143,54 @@ Label: `Depois — ficha montada`
 ## 2. Demo — `src/routes/demo.tsx`
 
 **Faixa de topo**
+
 > Demo pública · dados reais da Receita Federal
 
 **Botão da faixa**
+
 > Criar conta
 
 **Eyebrow do resultado**
+
 > Ficha gerada pelo Farol
 
 **H1 da demo**
+
 > Aponte o farol para uma empresa.
 
 **Lede**
+
 > Digite o CNPJ ou o nome. Se souber o site, informe também: é dele que sai a stack.
 
 **Campos**
+
 - `Nome da empresa ou CNPJ` · placeholder: `12.345.678/0001-90 ou Acme Saúde Digital`
 - `Site (opcional)` · placeholder: `acme.com.br` · ajuda: `Sem o site, a ficha sai sem a seção de stack.`
 
 **Chips de exemplo**
+
 > Experimente com:
 
 **Estado vazio**
+
 > Nenhuma consulta ainda. Escolha um exemplo acima ou digite um CNPJ.
 
 **Mensagens de erro** (uma por código de `error-codes.ts`)
 
-| Código | Texto na tela |
-|---|---|
-| `INVALID_CNPJ` | Esse CNPJ não fecha nos dígitos verificadores. Confira e tente de novo. |
-| `COMPANY_NOT_FOUND` | CNPJ válido, mas sem registro na Receita. Pode ser baixa cadastral ou erro de digitação. |
-| `NAME_NO_MATCH` | Não achei empresa com esse nome. Tente a razão social ou o CNPJ direto. |
-| `SOURCE_RATE_LIMITED` | A fonte pública limitou as consultas por agora. Tente em alguns minutos. |
-| `SOURCE_UNAVAILABLE` | A fonte da Receita está fora do ar. Não é você, é ela. |
-| `SITE_UNREACHABLE` | O site não respondeu, então a stack não entrou. O cadastro está completo. |
-| `QUOTA_VISITANTE` | Você usou as 5 consultas novas de hoje. Empresa que já está em cache continua liberada, como os exemplos acima. |
-| `QUOTA_GLOBAL` | A demo bateu o teto de consultas do dia. O limite é da casa, não seu: o Farol lê fontes públicas de graça e não repassa a conta para elas. |
-| `QUOTA_INDISPONIVEL` | Não consegui apurar o limite de consultas agora, e prefiro recusar a consultar sem contar. Tente em alguns minutos. |
+| Código                | Texto na tela                                                                                                                              |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `INVALID_CNPJ`        | Esse CNPJ não fecha nos dígitos verificadores. Confira e tente de novo.                                                                    |
+| `COMPANY_NOT_FOUND`   | CNPJ válido, mas sem registro na Receita. Pode ser baixa cadastral ou erro de digitação.                                                   |
+| `NAME_NO_MATCH`       | Não achei empresa com esse nome. Tente a razão social ou o CNPJ direto.                                                                    |
+| `SOURCE_RATE_LIMITED` | A fonte pública limitou as consultas por agora. Tente em alguns minutos.                                                                   |
+| `SOURCE_UNAVAILABLE`  | A fonte da Receita está fora do ar. Não é você, é ela.                                                                                     |
+| `SITE_UNREACHABLE`    | O site não respondeu, então a stack não entrou. O cadastro está completo.                                                                  |
+| `QUOTA_VISITANTE`     | Você usou as 5 consultas novas de hoje. Empresa que já está em cache continua liberada, como os exemplos acima.                            |
+| `QUOTA_GLOBAL`        | A demo bateu o teto de consultas do dia. O limite é da casa, não seu: o Farol lê fontes públicas de graça e não repassa a conta para elas. |
+| `QUOTA_INDISPONIVEL`  | Não consegui apurar o limite de consultas agora, e prefiro recusar a consultar sem contar. Tente em alguns minutos.                        |
 
 **Rodapé da demo**
+
 > Dados públicos da Receita Federal, consultados via Brasil API. O Farol não guarda nada além da consulta feita.
 
 ---
@@ -171,9 +200,11 @@ Label: `Depois — ficha montada`
 **Eyebrow**: `METODOLOGIA`
 
 **H1**
+
 > Como o Farol decide o que é prioridade.
 
 **01 — Por que quatro eixos**
+
 > A rubrica saiu de doze projetos de consultoria, não de um framework de prateleira. Cada eixo existe porque separou, na prática, conta que fechou de conta que consumiu tempo: setor no alvo, porte com orçamento, gatilho ativo e comprador alcançável. Sem gatilho identificável e sem caminho quente, não é prioridade máxima, por melhor que seja o setor.
 
 **02 — O que cada eixo pesa**
@@ -184,12 +215,15 @@ Label: `Depois — ficha montada`
 - `Alcance do comprador` (+1 ou −1) — caminho quente soma. Empresa grande sem caminho quente subtrai, e trava o tier em C.
 
 **03 — Por que o eixo de alcance pode subtrair**
+
 > Esse é o eixo que mais gente estranha. Uma empresa de mil funcionários é ótima cliente para quem tem time comercial, e é praticamente inalcançável para um consultor solo sem porta de entrada: o centro de compra está a três camadas de distância. A rubrica foi calibrada para o segundo caso. Se você vende com time, esse eixo deveria somar, não subtrair, e o Farol mostra o cálculo justamente para você poder discordar dele.
 
 **04 — O que a máquina não decide**
+
 > O tier final. O Farol devolve um pré-tier, com "parcial" estampado quando não há gatilho observado, porque gatilho vem de notícia e de conversa, não de cadastro. Casar nome com CNPJ quando a empresa tem holding e três razões sociais também continua sendo trabalho humano. A ferramenta reduz a pesquisa, não substitui o julgamento.
 
 **Fecho / link**
+
 > Voltar para a página inicial
 
 ---
@@ -197,27 +231,35 @@ Label: `Depois — ficha montada`
 ## 4. Termos de Uso — `src/routes/termos.tsx`
 
 **1. Aceitação**
+
 > Ao criar uma conta ou usar o Farol, você concorda com estes Termos. Se não concordar, não use o serviço.
 
 **2. Descrição do serviço**
+
 > O Farol é uma ferramenta de consulta que reúne, numa única ficha, dados cadastrais públicos de empresas brasileiras, tecnologias detectáveis em sites públicos e uma classificação de prioridade calculada. É uma demonstração técnica de J P Saraiva Consultoria, oferecida sem cobrança e sem garantia de continuidade.
 
 **3. Uso aceitável**
+
 > Você não pode: automatizar consultas além dos limites da interface; revender ou redistribuir as fichas como base de dados; usar o serviço para constranger, fraudar ou fazer engenharia social contra as empresas consultadas; tentar acessar dados de outros usuários ou contornar mecanismos de segurança.
 
 **4. Precisão dos dados**
+
 > Os dados cadastrais vêm da Receita Federal por intermediários públicos e podem estar desatualizados na fonte. A detecção de tecnologia é inferência a partir do que o site expõe, e erra nos dois sentidos: aponta ferramenta que saiu e deixa de apontar ferramenta que está lá. O pré-tier é o resultado de uma rubrica opinativa, explicada em Metodologia. Nenhuma dessas três coisas é aconselhamento comercial, e a decisão continua sendo sua.
 
 **5. Propriedade**
+
 > Os dados cadastrais são públicos e não pertencem a ninguém aqui. A rubrica, os fingerprints e o código são nossos.
 
 **6. Disponibilidade**
+
 > Buscamos disponibilidade contínua, sem garantir uptime. O serviço depende de fontes públicas de terceiros, que podem sair do ar ou mudar as regras a qualquer momento.
 
 **7. Encerramento**
+
 > Podemos suspender contas que violem estes Termos. Você pode encerrar a sua a qualquer momento.
 
 **8. Lei aplicável**
+
 > Estes Termos são regidos pelas leis brasileiras.
 
 ---
@@ -225,30 +267,39 @@ Label: `Depois — ficha montada`
 ## 5. Política de Privacidade — `src/routes/privacidade.tsx`
 
 **1. Quem somos**
+
 > O Farol é um produto de J P Saraiva Consultoria Ltda., com sede no Brasil. Somos o controlador dos dados pessoais tratados aqui.
 
 **2. Dados que coletamos**
+
 > De quem cria conta: e-mail, nome e senha (armazenada com hash pelo Supabase Auth). De quem usa a demo sem conta: um identificador derivado do endereço IP por hash com salt secreto, mais a data e a hora da consulta.
 
 **3. Sobre o hash do IP**
+
 > Não guardamos endereço IP. Guardamos o resultado de um hash com salt, que serve só para contar quantas consultas vieram do mesmo visitante no dia e aplicar o limite da demo. O salt fica no servidor e nunca sai dele. Sem o salt, o hash não volta a ser IP.
 
 **4. Dados das empresas consultadas**
+
 > A ficha usa dados cadastrais públicos da Receita Federal, incluindo nomes de sócios, que são públicos por força de lei. Guardamos o resultado da consulta em cache por até 30 dias, para não repetir a chamada à fonte pública. Se você é sócio de uma empresa e quer que o cache dela seja apagado, escreva para o e-mail abaixo.
 
 **5. Finalidade e base legal**
+
 > Autenticação e operação da conta: execução de contrato (art. 7º, V, LGPD). Limite da demo e prevenção de abuso: legítimo interesse (art. 7º, IX, LGPD). Comunicação transacional, como confirmação de conta: legítimo interesse (art. 7º, IX, LGPD).
 
 **6. Compartilhamento**
+
 > Não vendemos dados pessoais. Usamos Supabase (banco e autenticação) e Cloudflare (hospedagem) como operadores, e consultamos Brasil API e cnpj.ws como fontes de dado cadastral.
 
 **7. Retenção**
+
 > Conta: enquanto ela existir. Registros do limite da demo: 30 dias. Cache de ficha: 30 dias.
 
 **8. Seus direitos**
+
 > Você pode pedir confirmação de tratamento, acesso, correção, anonimização, portabilidade ou eliminação dos seus dados, e revogar consentimento. Escreva para janilo@pereirasaraiva.com.
 
 **9. Alterações**
+
 > Mudanças relevantes serão avisadas por e-mail ou por aviso na plataforma.
 
 ---
@@ -256,31 +307,37 @@ Label: `Depois — ficha montada`
 ## 6. Telas de conta
 
 **`login.tsx`**
+
 - Title: `Entrar — Farol`
 - Description: `Acesse sua conta Farol para consultar fichas de empresas brasileiras com quota ampliada.`
 - H1: `Entrar`
 - Link: `Não tem conta? Criar conta`
 
 **`signup.tsx`**
+
 - Title: `Criar conta — Farol`
 - Description: `Crie sua conta Farol em um minuto. Consultas com quota ampliada e histórico das suas buscas.`
 - H1: `Criar conta`
 - Microcópia sob o botão: `A conta passa por aprovação manual. Você recebe um e-mail quando liberar.`
 
 **`aguardando-aprovacao.tsx`**
+
 - H1: `Conta em análise`
 - Corpo: `Sua conta foi criada e está aguardando liberação. Aprovo manualmente porque o Farol consulta fontes públicas com limite, e o limite é finito. Você recebe um e-mail assim que liberar.`
 - Ação: `Ver a demo enquanto isso`
 
 **`forgot-password.tsx`**
+
 - H1: `Esqueci a senha`
 - Corpo: `Informe o e-mail da conta e enviamos um link para redefinir.`
 
 **`reset-password.tsx`**
+
 - H1: `Nova senha`
 - Corpo: `Escolha uma senha nova para a sua conta.`
 
 **Área logada — `_authenticated/app.tsx`** (substitui o placeholder)
+
 - Eyebrow: `Consulta`
 - H1: `Aponte o farol para uma empresa.`
 - Nota de quota: `Você tem N consultas hoje.`
@@ -292,9 +349,11 @@ Label: `Depois — ficha montada`
 **`SiteHeader.tsx`** — links: `Metodologia` · `Entrar` · `Criar conta`
 
 **`BrandFooter.tsx`** — linha de assinatura:
+
 > Farol · 2026 · um produto de J P Saraiva
 
 Descritor curto (onde o Cascata dizia "Price waterfall · IA · P&L por cliente"):
+
 > Cadastro da Receita · tecnografia brasileira · priorização por rubrica
 
 ---

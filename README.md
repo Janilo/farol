@@ -37,4 +37,5 @@ React · TanStack Start · Tailwind · shadcn · Supabase · Cloudflare Workers.
 Testes em `pnpm test` (núcleo puro, sem I/O). Tipos em `pnpm typecheck`. A versão do pnpm vem do campo `packageManager` — não declare em outro lugar.
 
 ---
+
 Construído por [J P Saraiva](https://pereirasaraiva.com) · Engenharia de Go-to-Market.

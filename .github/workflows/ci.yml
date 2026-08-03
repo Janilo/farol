@@ -31,6 +31,11 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm run lint
+      # O `lint` acima é `eslint .`, e o único bloco com `files` no
+      # eslint.config.js é `**/*.{ts,tsx}` — md, yaml, css e json ficavam sem
+      # dono. Em 03/ago/2026 havia 12 arquivos fora de formato por isso.
+      # Fixtures capturados de API estão no .prettierignore de propósito.
+      - run: pnpm run format:check
       # O build (vite) não checa tipos: sem este passo, erro de tipo passa
       # verde no CI e só aparece no editor de quem abrir o arquivo.
       - run: pnpm run typecheck

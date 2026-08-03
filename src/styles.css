@@ -110,79 +110,79 @@
      o facho da família --jps-gold clareada para contraste em escuro.
      Ver docs/DESIGN.md §2. NÃO editar primitives.css do DS-mãe.
      ============================================================ */
-  --farol-night:        #14181B;
-  --farol-night-deep:   #0D1113;
-  --farol-surface:      #1C2226;
-  --farol-surface-alt:  #232B30;
-  --farol-rule:         #2E383E;
+  --farol-night: #14181b;
+  --farol-night-deep: #0d1113;
+  --farol-surface: #1c2226;
+  --farol-surface-alt: #232b30;
+  --farol-rule: #2e383e;
   /* Borda que IDENTIFICA um controle (campo, botão outline) — WCAG 1.4.11
      pede 3:1 e `rule` dá 1,34 sobre surface. Medido: night 4,31 · deep 4,58
      · surface 3,88 · surface-alt 3,48. Ver docs/DESIGN.md §2.1. */
-  --farol-rule-control: #69808D;
+  --farol-rule-control: #69808d;
 
-  --farol-beam:         #E8B93F;
-  --farol-beam-bright:  #F6D073;
-  --farol-beam-deep:    #A87F14;
-  --farol-beam-soft:    #2A2412;
+  --farol-beam: #e8b93f;
+  --farol-beam-bright: #f6d073;
+  --farol-beam-deep: #a87f14;
+  --farol-beam-soft: #2a2412;
 
-  --farol-ink:          #F2F0EA;
-  --farol-mist:         #A9B4BA;
-  --farol-fog:          #859299;  /* AA 4.50 no pior fundo (surface-alt) */
+  --farol-ink: #f2f0ea;
+  --farol-mist: #a9b4ba;
+  --farol-fog: #859299; /* AA 4.50 no pior fundo (surface-alt) */
 
   /* Tiers — cores funcionais da rubrica. B é o próprio facho: "nutrir" é o
      estado de marca. A é sinal de partida, C é neblina. */
-  --farol-tier-a:       #4FA37F;
-  --farol-tier-a-soft:  #16251F;
-  --farol-tier-b:       var(--farol-beam);
-  --farol-tier-b-soft:  var(--farol-beam-soft);
-  --farol-tier-c:       #7D8C94;  /* AA 4.53 sobre tier-c-soft */
-  --farol-tier-c-soft:  #1E2427;
+  --farol-tier-a: #4fa37f;
+  --farol-tier-a-soft: #16251f;
+  --farol-tier-b: var(--farol-beam);
+  --farol-tier-b-soft: var(--farol-beam-soft);
+  --farol-tier-c: #7d8c94; /* AA 4.53 sobre tier-c-soft */
+  --farol-tier-c-soft: #1e2427;
 
-  --farol-danger:       #E0645C;
-  --farol-danger-soft:  #2B1917;
+  --farol-danger: #e0645c;
+  --farol-danger-soft: #2b1917;
 
   /* Superfície clara — só impressão e og-image. Não é um tema. */
-  --farol-paper:        #F5F6F4;
+  --farol-paper: #f5f6f4;
 
   /* Densidade / layout do produto */
-  --farol-row-h-sm:     30px;
-  --farol-row-h-md:     38px;
-  --farol-row-h-lg:     46px;
-  --farol-tap-min:      38px;
-  --farol-topbar-h:     56px;
-  --farol-content-max:  1180px;
-  --farol-tnum:         "tnum" 1, "lnum" 1;
+  --farol-row-h-sm: 30px;
+  --farol-row-h-md: 38px;
+  --farol-row-h-lg: 46px;
+  --farol-tap-min: 38px;
+  --farol-topbar-h: 56px;
+  --farol-content-max: 1180px;
+  --farol-tnum: "tnum" 1, "lnum" 1;
 
   /* ============================================================
      SEMANTIC ROLE TOKENS (shadcn / Tailwind)
      ============================================================ */
-  --background:         var(--farol-night);
-  --foreground:         var(--farol-ink);
-  --card:               var(--farol-surface);
-  --card-foreground:    var(--farol-ink);
-  --popover:            var(--farol-surface);
+  --background: var(--farol-night);
+  --foreground: var(--farol-ink);
+  --card: var(--farol-surface);
+  --card-foreground: var(--farol-ink);
+  --popover: var(--farol-surface);
   --popover-foreground: var(--farol-ink);
 
-  --primary:            var(--farol-beam);
+  --primary: var(--farol-beam);
   --primary-foreground: var(--farol-night-deep);
 
-  --secondary:            var(--farol-surface-alt);
+  --secondary: var(--farol-surface-alt);
   --secondary-foreground: var(--farol-ink);
 
-  --muted:              var(--farol-surface-alt);
-  --muted-foreground:   var(--farol-mist);
+  --muted: var(--farol-surface-alt);
+  --muted-foreground: var(--farol-mist);
 
-  --accent:             var(--farol-beam);
-  --accent-foreground:  var(--farol-night-deep);
+  --accent: var(--farol-beam);
+  --accent-foreground: var(--farol-night-deep);
 
-  --destructive:            var(--farol-danger);
+  --destructive: var(--farol-danger);
   --destructive-foreground: var(--farol-night-deep);
 
   /* `border` é divisória (0,5px, decorativa) — 1,49 é aceito.
      `input` é contorno de controle — precisa de 3:1, token próprio. */
   --border: var(--farol-rule);
-  --input:  var(--farol-rule-control);
-  --ring:   var(--farol-beam);
+  --input: var(--farol-rule-control);
+  --ring: var(--farol-beam);
 
   /* Data viz — facho → tier A → neblina → mist → danger */
   --chart-1: var(--farol-beam);
@@ -203,8 +203,8 @@
 
   /* Sombras — em fundo escuro, drop shadow quase não lê. O que separa plano
      aqui é a superfície mais clara e a hairline. */
-  --shadow-card:  0 1px 0 rgba(0, 0, 0, 0.30);
-  --shadow-hover: 0 1px 0 rgba(0, 0, 0, 0.40), 0 8px 24px rgba(0, 0, 0, 0.35);
+  --shadow-card: 0 1px 0 rgba(0, 0, 0, 0.3);
+  --shadow-hover: 0 1px 0 rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.35);
 }
 
 @layer base {

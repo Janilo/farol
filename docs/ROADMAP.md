@@ -4,10 +4,17 @@ Estado das fases e o que falta. Este arquivo substitui o plano que vivia em
 `~/.claude/plans/`, fora de controle de versão — um roteiro de onze fases que
 atravessa sessões precisa de histórico.
 
-**Fases 0, 1, 2, 3, 4 e 7 estão fechadas.** O produto está no ar em
+**Fases 0, 1, 2, 3, 4, 4.2, 6 e 7 estão fechadas.** O produto está no ar em
 [farol.pereirasaraiva.com](https://farol.pereirasaraiva.com) consultando o
 cadastro da Receita Federal por CNPJ, com cache de 30 dias e detecção de
 tecnografia brasileira a partir do site.
+
+**Ordem do que resta, decidida com o Janilo em 03/ago/2026: 5 → 9 → 10.** A
+Fase 5 vem antes da 9 porque é ela que constrói a rubrica, e a rubrica é o que
+sustenta o discurso da página institucional: a tecnografia tem recall baixa fora
+de e-commerce (§Fase 6, item 1 — em ~50 empresas, nenhuma detecção de terceiro
+fora de VTEX sobreviveu ao escrutínio). A **Fase 8 está suspensa**, com o
+gatilho de reabertura escrito na própria seção.
 
 As decisões travadas estão em [`DESIGN.md`](DESIGN.md); os termos, em
 [`../GLOSSARIO.md`](../GLOSSARIO.md). Nada aqui as reabre.
@@ -166,16 +173,16 @@ inatingível: zero detecções é `empty`, e quem chama não escolhe.
 
 Frases por estado de falha (28/jul/2026) — implementadas literais:
 
-| Estado | Frase |
-|---|---|
+| Estado        | Frase                                       |
+| ------------- | ------------------------------------------- |
 | `unreachable` | O site não respondeu ao endereço informado. |
-| `timeout` | O site demorou demais para responder. |
-| `blocked` | O site recusou a leitura. |
+| `timeout`     | O site demorou demais para responder.       |
+| `blocked`     | O site recusou a leitura.                   |
 
 Abaixo das três, fixa: **"O cadastro da Receita não depende disso."**
 
-Estado `empty` (aprovado 28/jul, **com** o número): *"O site foi lido. Nenhuma das
-{CATALOGO} ferramentas do catálogo apareceu."* O número carrega a informação de
+Estado `empty` (aprovado 28/jul, **com** o número): _"O site foi lido. Nenhuma das
+{CATALOGO} ferramentas do catálogo apareceu."_ O número carrega a informação de
 escala, que é parte do que faz o achado ser achado — "nenhuma das 23" diz que a
 busca foi ampla. Interpolado de `CATALOGO`, nunca literal.
 
@@ -190,12 +197,12 @@ teste); `empty` → `lido · nenhuma das N`; `error` → a frase no rodapé, for
 token, porque rodapé é lista de fontes e sentença dentro de token mistura dois
 registros.
 
-Por que estas palavras, para ninguém "melhorar" depois: *"não respondeu ao
-endereço informado"* e não "não resolveu", porque resolver é vocabulário de DNS e
+Por que estas palavras, para ninguém "melhorar" depois: _"não respondeu ao
+endereço informado"_ e não "não resolveu", porque resolver é vocabulário de DNS e
 a frase devolve a dúvida ao lugar útil — domínio errado no formulário é o caso
-comum e o único que o visitante conserta sozinho. *"demorou demais"* **sem
-número**, porque chumbar "8s" amarra a copy ao valor do adapter. *"recusou a
-leitura"* e não "bloqueou", porque o site está funcionando e só não quer ser lido
+comum e o único que o visitante conserta sozinho. _"demorou demais"_ **sem
+número**, porque chumbar "8s" amarra a copy ao valor do adapter. _"recusou a
+leitura"_ e não "bloqueou", porque o site está funcionando e só não quer ser lido
 por robô. Nenhuma diz "erro": a stack é opcional e a ficha entregue está completa
 no que prometeu.
 
@@ -219,12 +226,12 @@ aninhamento e ordem, e a detecção não usa nenhum dos dois.
 
 Os quatro estados, contra sites de verdade, através do adapter:
 
-| Alvo | Resultado |
-|---|---|
-| `omie.com.br` | `ok` — Omie via script; redirect para `www` seguido; corpo truncado no teto |
-| `resultadosdigitais.com.br` | `ok` — RD Station CRM; **redirect entre domínios** para `www.rdstation.com`, revalidado |
-| `ambev.com.br` | `empty` — leu e não achou nada do catálogo |
-| `bb.com.br`, `petrobras.com.br` | `blocked` — recusaram a leitura |
+| Alvo                            | Resultado                                                                               |
+| ------------------------------- | --------------------------------------------------------------------------------------- |
+| `omie.com.br`                   | `ok` — Omie via script; redirect para `www` seguido; corpo truncado no teto             |
+| `resultadosdigitais.com.br`     | `ok` — RD Station CRM; **redirect entre domínios** para `www.rdstation.com`, revalidado |
+| `ambev.com.br`                  | `empty` — leu e não achou nada do catálogo                                              |
+| `bb.com.br`, `petrobras.com.br` | `blocked` — recusaram a leitura                                                         |
 
 **Uma sonda de rede foi escrita e removida.** Teste que bate em site de terceiro
 não entra no CI: deixaria o CI instável e faria requisição a terceiros a cada push.
@@ -269,11 +276,11 @@ existe.
 Aberta em 30/jul/2026 pela varredura de candidatos a chip da Fase 6, que rendeu
 duas detecções de terceiro em 24 sites. Investigando o motivo, o defeito apareceu:
 
-| Medida | Valor |
-|---|---|
-| HTML de `farmrio.com.br` | 609.886 bytes |
-| `MAX_BYTES` de então | 512.000 |
-| Onde aparece `vtexassets.com` | byte 609.358 |
+| Medida                        | Valor         |
+| ----------------------------- | ------------- |
+| HTML de `farmrio.com.br`      | 609.886 bytes |
+| `MAX_BYTES` de então          | 512.000       |
+| Onde aparece `vtexassets.com` | byte 609.358  |
 
 O fingerprint do VTEX **já casava** esse padrão. O detector devolvia `empty`, que
 na tela diz "li o site e não achei nada", quando o certo era "li menos da metade
@@ -346,6 +353,7 @@ portão. O risco era teórico só porque ninguém sabia que o produto existia.
    a Movidesk detecta Zenvia por `<iframe src>`, o que está correto, mas a Zenvia é
    dona da Movidesk e aquilo é infra da matriz. Tecnografia não distingue fornecedor de
    controlador, e nenhum código conserta isso.
+
 2. ~~Cache compartilhado~~ — **feito na Fase 3.**
 3. ✅ `demo_lookups` com `visitor_hash` = sha256(IP + salt) e `src/lib/rate-limit.ts`
    puro: 5 novas/dia por visitante anônimo, 150/dia global, 50/dia para conta aprovada
@@ -412,7 +420,26 @@ o repo não tinha.
 Marcador temporário que sobra nas telas: `stack de exemplo · detector em
 construção`, que sai com a Fase 4.
 
-## Fase 8 — Área logada
+## Fase 8 — Área logada · ⏸️ SUSPENSA até a Fase 9 gerar sinal
+
+**Decisão de 03/ago/2026 (Janilo).** A ordem das fases restantes é **5 → 9 → 10**,
+e a 8 fica suspensa — não morta. O gatilho que a reabre está escrito abaixo.
+
+**Por que suspender e não matar.** A proposta original era arquivar a fase por
+"sem usuário e sem demanda", e o raciocínio estava invertido: **não há usuário
+porque não há vitrine.** O Farol nem aparece no site institucional — é a Fase 9
+que o coloca lá. Descartar a 8 antes da 9 é decidir com base num sinal que ainda
+não foi coletado. E o custo residual é menor do que a palavra "fase" sugere: o
+login, o cadastro, o portão de aprovação, o `_authenticated` e o placeholder de
+`/app` **já estão de pé desde a Fase 1** — falta o miolo, não o alicerce.
+
+**Gatilho de reabertura:** o primeiro pedido real de acesso estendido, vindo de
+alguém que viu o Farol pela Fase 9 e bateu no limite de 5 consultas/dia da demo.
+Esse pedido é a resposta que a 8 existe para dar; sem ele, ela não tem público.
+
+**Custo aceito enquanto suspensa:** `QUOTA_APROVADO` (50/dia, `SEGURANCA.md`
+§quota) fica como código morto documentado. É barato e está declarado aqui para
+que ninguém o "limpe" achando que é sobra.
 
 Migration de auth e o portão de aprovação **já existem** (Fase 1). Falta a área
 em si: `/app` com a mesma consulta da demo, quota maior e histórico das buscas.

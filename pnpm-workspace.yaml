@@ -3,4 +3,4 @@
 minimumReleaseAge: 1440
 # Cada entrada fura a guarda de 24h para um pacote — confirmar antes de adicionar.
 minimumReleaseAgeExclude:
-  - '@lovable.dev/vite-tanstack-config'
+  - "@lovable.dev/vite-tanstack-config"

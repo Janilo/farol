@@ -6,23 +6,23 @@
 
 ## ⛔ LEIA PRIMEIRO — decisões travadas
 
-**As onze decisões abaixo estão fechadas e não se reabrem.** Elas foram tomadas com o Janilo em 27/jul/2026, algumas depois de eu propor o contrário e ser corrigido. O resto deste documento é o *raciocínio* que levou a elas; quem lê o raciocínio e conclui diferente está reabrindo decisão, não pensando melhor.
+**As onze decisões abaixo estão fechadas e não se reabrem.** Elas foram tomadas com o Janilo em 27/jul/2026, algumas depois de eu propor o contrário e ser corrigido. O resto deste documento é o _raciocínio_ que levou a elas; quem lê o raciocínio e conclui diferente está reabrindo decisão, não pensando melhor.
 
 **O portão para reabrir é fato novo** — fonte que mudou, medição que contradiz, restrição que apareceu. "Eu acho melhor assim" não é fato novo. Vale para mim em sessão futura, para o projeto no claude.ai/design e para qualquer agente que leia este arquivo.
 
-| # | Decisão | Onde vive |
-|---|---|---|
-| 1 | **Dark-first.** A alternativa clara com roxo-vinho `--jps-purple` está descartada. | §1 |
-| 2 | **Não existe tema claro.** `--farol-paper` é para impressão e og-image, não é tema. | §7 |
-| 3 | **Os valores de cor da §2 são finais.** Contraste WCAG medido nos catorze pares; `--farol-fog` e `--farol-tier-c` já foram corrigidos por falharem AA. Mudança exige recálculo com o número na mesa. *Token **novo** com medição não reabre esta decisão — foi o caso de `--farol-rule-control` (§2.2); mudar valor existente, sim.* | §2, §2.1, §2.2 |
-| 4 | **A palavra é "ficha", nunca "dossiê"** na UI. Em PT-BR "dossiê" carrega halo de investigação; o produto lê registro público. No código o tipo segue `dossier`, em inglês. | §"A palavra" |
-| 5 | **Tagline: "O que as ferramentas globais não veem no Brasil."** Sem nomear concorrente. | abaixo |
-| 6 | **Tipografia inalterada** — Fraunces + Inter Tight. É o que amarra a família. Em fundo escuro, Fraunces nunca abaixo de peso 500. | §4 |
-| 7 | **O facho aparece em dois lugares só:** hero (estático) e a varredura única de 900ms na busca. Nada de animação em loop. | §5 |
-| 8 | **`rubricPorte` vem de seletor na tela, nunca derivado do `porte` da Receita.** A RFB só tem micro/pequeno/demais, e DEMAIS cobre de empresa de 50 pessoas à Ambev — verificado na Brasil API com BB, Petrobras e Ambev. | glossário, armadilha 2 |
-| 9 | **`partner` não tem percentual.** O QSA não traz participação; não inferir sócio majoritário. | glossário, armadilha 3 |
-| 10 | **Escopo v1 é a ficha instantânea.** Sem inbox de sinais, sem cron, sem multi-tenant, sem monetização. | plano, Fase 2 |
-| 11 | **Busca por nome não existe**, e isso é fato sobre as fontes, não pendência: `publica.cnpj.ws/cnpj/search` devolve 400 "CNPJ inválido". Implementar exige fonte com índice textual. | `enrichment.server.ts` |
+| #   | Decisão                                                                                                                                                                                                                                                                                                                              | Onde vive              |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------- |
+| 1   | **Dark-first.** A alternativa clara com roxo-vinho `--jps-purple` está descartada.                                                                                                                                                                                                                                                   | §1                     |
+| 2   | **Não existe tema claro.** `--farol-paper` é para impressão e og-image, não é tema.                                                                                                                                                                                                                                                  | §7                     |
+| 3   | **Os valores de cor da §2 são finais.** Contraste WCAG medido nos catorze pares; `--farol-fog` e `--farol-tier-c` já foram corrigidos por falharem AA. Mudança exige recálculo com o número na mesa. _Token **novo** com medição não reabre esta decisão — foi o caso de `--farol-rule-control` (§2.2); mudar valor existente, sim._ | §2, §2.1, §2.2         |
+| 4   | **A palavra é "ficha", nunca "dossiê"** na UI. Em PT-BR "dossiê" carrega halo de investigação; o produto lê registro público. No código o tipo segue `dossier`, em inglês.                                                                                                                                                           | §"A palavra"           |
+| 5   | **Tagline: "O que as ferramentas globais não veem no Brasil."** Sem nomear concorrente.                                                                                                                                                                                                                                              | abaixo                 |
+| 6   | **Tipografia inalterada** — Fraunces + Inter Tight. É o que amarra a família. Em fundo escuro, Fraunces nunca abaixo de peso 500.                                                                                                                                                                                                    | §4                     |
+| 7   | **O facho aparece em dois lugares só:** hero (estático) e a varredura única de 900ms na busca. Nada de animação em loop.                                                                                                                                                                                                             | §5                     |
+| 8   | **`rubricPorte` vem de seletor na tela, nunca derivado do `porte` da Receita.** A RFB só tem micro/pequeno/demais, e DEMAIS cobre de empresa de 50 pessoas à Ambev — verificado na Brasil API com BB, Petrobras e Ambev.                                                                                                             | glossário, armadilha 2 |
+| 9   | **`partner` não tem percentual.** O QSA não traz participação; não inferir sócio majoritário.                                                                                                                                                                                                                                        | glossário, armadilha 3 |
+| 10  | **Escopo v1 é a ficha instantânea.** Sem inbox de sinais, sem cron, sem multi-tenant, sem monetização.                                                                                                                                                                                                                               | plano, Fase 2          |
+| 11  | **Busca por nome não existe**, e isso é fato sobre as fontes, não pendência: `publica.cnpj.ws/cnpj/search` devolve 400 "CNPJ inválido". Implementar exige fonte com índice textual.                                                                                                                                                  | `enrichment.server.ts` |
 
 Duas decisões de processo que também estão travadas, e que não são de design: os tokens no repo (`src/styles.css`) são a **fonte de verdade** dos valores, e o projeto no claude.ai/design é derivado — se o zip exportado divergir da §2, o repo ganha. E o `errors.ts` é mantido **idêntico por hash** nos cinco apps da família; qualquer edição nele exige a mesma edição nos outros quatro.
 
@@ -32,17 +32,18 @@ Duas decisões de processo que também estão travadas, e que não são de desig
 
 O que os três irmãos já ocupam (lido dos `styles.css` de cada repo):
 
-| Produto | Cor primária | Fundo | Leitura |
-|---|---|---|---|
-| **Lente** | teal `#0E6B5E` | `--lente-paper` (claro) | pesquisa, escuta |
-| **Prisma** | índigo `#4A37B5` + violeta `#7A5CF0` | `#F7F6FB` (claro) | decomposição, mídia |
-| **Cascata** | navy `#103C61` + ouro `#B5871C` | `#F5F8FB` (claro) | fluxo, margem |
+| Produto     | Cor primária                         | Fundo                   | Leitura             |
+| ----------- | ------------------------------------ | ----------------------- | ------------------- |
+| **Lente**   | teal `#0E6B5E`                       | `--lente-paper` (claro) | pesquisa, escuta    |
+| **Prisma**  | índigo `#4A37B5` + violeta `#7A5CF0` | `#F7F6FB` (claro)       | decomposição, mídia |
+| **Cascata** | navy `#103C61` + ouro `#B5871C`      | `#F5F8FB` (claro)       | fluxo, margem       |
 
 Os três são **claros, com um matiz próprio**. Teal, índigo e navy estão tomados — e as três famílias vizinhas (verde, roxo, azul) cobrem quase toda a paleta da marca. Um quarto matiz claro começaria a parecer arbitrário: "qual era mesmo o azul do Cascata e o do Farol?".
 
 **Decidido: o Farol se diferencia pelo modo, não por mais um matiz.** É o primeiro produto **dark-first** da família — base neutra escura, um único facho quente.
 
 Por que isso funciona:
+
 - **A metáfora pede.** Farol é luz no escuro. Um farol em fundo bege é um desenho de farol; um facho sobre fundo escuro é a coisa.
 - **Não colide com ninguém.** Nenhum irmão é escuro. Zero risco de confundir com o navy do Cascata.
 - **Fica dentro da marca.** Base = neutros JPS (`--jps-ink`) aprofundados; facho = `--jps-gold` clareado para brilhar sobre escuro. Nenhuma cor nova de família.
@@ -64,59 +65,59 @@ Mesma convenção dos irmãos: cada produto declara os próprios primitivos com 
    ============================================================ */
 
 /* Base — neutros aprofundados (família --jps-ink) */
---farol-night:       #14181B;  /* fundo da aplicação */
---farol-night-deep:  #0D1113;  /* fundo de seção recuada, hero */
---farol-surface:     #1C2226;  /* cartão sobre a noite */
---farol-surface-alt: #232B30;  /* linha zebrada, hover de cartão */
---farol-rule:        #2E383E;  /* divisórias sobre escuro — decorativas */
---farol-rule-control:#69808D;  /* borda que IDENTIFICA um controle — 3:1, ver §2.1 */
+--farol-night: #14181b; /* fundo da aplicação */
+--farol-night-deep: #0d1113; /* fundo de seção recuada, hero */
+--farol-surface: #1c2226; /* cartão sobre a noite */
+--farol-surface-alt: #232b30; /* linha zebrada, hover de cartão */
+--farol-rule: #2e383e; /* divisórias sobre escuro — decorativas */
+--farol-rule-control: #69808d; /* borda que IDENTIFICA um controle — 3:1, ver §2.1 */
 
 /* Facho — a luz (família --jps-gold #C9A227, clareada p/ contraste em escuro) */
---farol-beam:        #E8B93F;  /* accent principal: CTA, foco, dado em destaque */
---farol-beam-bright: #F6D073;  /* hover, ponto de luz do wordmark */
---farol-beam-deep:   #A87F14;  /* pressed; e o accent em superfície clara */
---farol-beam-soft:   #2A2412;  /* preenchimento âmbar sobre escuro (badge, callout) */
+--farol-beam: #e8b93f; /* accent principal: CTA, foco, dado em destaque */
+--farol-beam-bright: #f6d073; /* hover, ponto de luz do wordmark */
+--farol-beam-deep: #a87f14; /* pressed; e o accent em superfície clara */
+--farol-beam-soft: #2a2412; /* preenchimento âmbar sobre escuro (badge, callout) */
 
 /* Texto */
---farol-ink:         #F2F0EA;  /* texto principal (herda --jps-offwhite) */
---farol-mist:        #A9B4BA;  /* texto secundário */
---farol-fog:         #859299;  /* texto terciário, placeholder — corrigido, ver §2.1 */
+--farol-ink: #f2f0ea; /* texto principal (herda --jps-offwhite) */
+--farol-mist: #a9b4ba; /* texto secundário */
+--farol-fog: #859299; /* texto terciário, placeholder — corrigido, ver §2.1 */
 
 /* Tiers — cores funcionais da rubrica */
---farol-tier-a:      #4FA37F;  /* verde-sinal (família --jps-green, clareada) */
---farol-tier-a-soft: #16251F;
---farol-tier-b:      #E8B93F;  /* = facho: o tier "nutrir" usa a cor da marca */
---farol-tier-b-soft: #2A2412;
---farol-tier-c:      #7D8C94;  /* cinza-neblina: presente, sem urgência */
---farol-tier-c-soft: #1E2427;
+--farol-tier-a: #4fa37f; /* verde-sinal (família --jps-green, clareada) */
+--farol-tier-a-soft: #16251f;
+--farol-tier-b: #e8b93f; /* = facho: o tier "nutrir" usa a cor da marca */
+--farol-tier-b-soft: #2a2412;
+--farol-tier-c: #7d8c94; /* cinza-neblina: presente, sem urgência */
+--farol-tier-c-soft: #1e2427;
 
 /* Sistema */
---farol-danger:      #E0645C;  /* --jps-danger-base clareado p/ escuro */
---farol-paper:       #F5F6F4;  /* superfície clara — landing pública, impressão */
+--farol-danger: #e0645c; /* --jps-danger-base clareado p/ escuro */
+--farol-paper: #f5f6f4; /* superfície clara — landing pública, impressão */
 
 /* Densidade (padrão Cascata) */
 --farol-content-max: 1180px;
---farol-topbar-h:    56px;
---farol-tnum:        "tnum" 1, "lnum" 1;
+--farol-topbar-h: 56px;
+--farol-tnum: "tnum" 1, "lnum" 1;
 ```
 
 ### 2.1 Contraste — medido, não estimado (27/jul/2026)
 
 Calculei o ratio WCAG de todos os pares de texto da paleta. Dois falharam e já estão corrigidos acima; os valores da tabela §2 são os corrigidos.
 
-| Par | Ratio | AA (4.5) |
-|---|---|---|
-| `ink` sobre `night` | 15,67 | passa |
-| `ink` sobre `surface` | 14,11 | passa |
-| `mist` sobre `night` | 8,44 | passa |
-| `mist` sobre `surface` | 7,60 | passa |
-| `beam` sobre `night` | 9,73 | passa |
-| `night-deep` sobre `beam` (texto do botão) | 10,34 | passa |
-| `beam-bright` sobre `beam-soft` | 10,44 | passa |
-| `tier-a` sobre `tier-a-soft` | 5,22 | passa |
-| `danger` sobre `night` | 5,23 | passa |
-| **`fog`** sobre `surface-alt` | **4,50** | passa **após correção** (era 3,64 com `#6F7C83`) |
-| **`tier-c`** sobre `tier-c-soft` | **4,53** | passa **após correção** (era 4,47 com `#7C8B93`) |
+| Par                                        | Ratio    | AA (4.5)                                         |
+| ------------------------------------------ | -------- | ------------------------------------------------ |
+| `ink` sobre `night`                        | 15,67    | passa                                            |
+| `ink` sobre `surface`                      | 14,11    | passa                                            |
+| `mist` sobre `night`                       | 8,44     | passa                                            |
+| `mist` sobre `surface`                     | 7,60     | passa                                            |
+| `beam` sobre `night`                       | 9,73     | passa                                            |
+| `night-deep` sobre `beam` (texto do botão) | 10,34    | passa                                            |
+| `beam-bright` sobre `beam-soft`            | 10,44    | passa                                            |
+| `tier-a` sobre `tier-a-soft`               | 5,22     | passa                                            |
+| `danger` sobre `night`                     | 5,23     | passa                                            |
+| **`fog`** sobre `surface-alt`              | **4,50** | passa **após correção** (era 3,64 com `#6F7C83`) |
+| **`tier-c`** sobre `tier-c-soft`           | **4,53** | passa **após correção** (era 4,47 com `#7C8B93`) |
 
 O `fog` foi o achado que importa: ele é a cor de placeholder, e placeholder vive dentro de campo, cujo fundo é `--farol-surface`, não `--farol-night`. Calibrar contra o fundo mais escuro dava falso verde. O valor novo passa nos três fundos (night 5,58 · surface 5,03 · surface-alt 4,50).
 
@@ -137,12 +138,12 @@ que a própria §2.1 já previa ("o token certo é outro"), com o número na mes
 `--farol-rule-control: #69808D` — mesmo matiz e saturação do `rule` (r:g:b em
 0,745 : 0,908 : 1), no meio do caminho entre `rule` e `fog`:
 
-| Par | Ratio | 1.4.11 (3,0) |
-|---|---|---|
-| `rule-control` sobre `night` | 4,31 | passa |
-| `rule-control` sobre `night-deep` | 4,58 | passa |
-| `rule-control` sobre `surface` | 3,88 | passa |
-| `rule-control` sobre `surface-alt` | 3,48 | passa |
+| Par                                | Ratio | 1.4.11 (3,0) |
+| ---------------------------------- | ----- | ------------ |
+| `rule-control` sobre `night`       | 4,31  | passa        |
+| `rule-control` sobre `night-deep`  | 4,58  | passa        |
+| `rule-control` sobre `surface`     | 3,88  | passa        |
+| `rule-control` sobre `surface-alt` | 3,48  | passa        |
 
 Passa nos quatro fundos, não só nos dois em uso hoje — controle em linha zebrada ou
 em hover de cartão já está coberto.
@@ -153,7 +154,7 @@ botão "Criar conta" usava `beam/40` (2,57) e subiu para `beam/60` (4,27).
 
 **A régua, e onde ela se aplica.** Contorno de controle: **`--farol-rule-control`
 (ou `border-input`, que resolve nele), ou um `beam` a 60%+** — piso 3:1, WCAG
-1.4.11. Isso é régua de *borda*. **Texto tem outro piso: 4,5:1 (1.4.3), e ali
+1.4.11. Isso é régua de _borda_. **Texto tem outro piso: 4,5:1 (1.4.3), e ali
 `beam/60` não serve** — texto âmbar sobre escuro usa `beam` cheio (9,73 sobre
 `night`) ou `beam-bright` sobre `beam-soft` (10,44). Vale para o estado escolhido
 de qualquer chip ou seletor.
@@ -182,19 +183,19 @@ não foram tocados: usam `border-foreground/40`, que compõe para 3,42 sobre
 Re-bind no `styles.css` do repo, no mesmo formato do Cascata:
 
 ```css
---background:         var(--farol-night);
---foreground:         var(--farol-ink);
---card:               var(--farol-surface);
---card-foreground:    var(--farol-ink);
---primary:            var(--farol-beam);
---primary-foreground: var(--farol-night-deep);   /* texto escuro sobre âmbar */
---muted:              var(--farol-surface-alt);
---muted-foreground:   var(--farol-mist);
---accent:             var(--farol-beam);
---border:             var(--farol-rule);          /* divisória: decorativa */
---input:              var(--farol-rule-control);   /* contorno de controle: 3:1 */
---ring:               var(--farol-beam);
---destructive:        var(--farol-danger);
+--background: var(--farol-night);
+--foreground: var(--farol-ink);
+--card: var(--farol-surface);
+--card-foreground: var(--farol-ink);
+--primary: var(--farol-beam);
+--primary-foreground: var(--farol-night-deep); /* texto escuro sobre âmbar */
+--muted: var(--farol-surface-alt);
+--muted-foreground: var(--farol-mist);
+--accent: var(--farol-beam);
+--border: var(--farol-rule); /* divisória: decorativa */
+--input: var(--farol-rule-control); /* contorno de controle: 3:1 */
+--ring: var(--farol-beam);
+--destructive: var(--farol-danger);
 ```
 
 Regra do sistema, mantida: **nunca editar `primitives.css` do DS-mãe.** Divergência do produto acontece aqui e no bloco de primitivos `--farol-*`.
@@ -223,7 +224,7 @@ Medidas, do projeto do claude.ai/design (28/jul/2026), em `em` para escalar com 
 
 Três notas de ofício que custaram defeito e ficam registradas:
 
-**A lente É o "o", não um enfeite sobre ele.** Por isso o componente é DOM e não SVG, divergindo do `CascataWordmark.tsx`: em `<svg><text>` não há como posicionar um elemento em relação a um glifo sem chumbar o avanço horizontal de "far" na Fraunces, número que muda com peso, `opsz` e versão da fonte. O glifo do Cascata fica *fora* da palavra, então SVG serve lá. Diferença de geometria, não de gosto.
+**A lente É o "o", não um enfeite sobre ele.** Por isso o componente é DOM e não SVG, divergindo do `CascataWordmark.tsx`: em `<svg><text>` não há como posicionar um elemento em relação a um glifo sem chumbar o avanço horizontal de "far" na Fraunces, número que muda com peso, `opsz` e versão da fonte. O glifo do Cascata fica _fora_ da palavra, então SVG serve lá. Diferença de geometria, não de gosto.
 
 **`<text>` em .svg servido como documento isolado não vê a `@font-face` da página** — favicon e `<img src>` caem em fonte de sistema. Foi o que acontecia com `public/favicon.svg`, que além disso ainda era o "jps" roxo do DS-mãe. Regra: **asset de marca em .svg não leva texto.** O favicon é a lente sozinha, que é a redução que a §8 já previa.
 
@@ -241,7 +242,7 @@ Além do kit shadcn herdado:
 
 1. **Badge de tier** — pílula com `--farol-tier-{a,b,c}` no texto e `*-soft` no fundo. Mostra a letra e o rótulo: **A · abordar agora**, **B · nutrir**, **C · revisitar** (fechados em 28/jul/2026; a fonte e o porquê de "revisitar" e não "observar" estão na armadilha 4 do glossário). Quando o pré-tier é parcial, ganha um sufixo discreto "parcial".
 2. **Cartão da ficha** — três seções empilhadas com divisória `--farol-rule`: **Cadastro** (razão social, CNPJ, CNAE, porte, capital, sócios), **Stack** (chips das ferramentas detectadas, agrupadas por categoria), **Score** (badge de tier + os eixos que somaram, cada um com seu ponto).
-3. **Chip de tecnologia** — nome + categoria, com um marcador de *como* foi detectado (script, header, cookie…). Detecção por inferência (`implies`) vem com o marcador visualmente mais fraco — honestidade de procedência na UI.
+3. **Chip de tecnologia** — nome + categoria, com um marcador de _como_ foi detectado (script, header, cookie…). Detecção por inferência (`implies`) vem com o marcador visualmente mais fraco — honestidade de procedência na UI.
 4. **Estado vazio da busca** — o facho apagado e a linha "aponte o farol para uma empresa", com os chips de empresas de exemplo logo abaixo.
 5. **Seletor de gatilho** — os 19 gatilhos como opções; ao escolher, o badge de tier recalcula na hora. É a peça que demonstra a mecânica da rubrica.
 
@@ -258,6 +259,7 @@ O produto é **dark-first**: a área logada e a demo existem só no escuro. Não
 ## 8. O que levar para o claude.ai/design
 
 Ao criar o "JPS DS — Farol" como remix:
+
 1. Os primitivos da seção 2 e os re-binds da seção 3.
 2. Verificação de contraste AA dos pares de texto.
 3. As cinco telas que valem desenhar: landing (hero com facho), demo vazia, ficha completa, ficha sem stack (o caso do site inacessível), estado de quota estourada.

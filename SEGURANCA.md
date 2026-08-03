@@ -10,17 +10,17 @@ quê" para "quanto alguém pode consumir".
 
 ## O que o banco impõe hoje
 
-| Fronteira | Regra | Onde vive |
-|---|---|---|
-| **Portão de aprovação** | entrar na área logada exige `profiles.is_approved` OU role `admin` | client: `src/lib/access.ts` (`getAccessState`), usado no `beforeLoad` de `_authenticated.tsx` · server: `src/lib/require-approved.ts` |
-| **Ninguém se auto-aprova** | mudar `is_approved` ou `is_guest` exige role `admin` | trigger `protect_profile_flags` em `supabase/migrations/20260727120000_farol_auth_base.sql` |
-| **Novo usuário entra sem acesso** | `handle_new_user` cria o perfil com `is_approved = false` e role `member` | mesma migration |
-| **Papéis** | `user_roles` é legível só pelo próprio usuário; escrita e leitura ampla exigem `admin` | RLS na mesma migration |
-| **Cache de ficha** | `fichas` tem RLS ligada e **zero políticas**: `anon` e `authenticated` não leem nem escrevem; só `service_role` passa | `supabase/migrations/20260728140000_farol_fichas_cache.sql` |
-| **Contador de quota** | `demo_lookups` idem — RLS ligada, zero políticas. O `EXECUTE` de `bump_demo_quota` é só do `service_role`, com `anon` e `authenticated` nomeados no `REVOKE` | `supabase/migrations/20260730120000_farol_demo_quota.sql` |
-| **Teto global protegido** | `bump_demo_quota` recusa `visitor_hash` que não seja hex de 64 caracteres, o que impede alguém passar a sentinela `__global__` como se fosse visitante | mesma migration |
-| **Alvo da leitura de site** | o servidor só busca **nome de domínio público**: todo literal de IP é recusado, e sufixo de rede interna também | `src/lib/technographics.ts` (`isAllowedTarget`) |
-| **Redirecionamento** | seguido **à mão**, com o alvo revalidado a cada salto e teto de 3 saltos | `src/lib/technographics.server.ts` |
+| Fronteira                         | Regra                                                                                                                                                        | Onde vive                                                                                                                             |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
+| **Portão de aprovação**           | entrar na área logada exige `profiles.is_approved` OU role `admin`                                                                                           | client: `src/lib/access.ts` (`getAccessState`), usado no `beforeLoad` de `_authenticated.tsx` · server: `src/lib/require-approved.ts` |
+| **Ninguém se auto-aprova**        | mudar `is_approved` ou `is_guest` exige role `admin`                                                                                                         | trigger `protect_profile_flags` em `supabase/migrations/20260727120000_farol_auth_base.sql`                                           |
+| **Novo usuário entra sem acesso** | `handle_new_user` cria o perfil com `is_approved = false` e role `member`                                                                                    | mesma migration                                                                                                                       |
+| **Papéis**                        | `user_roles` é legível só pelo próprio usuário; escrita e leitura ampla exigem `admin`                                                                       | RLS na mesma migration                                                                                                                |
+| **Cache de ficha**                | `fichas` tem RLS ligada e **zero políticas**: `anon` e `authenticated` não leem nem escrevem; só `service_role` passa                                        | `supabase/migrations/20260728140000_farol_fichas_cache.sql`                                                                           |
+| **Contador de quota**             | `demo_lookups` idem — RLS ligada, zero políticas. O `EXECUTE` de `bump_demo_quota` é só do `service_role`, com `anon` e `authenticated` nomeados no `REVOKE` | `supabase/migrations/20260730120000_farol_demo_quota.sql`                                                                             |
+| **Teto global protegido**         | `bump_demo_quota` recusa `visitor_hash` que não seja hex de 64 caracteres, o que impede alguém passar a sentinela `__global__` como se fosse visitante       | mesma migration                                                                                                                       |
+| **Alvo da leitura de site**       | o servidor só busca **nome de domínio público**: todo literal de IP é recusado, e sufixo de rede interna também                                              | `src/lib/technographics.ts` (`isAllowedTarget`)                                                                                       |
+| **Redirecionamento**              | seguido **à mão**, com o alvo revalidado a cada salto e teto de 3 saltos                                                                                     | `src/lib/technographics.server.ts`                                                                                                    |
 
 `has_role`, `is_approved` e `is_guest` são `SECURITY DEFINER` com
 `search_path = public` fixo, e o `EXECUTE` delas está revogado de `anon`.
@@ -121,11 +121,11 @@ SSRF limitam **para onde**; não limitavam **quantas**. Sem quota, o Farol podia
 usado como varredor de terceiros a partir do IP da Cloudflare — argumento mais forte
 a favor desta fase do que economizar chamada à Brasil API.
 
-| Limite | Valor | Onde |
-|---|---|---|
-| Visitante anônimo | 5 consultas **novas** por dia | `QUOTA_ANONIMO` em `src/lib/rate-limit.ts` |
-| Conta aprovada | 50 por dia | `QUOTA_APROVADO` (só entra em uso na Fase 8) |
-| Teto da casa | 150 por dia, **só sobre tráfego anônimo** | `QUOTA_GLOBAL` |
+| Limite            | Valor                                     | Onde                                         |
+| ----------------- | ----------------------------------------- | -------------------------------------------- |
+| Visitante anônimo | 5 consultas **novas** por dia             | `QUOTA_ANONIMO` em `src/lib/rate-limit.ts`   |
+| Conta aprovada    | 50 por dia                                | `QUOTA_APROVADO` (só entra em uso na Fase 8) |
+| Teto da casa      | 150 por dia, **só sobre tráfego anônimo** | `QUOTA_GLOBAL`                               |
 
 **A unidade contada é consulta que sai para a rede, não requisição.** Cache hit não
 consome: ele não custa nada a ninguém, e cobrar por ele puniria justamente o caminho

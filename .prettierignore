@@ -6,3 +6,7 @@ pnpm-lock.yaml
 package-lock.json
 bun.lock
 routeTree.gen.ts
+
+# Fixtures capturados de API externa: são a resposta crua do provedor, não código
+# nosso. Formatá-los cria drift toda vez que alguém recaptura.
+src/lib/__fixtures__/

@@ -12,12 +12,12 @@ O exemplo da pergunta (`Porte 0–3 · Stack 0–3 · Gatilho 0–2 · Setor 0�
 
 A rubrica real, portada de `fechar_ciclo.py`, tem **placar máximo de 5**:
 
-| Eixo | Pontos | Regra |
-|---|---|---|
-| 1 · Setor | **+1** | Setor no alvo: Fintech, Healthtech, DTC, CPG, SaaS, Govtech. Setor fora da lista não soma e não subtrai. |
-| 2 · Porte | **+1** | Scale-up ou Grande somam. Early não soma (o tíquete de consultoria não cabe). |
-| 3 · Gatilho | **+2 / +1** | Urgente vale 2: G1, G4, G7, G12, G13, G15, G19. Médio vale 1: G2, G3, G5, G6, G11, G14, G16, G17, G18. Os demais (G8, G9, G10) não pontuam. |
-| 4 · Alcance do comprador | **+1 / −1** | Caminho quente (G12 ou G13) soma 1. **Porte Grande sem caminho quente subtrai 1 e trava o tier em C.** |
+| Eixo                     | Pontos      | Regra                                                                                                                                       |
+| ------------------------ | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1 · Setor                | **+1**      | Setor no alvo: Fintech, Healthtech, DTC, CPG, SaaS, Govtech. Setor fora da lista não soma e não subtrai.                                    |
+| 2 · Porte                | **+1**      | Scale-up ou Grande somam. Early não soma (o tíquete de consultoria não cabe).                                                               |
+| 3 · Gatilho              | **+2 / +1** | Urgente vale 2: G1, G4, G7, G12, G13, G15, G19. Médio vale 1: G2, G3, G5, G6, G11, G14, G16, G17, G18. Os demais (G8, G9, G10) não pontuam. |
+| 4 · Alcance do comprador | **+1 / −1** | Caminho quente (G12 ou G13) soma 1. **Porte Grande sem caminho quente subtrai 1 e trava o tier em C.**                                      |
 
 O eixo 4 é o único que pode subtrair, e é o que mais estranha quem vê. A razão precisa aparecer na tela: a rubrica foi calibrada para consultor solo, e o centro de compra de uma empresa grande está fora do alcance dele sem porta de entrada. Para um time de vendas essa regra seria falsa. **É premissa do operador, não atributo da empresa** — o texto ao lado do score diz isso.
 
@@ -29,7 +29,7 @@ Esse é o ponto mais fácil de errar em todo o produto, e está travado como dec
 
 Consequência para as telas: a ficha mostra **as duas coisas, separadas e com rótulos diferentes**. O cadastro exibe `Porte (Receita) · Demais · nem micro, nem pequeno porte`, como informação. O seletor exibe `Porte (rubrica) · Early / Scale-up / Grande`, como entrada. Se as duas aparecerem com o mesmo rótulo "porte", o produto ensina o erro.
 
-Microcópia sob os seletores: *"Porte e gatilho não estão em cadastro público. Escolha e veja o tier recalcular."*
+Microcópia sob os seletores: _"Porte e gatilho não estão em cadastro público. Escolha e veja o tier recalcular."_
 
 ## 6. Rigor dos dados — reais e exatos, com uma exceção honesta
 
@@ -53,27 +53,27 @@ O teto do eixo 4 rebaixa depois do corte: **teto limita, nunca promove.** Uma em
 
 Mostre 6 e resuma o resto, mas use estes rótulos e mantenha o código visível (`G4`, não "troca de C-level" solto):
 
-| | Gatilho | Peso |
-|---|---|---|
-| G1 | Captou rodada / aporte recente | urgente |
-| G2 | M&A / aquisição | médio |
-| G3 | Aquisição desacelerando / churn / MAU em queda | médio |
-| G4 | Troca de C-level (novo CEO/CFO/CMO) | urgente |
-| G5 | Lançamento de produto / novo mercado | médio |
-| G6 | Internacionalização / entrada em mercado novo | médio |
-| G7 | Evento de governança (JV, IPO, earn-out, prazo regulatório) | urgente |
-| G8 | Boutique de dados querendo escalar método | — |
-| G9 | Tema externo (regulatório, eleitoral, macro) vira prioridade | — |
-| G10 | Vaga de Head/VP aberta há tempo | — |
-| G11 | Contratou líder de growth/dados | médio |
-| G12 | Ex-cliente mudou de empresa | urgente + quente |
-| G13 | Intenção declarada | urgente + quente |
-| G14 | Travado em piloto de IA sem valor | médio |
-| G15 | Legal adverso | urgente |
-| G16 | Intenção de pesquisa | médio |
-| G17 | Produto e operação | médio |
-| G18 | Ecossistema e rede | médio |
-| G19 | Receita pública contratada | urgente |
+|     | Gatilho                                                      | Peso             |
+| --- | ------------------------------------------------------------ | ---------------- |
+| G1  | Captou rodada / aporte recente                               | urgente          |
+| G2  | M&A / aquisição                                              | médio            |
+| G3  | Aquisição desacelerando / churn / MAU em queda               | médio            |
+| G4  | Troca de C-level (novo CEO/CFO/CMO)                          | urgente          |
+| G5  | Lançamento de produto / novo mercado                         | médio            |
+| G6  | Internacionalização / entrada em mercado novo                | médio            |
+| G7  | Evento de governança (JV, IPO, earn-out, prazo regulatório)  | urgente          |
+| G8  | Boutique de dados querendo escalar método                    | —                |
+| G9  | Tema externo (regulatório, eleitoral, macro) vira prioridade | —                |
+| G10 | Vaga de Head/VP aberta há tempo                              | —                |
+| G11 | Contratou líder de growth/dados                              | médio            |
+| G12 | Ex-cliente mudou de empresa                                  | urgente + quente |
+| G13 | Intenção declarada                                           | urgente + quente |
+| G14 | Travado em piloto de IA sem valor                            | médio            |
+| G15 | Legal adverso                                                | urgente          |
+| G16 | Intenção de pesquisa                                         | médio            |
+| G17 | Produto e operação                                           | médio            |
+| G18 | Ecossistema e rede                                           | médio            |
+| G19 | Receita pública contratada                                   | urgente          |
 
 Para a tela, os 6 que contam melhor a história: **G1, G4, G12, G13, G14, G7**. G12 e G13 são os únicos "quentes" e por isso os únicos que ativam o bônus do eixo 4 — vale deixar isso visível quando um deles é escolhido.
 
@@ -83,19 +83,19 @@ Selecione o estado inicial como **"nenhum gatilho observado"**, que é o caso re
 
 Use **Ambev**. É real, o setor CPG está na lista core, e eu consultei a Brasil API agora — os valores abaixo são exatos:
 
-| Campo | Valor |
-|---|---|
-| Razão social | AMBEV S.A. |
-| Nome fantasia | *(vazio na Receita — a tela deve omitir a linha, não mostrar em branco)* |
-| CNPJ | 07.526.557/0001-00 |
-| CNAE principal | 1113-5/02 · Fabricação de cervejas e chopes |
-| Porte (Receita) | Demais · nem micro, nem pequeno porte |
-| Capital social | R$ 58.308.215.000 |
-| Natureza jurídica | Sociedade Anônima Aberta |
-| Situação cadastral | ATIVA |
-| Município | SÃO PAULO · SP |
-| Início de atividade | 19/07/2005 |
-| Quadro societário | 7 sócios · 7 administradores |
+| Campo               | Valor                                                                    |
+| ------------------- | ------------------------------------------------------------------------ |
+| Razão social        | AMBEV S.A.                                                               |
+| Nome fantasia       | _(vazio na Receita — a tela deve omitir a linha, não mostrar em branco)_ |
+| CNPJ                | 07.526.557/0001-00                                                       |
+| CNAE principal      | 1113-5/02 · Fabricação de cervejas e chopes                              |
+| Porte (Receita)     | Demais · nem micro, nem pequeno porte                                    |
+| Capital social      | R$ 58.308.215.000                                                        |
+| Natureza jurídica   | Sociedade Anônima Aberta                                                 |
+| Situação cadastral  | ATIVA                                                                    |
+| Município           | SÃO PAULO · SP                                                           |
+| Início de atividade | 19/07/2005                                                               |
+| Quadro societário   | 7 sócios · 7 administradores                                             |
 
 Nomes reais do QSA, se precisar preencher a lista: CARLA SMITH DE VASCONCELLOS CRIPPA PRADO, CARLOS EDUARDO KLUTZENSCHELL LISBOA, GUILHERME FLEURY DE FIGUEIREDO FERRAZ PAROLARI — todos com qualificação **Diretor**. São dados públicos da Receita por força de lei.
 
@@ -114,12 +114,14 @@ Cobrem fintech, varejo, SaaS/ERP e CPG. Totvs e VTEX têm a vantagem de serem el
 As categorias são as reais do `tecnografias_br.json` (**23 ferramentas desde 28/jul/2026** — PIX saiu, ver ROADMAP Fase 4; nas telas o número vem da prop `catalogo`, não literal). Sugestão para a tela:
 
 **Procedência forte** (evidência direta no site)
+
 - `RD Station Marketing` — Marketing Automation — via **script**
 - `VTEX` — E-commerce — via **header**
 - `Jivochat` — Live Chat — via **cookie**
 - `Sankhya` — ERP — via **cname**
 
 **Procedência inferida** (`implies`, visualmente mais fraca)
+
 - `Pagar.me` — Payment Processor — **inferido de Stone**
 
 Detalhe que importa: **`Stone → Pagar.me` é o único `implies` que existe** entre os fingerprints do catálogo. Se a tela precisar de um segundo exemplo de inferência, ele seria inventado — melhor mostrar um só e deixar a assimetria visível, porque ela é verdadeira.
@@ -132,9 +134,9 @@ O marcador de procedência não é decoração. Ele existe para o usuário saber
 
 Consulta que vem do cache **não conta**. O contador é por visitante, identificado por hash do IP com salt secreto — nunca o IP.
 
-O que vem depois: mensagem sem punição, convidando ao cadastro. *"Você usou as consultas da demo de hoje. Criar conta libera mais."* Conta aprovada tem 50/dia.
+O que vem depois: mensagem sem punição, convidando ao cadastro. _"Você usou as consultas da demo de hoje. Criar conta libera mais."_ Conta aprovada tem 50/dia.
 
-CTA é **cadastro com e-mail e senha**, com aprovação manual depois. A tela de espera diz o motivo: *"Aprovo manualmente porque o Farol consulta fontes públicas com limite, e o limite é finito."*
+CTA é **cadastro com e-mail e senha**, com aprovação manual depois. A tela de espera diz o motivo: _"Aprovo manualmente porque o Farol consulta fontes públicas com limite, e o limite é finito."_
 
 ## 10. Quanto deve funcionar
 
