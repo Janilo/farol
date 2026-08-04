@@ -37,7 +37,11 @@ export default defineConfig({
     // 03/ago/2026 o placar deu 338 testes onde havia 169, e o pior não é o
     // número — é o trabalho em andamento de outra sessão reprovar a suíte desta.
     test: {
-      exclude: ["**/node_modules/**", "**/dist/**", "**/.claude/**"],
+      // `scripts/` fica fora: o comparador de paridade que mora lá depende de um
+      // JSON gerado à mão e da esteira Python fora deste repo. Sem esta linha ele
+      // entra na suíte e o CI quebra por falta do arquivo — verificado em
+      // 04/ago/2026, quando o placar saltou de 190 para 191.
+      exclude: ["**/node_modules/**", "**/dist/**", "**/.claude/**", "scripts/**"],
     },
   },
 });
