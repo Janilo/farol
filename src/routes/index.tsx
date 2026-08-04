@@ -7,7 +7,7 @@ import { SiteHeader } from "@/components/brand/SiteHeader";
 
 const TITLE = "Farol · Ficha instantânea de empresas brasileiras";
 const DESCRIPTION =
-  "Digite um nome ou um CNPJ. O Farol lê o cadastro público da Receita Federal, detecta a stack do site e devolve razão social, CNAE, porte, quadro societário e ferramentas em uso, com uma prioridade calculada e a conta aberta de como chegou nela.";
+  "Digite o CNPJ. O Farol lê o cadastro público da Receita Federal, detecta a stack do site e devolve razão social, CNAE, porte, quadro societário e ferramentas em uso, com uma prioridade calculada e a conta aberta de como chegou nela.";
 
 export const Route = createFileRoute("/")({
   component: LandingPage,
@@ -32,7 +32,7 @@ export const Route = createFileRoute("/")({
           name: "Farol",
           url: "https://farol.pereirasaraiva.com/",
           description:
-            "Ficha de empresa brasileira a partir de CNPJ ou nome: cadastro da Receita, tecnografia do site e priorização por rubrica.",
+            "Ficha de empresa brasileira a partir do CNPJ: cadastro da Receita, tecnografia do site e priorização por rubrica.",
         }),
       },
       {
@@ -91,10 +91,13 @@ const STEPS = [
   {
     n: "01",
     // Este passo prometia busca por nome — "até cinco candidatos com razão
-    // social" — e ela nunca existiu: `searchCnpjByName` devolve `unavailable`
-    // por desenho, porque as fontes públicas gratuitas não têm índice textual
-    // (ver Fase 3 no ROADMAP). A /demo já dizia a verdade; a home contradizia a
-    // própria demo do mesmo produto. Alinhado com a copy da /demo em 03/ago/2026.
+    // social" — e ela nunca existiu, porque as fontes públicas gratuitas não têm
+    // índice textual (ver Fase 3 no ROADMAP). A /demo já dizia a verdade; a home
+    // contradizia a demo do mesmo produto. Alinhado com a /demo em 03/ago/2026.
+    //
+    // A promessa também estava na DESCRIPTION e no JSON-LD desta página, que
+    // diziam "nome ou CNPJ" — corrigidos junto, no achado A2: copy falsa em meta
+    // tag é falsa do mesmo jeito, e ainda vai para buscador e para card de link.
     title: "Digite o CNPJ",
     body: "Os dígitos verificadores são conferidos no navegador, então CNPJ errado não gasta consulta. Busca por nome não existe: as fontes públicas gratuitas não têm índice textual, e eu prefiro dizer isso a te devolver resultado ruim.",
   },

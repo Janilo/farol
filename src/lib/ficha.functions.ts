@@ -11,7 +11,7 @@ import { z } from "zod";
 
 import { cleanCnpj, isValidCnpj, looksLikeCnpj } from "./cnpj";
 import { extractEnrichment } from "./enrichment";
-import { fetchCnpj, searchCnpjByName, type NameMatch } from "./enrichment.server";
+import { fetchCnpj } from "./enrichment.server";
 import {
   decideFromCache,
   decideStackFromCache,
@@ -29,7 +29,7 @@ import { fetchTargetSite } from "./technographics.server";
 export type FichaError =
   | "INVALID_CNPJ"
   | "COMPANY_NOT_FOUND"
-  | "NAME_NO_MATCH"
+  /** Digitou algo que não é CNPJ. Não existe busca por nome — ver `enrichment.server.ts`. */
   | "NAME_SEARCH_UNAVAILABLE"
   | "SOURCE_RATE_LIMITED"
   | "SOURCE_UNAVAILABLE"
@@ -37,10 +37,12 @@ export type FichaError =
   | "QUOTA_GLOBAL"
   | "QUOTA_INDISPONIVEL";
 
-export type FichaResult =
-  | { status: "ok"; ficha: Ficha }
-  | { status: "choose"; matches: NameMatch[] }
-  | { status: "error"; error: FichaError };
+/**
+ * Duas saídas, não três. Havia uma variante `choose` com candidatos de busca por
+ * nome, removida em 03/ago/2026 (achado A2): ela **nunca podia acontecer**, e um
+ * tipo que descreve um estado impossível é uma promessa que o produto não cumpre.
+ */
+export type FichaResult = { status: "ok"; ficha: Ficha } | { status: "error"; error: FichaError };
 
 /** Traduz a falha do adapter no código de erro do domínio. */
 function mapFetchError(error: "not_found" | "rate_limited" | "upstream_down" | "invalid_response") {
@@ -183,23 +185,14 @@ export const getFichaFn = createServerFn({ method: "POST" })
       return resolverPorCnpj(cleanCnpj(query), domain, agora);
     }
 
-    // Busca por nome depende de fonte com índice textual, que não existe nas
-    // gratuitas — ver a nota em `searchCnpjByName`. O erro é específico para a
-    // tela poder pedir o CNPJ em vez de culpar a Receita.
-    const busca = await searchCnpjByName(query);
-    if (!busca.ok) {
-      if (busca.error === "unavailable")
-        return { status: "error", error: "NAME_SEARCH_UNAVAILABLE" };
-      if (busca.error === "none_found") return { status: "error", error: "NAME_NO_MATCH" };
-      if (busca.error === "rate_limited") return { status: "error", error: "SOURCE_RATE_LIMITED" };
-      return { status: "error", error: "SOURCE_UNAVAILABLE" };
-    }
-
-    // Um único candidato com CNPJ completo dispensa a escolha.
-    const unico = busca.matches.length === 1 ? busca.matches[0] : null;
-    if (unico && isValidCnpj(unico.cnpj)) {
-      return resolverPorCnpj(cleanCnpj(unico.cnpj), domain, agora);
-    }
-
-    return { status: "choose", matches: busca.matches };
+    // Não parece CNPJ. Busca por nome depende de fonte com índice textual, que
+    // não existe nas gratuitas — o porquê está em `enrichment.server.ts`. Erro
+    // próprio para a tela pedir o CNPJ em vez de culpar a Receita por uma
+    // limitação nossa.
+    //
+    // Aqui havia uma cadeia que chamava `searchCnpjByName` e tratava
+    // `none_found`, `rate_limited` e candidatos múltiplos. **Nada daquilo era
+    // alcançável**: o stub devolvia `unavailable` sempre, então só a primeira
+    // linha rodava. Removido em 03/ago/2026 (achado A2 da auditoria).
+    return { status: "error", error: "NAME_SEARCH_UNAVAILABLE" };
   });

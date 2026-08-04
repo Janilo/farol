@@ -16,11 +16,13 @@ Registro calibrado nos irmãos: eyebrow é a categoria do método (Lente: "Pesqu
 
 **Description** (também og e twitter)
 
-> Digite um nome ou um CNPJ. O Farol lê o cadastro público da Receita Federal, detecta a stack do site e devolve razão social, CNAE, porte, quadro societário e ferramentas em uso, com uma prioridade calculada e a conta aberta de como chegou nela.
+> Digite o CNPJ. O Farol lê o cadastro público da Receita Federal, detecta a stack do site e devolve razão social, CNAE, porte, quadro societário e ferramentas em uso, com uma prioridade calculada e a conta aberta de como chegou nela.
+
+_(Dizia "Digite um nome ou um CNPJ" até 03/ago/2026 — mesma promessa falsa do passo 01, e esta ia para buscador e card de link. Achado A2.)_
 
 **JSON-LD, WebSite.description**
 
-> Ficha de empresa brasileira a partir de CNPJ ou nome: cadastro da Receita, tecnografia do site e priorização por rubrica.
+> Ficha de empresa brasileira a partir do CNPJ: cadastro da Receita, tecnografia do site e priorização por rubrica.
 
 ### 1.2 Hero
 
@@ -131,7 +133,7 @@ Label: `Depois — ficha montada`
 > Os dígitos verificadores são conferidos no navegador, então CNPJ errado não gasta consulta. Busca por nome não existe: as fontes públicas gratuitas não têm índice textual, e eu prefiro dizer isso a te devolver resultado ruim.
 
 O texto anterior prometia "até cinco candidatos com razão social" para busca por
-nome. **Essa busca nunca existiu:** `searchCnpjByName` devolve `unavailable` por
+nome. **Essa busca nunca existiu:** havia um `searchCnpjByName` devolvendo `unavailable` por
 desenho, porque a rota herdada do script Python não existe na fonte (Fase 3 do
 roadmap). A `/demo` já dizia a verdade — a home contradizia a demo do mesmo
 produto, e este arquivo, que é a copy de referência, sustentava a versão falsa.
@@ -166,11 +168,11 @@ produto, e este arquivo, que é a copy de referência, sustentava a versão fals
 
 **Lede**
 
-> Digite o CNPJ ou o nome. Se souber o site, informe também: é dele que sai a stack.
+> Digite o CNPJ. Se souber o site, informe também: é dele que sai a stack.
 
 **Campos**
 
-- `Nome da empresa ou CNPJ` · placeholder: `12.345.678/0001-90 ou Acme Saúde Digital`
+- `CNPJ da empresa` · placeholder: `33.000.167/0001-01`
 - `Site (opcional)` · placeholder: `acme.com.br` · ajuda: `Sem o site, a ficha sai sem a seção de stack.`
 
 **Chips de exemplo**

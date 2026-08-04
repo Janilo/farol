@@ -68,34 +68,30 @@ export async function fetchCnpj(cnpjDigits: string): Promise<FetchCnpjResult> {
   return { ok: false, error: "rate_limited" };
 }
 
-export interface NameMatch {
-  cnpj: string;
-  legalName: string;
-  tradeName: string | null;
-}
-
-export type SearchByNameResult =
-  | { ok: true; matches: NameMatch[] }
-  | { ok: false; error: "none_found" | "rate_limited" | "upstream_down" | "unavailable" };
-
-/**
- * Busca por nome — NÃO IMPLEMENTADA, e isso é um fato sobre as fontes, não
- * uma pendência de código.
+/* ------------------------------------------------------------------ *
+ * Busca por nome: NÃO EXISTE, e o código não finge que existe
+ * ------------------------------------------------------------------ *
  *
- * O plano previa `publica.cnpj.ws/cnpj/search`, herdado de
- * `Clientes/Leads/enriquecer_cnpj.py:118`. Testado ao vivo em 27/jul/2026:
- * a rota devolve `400 {"detalhes":"CNPJ inválido"}` — ela interpreta
- * "search" como um CNPJ no path. O endpoint não existe, e nunca existiu:
- * a busca por nome do script Python também nunca funcionou.
+ * Havia aqui um `searchCnpjByName` que devolvia `unavailable` incondicionalmente,
+ * mais o tipo `NameMatch` e a união `SearchByNameResult`. **Removidos em
+ * 03/ago/2026** (achado A2 da auditoria de arquitetura).
  *
- * Devolver `unavailable` em vez de tentar e falhar é deliberado. Chamar uma
- * rota inexistente faria a tela dizer "a fonte da Receita está fora do ar",
- * culpando a Receita por um defeito nosso.
+ * O stub não era inofensivo. Ele sustentava, rio abaixo, um estado `choose` na
+ * fatia, um código `NAME_NO_MATCH` e uma tela de seleção de candidatos — toda
+ * uma estrutura afirmando que o produto tem um recurso que ele não tem. Foi essa
+ * mesma afirmação que sobreviveu na home até 03/ago prometendo "até cinco
+ * candidatos com razão social", contradizendo a própria `/demo`.
  *
- * Para implementar de verdade, é preciso uma fonte com busca textual:
- * cnpj.ws em plano pago, Casa dos Dados, ou o dataset do Minha Receita
- * carregado localmente (o fallback que `farol.md` já prevê para a Brasil API).
+ * **O fato sobre as fontes, que é o que importa preservar:** o plano previa
+ * `publica.cnpj.ws/cnpj/search`, herdado de `Clientes/Leads/enriquecer_cnpj.py`.
+ * Testado ao vivo em 27/jul/2026, a rota devolve `400 {"detalhes":"CNPJ
+ * inválido"}` — ela interpreta "search" como um CNPJ no path. O endpoint não
+ * existe e nunca existiu; a busca por nome daquele script Python também nunca
+ * funcionou.
+ *
+ * **Para implementar de verdade** é preciso uma fonte com índice textual:
+ * cnpj.ws em plano pago, Casa dos Dados, ou o dataset do Minha Receita carregado
+ * localmente (o fallback que `farol.md` já prevê para a Brasil API). Quando essa
+ * fonte existir, o lugar de começar é aqui — e aí sim os tipos rio abaixo voltam,
+ * junto com a função que os honra.
  */
-export async function searchCnpjByName(_nome: string): Promise<SearchByNameResult> {
-  return { ok: false, error: "unavailable" };
-}

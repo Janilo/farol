@@ -6,7 +6,7 @@
 
 > **Nota sobre a meta.** O roadmap pedia "meta 100%". Auditoria que se obriga a fechar em verde não é auditoria — é carimbo. Esta fechou em **três verdes e dois amarelos**, com cinco achados, sendo **um deles contra a Fase 5, escrita horas antes desta auditoria**. O 100% fica como alvo dos achados, não como resultado declarado.
 
-> **✅ A1 e A4 foram corrigidos na mesma sessão** (decisão dele, 03/ago/2026), e as seções abaixo estão marcadas. O texto do diagnóstico foi mantido no passado, porque um achado que some depois de resolvido tira da próxima pessoa a razão pela qual a decisão foi tomada. **A2, A3 e A5 seguem abertos.**
+> **✅ A1, A2 e A4 foram corrigidos na mesma sessão** (decisão dele, 03/ago/2026), e as seções abaixo estão marcadas. O texto do diagnóstico foi mantido no passado, porque um achado que some depois de resolvido tira da próxima pessoa a razão pela qual a decisão foi tomada. **A3 e A5 seguem abertos.**
 
 ---
 
@@ -14,7 +14,7 @@
 
 O Farol nasceu de um clone do Cascata, e a comparação com a auditoria irmã é o dado mais útil aqui: **os três achados P0 do Cascata não existem neste repo.** Não há matemática do produto reimplementada em cinco telas, não há escrita do browser direto na tabela furando a fatia, e não há ausência de test runner — são 169 testes cobrindo todos os núcleos puros. A separação núcleo-puro / adapter-com-I/O foi aplicada com disciplina desde a Fase 2, e é ela que sustenta as três notas verdes.
 
-O que sobra é de outra natureza, e cabe em uma frase: **o produto carregava estruturas de coisas que não existem.** Uma busca por nome que nunca funcionou tem tipo, caminho de código, mensagem de erro e tela inteira (A2, aberto); duas edge functions do Cascata seguiam no repo com `service_role` (A4, resolvido); e o termo que o glossário criou de propósito para evitar o bug mais caro do Cascata foi contrariado pela fase mais recente (A1, resolvido). Nenhum desses é falha de execução tática — são exatamente os pontos onde a estratégia se perde quando cada fase é escrita bem por conta própria.
+O que sobra é de outra natureza, e cabe em uma frase: **o produto carregava estruturas de coisas que não existem.** Uma busca por nome que nunca funcionou tinha tipo, caminho de código, mensagem de erro e tela inteira (A2, resolvido); duas edge functions do Cascata seguiam no repo com `service_role` (A4, resolvido); e o termo que o glossário criou de propósito para evitar o bug mais caro do Cascata foi contrariado pela fase mais recente (A1, resolvido). Nenhum desses é falha de execução tática — são exatamente os pontos onde a estratégia se perde quando cada fase é escrita bem por conta própria.
 
 | Princípio                                      | Nota  | Veredito em uma linha                                                                                                                                                                    |
 | ---------------------------------------------- | ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -153,13 +153,19 @@ A Fase 5 declarou `export type Porte = "Early" | "Scale-up" | "Grande"` (hoje `R
 
 **Corrigido.** `Porte` → `RubricPorte` em `tier.ts` e `PreTier.tsx` (o `triggers.ts` não usava o tipo). Só o **tipo** foi renomeado: as strings de razão ("Porte viável: …") espelham as do Python e divergir delas quebraria a paridade, e o rótulo em PT-BR da tela é questão de copy, não de código. O tipo agora carrega no comentário a razão do nome, para não ser "simplificado" depois. ⚠️ **Fica aberto um resquício de UI:** na mesma `/demo`, a ficha exibe o porte da Receita e o seletor do pré-tier se chama "Porte" — a ambiguidade que o código não tem mais, a tela ainda tem. Mexer nisso é copy e precisa do OK dele.
 
-### A2 — Busca por nome: estado impossível modelado como possível (P1)
+### A2 — Busca por nome: estado impossível modelado como possível (P1) · ✅ CORRIGIDO em 03/ago/2026
 
 `searchCnpjByName` (`enrichment.server.ts:99`) devolve `{ ok: false, error: "unavailable" }` **incondicionalmente**, e isso é deliberado — a rota herdada do script Python não existe na fonte (Fase 3). A consequência é que tudo depois de `ficha.functions.ts:192` é inalcançável: os ramos `none_found`, `rate_limited` e `SOURCE_UNAVAILABLE` (`:193–195`), a resolução do candidato único (`:199–202`) e o retorno `{ status: "choose" }` (`:204`).
 
 O custo não é o código morto — é o que ele sustenta: a variante `choose` em `FichaResult` (`:42`), o código `NAME_NO_MATCH` em `FichaError` (`:32`) e em `error-codes.ts:15`, a frase correspondente em `demo.tsx:50`, o estado `escolher` (`demo.tsx:101`), o handler (`:117`) e a tela de seleção (`:259`). **O tipo afirma que o produto tem um recurso que ele não tem**, e foi essa mesma afirmação que sobreviveu na home até ser corrigida hoje (`fix: a home prometia busca por nome que nunca existiu`).
 
-**Correção:** decidir entre implementar a busca (exige fonte com índice textual — cnpj.ws pago, Casa dos Dados ou Minha Receita local) ou remover a estrutura inteira, deixando `NAME_SEARCH_UNAVAILABLE` como único caminho. **Meio-termo é o pior dos dois:** manter o tipo sem a função é o que produziu a copy falsa.
+**Corrigido pela remoção** — a outra saída, implementar, depende de contratar fonte com índice textual (cnpj.ws pago, Casa dos Dados ou Minha Receita local) e segue disponível: `enrichment.server.ts` guarda, em comentário, o fato sobre as fontes e o lugar por onde recomeçar.
+
+Saíram os 17 pontos que sustentavam o recurso inexistente: `searchCnpjByName`, `NameMatch` e `SearchByNameResult` (`enrichment.server.ts`); a variante `choose` e o código `NAME_NO_MATCH` (`ficha.functions.ts`); o código em `error-codes.ts`; e na `demo.tsx` o estado `escolher`, o handler, a frase e as 31 linhas da tela de seleção.
+
+**O comportamento visível não mudou, e isso é a prova de que o código era morto:** digitar um nome devolve exatamente a mesma frase de antes — verificado em dev local com "Petrobras", que retorna _"Por ora o Farol consulta só por CNPJ…"_, e nenhuma tela de escolha aparece, porque nunca podia aparecer.
+
+**Quem pegou a remoção foi o teste que congela a contagem de códigos** (`error-codes.test.ts`), com o comentário "bump this count deliberately". Ele reprovou em 8→7 e foi atualizado com a razão escrita — é exatamente para isso que a contagem está travada.
 
 ### A3 — Três funções `SECURITY DEFINER` expostas por RPC (P1, segurança)
 

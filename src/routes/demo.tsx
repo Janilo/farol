@@ -16,7 +16,6 @@ import {
   type SiteFetchError,
   type StackResult,
 } from "@/lib/technographics";
-import type { NameMatch } from "@/lib/enrichment.server";
 import { formatCnpj } from "@/lib/cnpj";
 
 const DESCRIPTION =
@@ -47,7 +46,6 @@ const ERROR_COPY: Record<FichaError, string> = {
   INVALID_CNPJ: "Esse CNPJ não fecha nos dígitos verificadores. Confira e tente de novo.",
   COMPANY_NOT_FOUND:
     "CNPJ válido, mas sem registro na Receita. Pode ser baixa cadastral ou erro de digitação.",
-  NAME_NO_MATCH: "Não achei empresa com esse nome. Tente a razão social ou o CNPJ direto.",
   NAME_SEARCH_UNAVAILABLE:
     "Por ora o Farol consulta só por CNPJ. As fontes públicas gratuitas não têm busca por nome, e eu prefiro dizer isso a te devolver resultado ruim.",
   SOURCE_RATE_LIMITED: "A fonte pública limitou as consultas por agora. Tente em alguns minutos.",
@@ -94,11 +92,14 @@ const EXEMPLOS = [
   { nome: "Ambev", cnpj: "07526557000100", site: "ambev.com.br" },
 ];
 
+/**
+ * Havia um estado `escolher`, com candidatos de busca por nome, removido em
+ * 03/ago/2026 (achado A2 da auditoria): a fatia nunca podia devolvê-lo.
+ */
 type Estado =
   | { tipo: "vazio" }
   | { tipo: "carregando" }
   | { tipo: "ficha"; ficha: Ficha }
-  | { tipo: "escolher"; matches: NameMatch[] }
   | { tipo: "erro"; error: FichaError };
 
 function DemoPage() {
@@ -114,7 +115,6 @@ function DemoPage() {
       const d = dominio.trim();
       const r = await getFichaFn({ data: { query: t, ...(d ? { domain: d } : {}) } });
       if (r.status === "ok") setEstado({ tipo: "ficha", ficha: r.ficha });
-      else if (r.status === "choose") setEstado({ tipo: "escolher", matches: r.matches });
       else setEstado({ tipo: "erro", error: r.error });
     } catch {
       setEstado({ tipo: "erro", error: "SOURCE_UNAVAILABLE" });
@@ -249,37 +249,6 @@ function DemoPage() {
             {estado.tipo === "erro" && (
               <div className="border-l-2 border-destructive bg-card p-5">
                 <p className="text-sm text-foreground">{ERROR_COPY[estado.error]}</p>
-              </div>
-            )}
-
-            {estado.tipo === "escolher" && (
-              <div>
-                <p className="eyebrow mb-4">Qual delas?</p>
-                <ul className="divide-y divide-border border border-border">
-                  {estado.matches.map((m) => (
-                    <li key={m.cnpj}>
-                      <button
-                        type="button"
-                        onClick={() => void consultar(m.cnpj, site)}
-                        className="flex w-full items-center justify-between gap-4 px-4 py-3 text-left transition-colors hover:bg-muted/40"
-                      >
-                        <span>
-                          <span className="block text-sm font-medium text-foreground">
-                            {m.legalName}
-                          </span>
-                          {m.tradeName && (
-                            <span className="block text-xs text-muted-foreground">
-                              {m.tradeName}
-                            </span>
-                          )}
-                        </span>
-                        <span className="shrink-0 font-mono text-xs tabular-nums text-muted-foreground">
-                          {formatCnpj(m.cnpj)}
-                        </span>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
               </div>
             )}
 

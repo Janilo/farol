@@ -12,7 +12,10 @@ import { appErrorCode as baseAppErrorCode } from "./errors";
 export const APP_ERROR_CODES = [
   "INVALID_CNPJ", // 14 digits didn't check out — never left the browser
   "COMPANY_NOT_FOUND", // valid CNPJ, no record at the source
-  "NAME_NO_MATCH", // name search came back empty
+  // "NAME_NO_MATCH" lived here until 03/Aug/2026 and was never raised: there is
+  // no name search to come back empty (see enrichment.server.ts). It failed the
+  // rule stated above — a code earns a place only when the UI says something
+  // different because of it — and an unreachable code is a promise in the type.
   "SOURCE_RATE_LIMITED", // upstream (Brasil API / cnpj.ws) throttled us
   "SOURCE_UNAVAILABLE", // upstream down or malformed response
   "SITE_UNREACHABLE", // target company site refused/timed out — dossier still renders

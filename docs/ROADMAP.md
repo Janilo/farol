@@ -15,7 +15,7 @@ e a rubrica é o que sustenta o discurso da página institucional: a tecnografia
 tem recall baixa fora de e-commerce (§Fase 6, item 1 — em ~50 empresas, nenhuma
 detecção de terceiro fora de VTEX sobreviveu ao escrutínio). A **Fase 8 é a
 única aberta, e está suspensa**, com o gatilho de reabertura escrito na própria
-seção. Os achados A2, A3 e A5 da auditoria seguem em aberto — ver a Fase 10.
+seção. Os achados A3 e A5 da auditoria seguem em aberto — ver a Fase 10.
 
 As decisões travadas estão em [`DESIGN.md`](DESIGN.md); os termos, em
 [`../GLOSSARIO.md`](../GLOSSARIO.md). Nada aqui as reabre.
@@ -64,8 +64,11 @@ projeto, devolve `400 {"detalhes":"CNPJ inválido"}` — ela interpreta "search"
 como um CNPJ no path. O endpoint não existe e nunca existiu; a busca por nome
 daquele script também nunca funcionou. Implementar exige fonte com índice
 textual: cnpj.ws pago, Casa dos Dados, ou o dataset do Minha Receita local.
-Até lá, `searchCnpjByName` devolve `unavailable` e a tela diz que só consulta
-por CNPJ, em vez de culpar a Receita por defeito nosso.
+Até lá a tela diz que só consulta por CNPJ, em vez de culpar a Receita por
+defeito nosso. _(Havia aqui um `searchCnpjByName` devolvendo `unavailable`;
+ele **e toda a estrutura que sustentava** foram removidos em 03/ago/2026 —
+achado A2 da Fase 10. O fato sobre as fontes ficou registrado em
+`enrichment.server.ts`.)_
 
 Sobra o cache, que é o que a fase entregou:
 
@@ -555,10 +558,17 @@ e `extract-inputs`, herdadas do clone do Cascata, foram apagadas (ninguém as
 invocava, nenhuma estava deployada, e as duas carregavam `service_role` com CORS
 `*` sem checar `is_approved`).
 
-**Seguem abertos:** **A2** (P1) — a busca por nome é um estado impossível
-modelado como possível: `searchCnpjByName` devolve `unavailable` sempre, então
-`ficha.functions.ts:193–204` é inalcançável, e isso sustenta uma variante de
-tipo, um código de erro, uma frase e uma tela inteira; **A3** (P1, segurança) —
+**A2 também foi corrigido**, logo depois: a busca por nome era um estado
+impossível modelado como possível — `searchCnpjByName` devolvia `unavailable`
+sempre, então o ramo inteiro era inalcançável, e ainda assim sustentava uma
+variante de tipo (`choose`), um código de erro (`NAME_NO_MATCH`), uma frase e
+uma tela de seleção. Os 17 pontos saíram, e **o comportamento visível não mudou**
+— digitar um nome devolve a mesma frase de antes, que é a prova de que o código
+era morto. A saída alternativa (implementar de verdade) continua aberta e exige
+fonte com índice textual; o `enrichment.server.ts` guarda o fato sobre as fontes
+e por onde recomeçar.
+
+**Seguem abertos:** **A3** (P1, segurança) —
 `has_role`, `is_approved` e `is_guest` são `SECURITY DEFINER` executáveis por
 qualquer autenticado via RPC, achado do linter do Supabase, e o impacto cresce
 quando a Fase 8 sair da suspensão; **A5** (P2) — o orquestrador `ficha.functions.ts`

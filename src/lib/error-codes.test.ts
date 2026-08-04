@@ -29,6 +29,11 @@ describe("appErrorCode (typed to Farol's code set)", () => {
     // it — see the note in error-codes.ts. Bump this count deliberately.
     expect(APP_ERROR_CODES).toContain("DEMO_QUOTA_EXCEEDED");
     expect(APP_ERROR_CODES).toContain("SITE_UNREACHABLE");
-    expect(APP_ERROR_CODES.length).toBe(8);
+    // 8 → 7 on 03/Aug/2026: NAME_NO_MATCH was removed with the name-search
+    // stub (audit finding A2). It could never be raised — there was no name
+    // search to come back empty. This assertion is what caught the removal,
+    // which is the point of freezing the count.
+    expect(APP_ERROR_CODES).not.toContain("NAME_NO_MATCH");
+    expect(APP_ERROR_CODES.length).toBe(7);
   });
 });

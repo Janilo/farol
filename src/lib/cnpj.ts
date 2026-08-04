@@ -41,10 +41,11 @@ export function formatCnpj(raw: string): string {
 }
 
 /**
- * Um palpite sobre a intenção do usuário: o campo aceita CNPJ ou nome.
- * Sete dígitos ou mais é tentativa de CNPJ, mesmo incompleta — assim
- * "12.345.678/0001-9" recebe erro de CNPJ inválido em vez de virar busca
- * por nome, que devolveria "não achei empresa com esse nome" e confundiria.
+ * Um palpite sobre a intenção do usuário: o campo é livre, e nem tudo que
+ * chega aqui é CNPJ. Sete dígitos ou mais é tentativa de CNPJ, mesmo
+ * incompleta — assim "12.345.678/0001-9" recebe erro de dígito verificador em
+ * vez da frase de "o Farol só consulta por CNPJ", que seria confusa para quem
+ * claramente digitou um CNPJ e só errou um número.
  */
 export function looksLikeCnpj(raw: string): boolean {
   return cleanCnpj(raw).length >= 7;
