@@ -17,7 +17,19 @@
 
 import { acharTrigger } from "./triggers";
 
-export type Porte = "Early" | "Scale-up" | "Grande";
+/**
+ * O porte **na linguagem da rubrica**, e o nome carrega o qualificador de
+ * propósito — é o `rubricPorte` do GLOSSARIO.
+ *
+ * Não simplifique para `Porte`: existe um `RfbPorte` neste mesmo repo
+ * (`enrichment.ts`), com três faixas **diferentes e não conversíveis** (micro,
+ * pequeno, demais). `DEMAIS` cobre tanto uma empresa de cinquenta pessoas
+ * quanto a Ambev, então nenhuma função pode inferir um do outro. Confundir as
+ * duas escalas é o que o glossário chama de "a receita completa do bug do
+ * Cascata" (armadilha 2). Nasceu como `Porte` na Fase 5 e foi renomeado pela
+ * auditoria da Fase 10, no mesmo dia.
+ */
+export type RubricPorte = "Early" | "Scale-up" | "Grande";
 export type Tier = "A" | "B" | "C";
 
 /** Do `CORE_SETORES` do Python. Setor fora daqui ainda pontua como oportunístico. */
@@ -36,7 +48,7 @@ const ORDEM_TIER: readonly Tier[] = ["A", "B", "C"];
 export interface TierInput {
   /** Nome do setor. `"Outro"`, vazio ou ausente não pontua. */
   setor?: string | null;
-  porte?: Porte | null;
+  porte?: RubricPorte | null;
   /** Id do gatilho (`"G1"`…`"G19"`). */
   gatilho?: string | null;
   /** Valor da rodada em reais, quando a fonte citou. Ver `PISO_RODADA`. */

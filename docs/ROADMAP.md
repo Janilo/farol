@@ -4,18 +4,18 @@ Estado das fases e o que falta. Este arquivo substitui o plano que vivia em
 `~/.claude/plans/`, fora de controle de versão — um roteiro de onze fases que
 atravessa sessões precisa de histórico.
 
-**Fases 0, 1, 2, 3, 4, 4.2, 5, 6, 7 e 9 estão fechadas.** O produto está no ar em
+**Todas as fases estão fechadas: 0–7, 9 e 10.** O produto está no ar em
 [farol.pereirasaraiva.com](https://farol.pereirasaraiva.com) consultando o
-cadastro da Receita Federal por CNPJ, com cache de 30 dias e detecção de
-tecnografia brasileira a partir do site.
+cadastro da Receita Federal por CNPJ, com cache de 30 dias, detecção de
+tecnografia brasileira a partir do site e pré-tier interativo pela rubrica.
 
-**Ordem decidida com o Janilo em 03/ago/2026: 5 → 9 → 10.** A **5 e a 9 fecharam
-no mesmo dia, então resta só a 10** (auditoria). A 5 veio antes da 9
-porque é ela que constrói a rubrica, e a rubrica é o que sustenta o discurso da
-página institucional: a tecnografia tem recall baixa fora
-de e-commerce (§Fase 6, item 1 — em ~50 empresas, nenhuma detecção de terceiro
-fora de VTEX sobreviveu ao escrutínio). A **Fase 8 está suspensa**, com o
-gatilho de reabertura escrito na própria seção.
+**A ordem decidida com o Janilo em 03/ago/2026 — 5 → 9 → 10 — foi executada
+inteira no mesmo dia.** A 5 veio antes da 9 porque é ela que constrói a rubrica,
+e a rubrica é o que sustenta o discurso da página institucional: a tecnografia
+tem recall baixa fora de e-commerce (§Fase 6, item 1 — em ~50 empresas, nenhuma
+detecção de terceiro fora de VTEX sobreviveu ao escrutínio). A **Fase 8 é a
+única aberta, e está suspensa**, com o gatilho de reabertura escrito na própria
+seção. Os achados A2, A3 e A5 da auditoria seguem em aberto — ver a Fase 10.
 
 As decisões travadas estão em [`DESIGN.md`](DESIGN.md); os termos, em
 [`../GLOSSARIO.md`](../GLOSSARIO.md). Nada aqui as reabre.
@@ -531,10 +531,44 @@ não ter atualizado — era o DOM em cache do navegador; o HTML fresco do servid
 já estava certo. Deploy verde não é conteúdo no ar, e o DOM da aba não é o que
 o servidor entrega.
 
-## Fase 10 — Auditoria
+## ✅ Fase 10 — Auditoria
 
-`AUDITORIA-ARQUITETURA.md` no formato dos irmãos: os cinco princípios avaliados
-módulo a módulo, meta 100%. `SEGURANCA.md` e `README.md` já estão escritos.
+Feita em 03/ago/2026. [`AUDITORIA-ARQUITETURA.md`](../AUDITORIA-ARQUITETURA.md)
+no formato dos irmãos, com os cinco princípios avaliados módulo a módulo.
+
+**Não fechou em 100%, e isso é o resultado, não uma falha da fase.** Auditoria
+que se obriga a fechar em verde é carimbo. Fechou em **três verdes e dois
+amarelos**, com cinco achados — e o primeiro deles é contra a Fase 5, escrita
+horas antes, no mesmo dia.
+
+O dado que mais vale: **os três achados P0 da auditoria do Cascata não existem
+aqui.** Não há regra do produto reimplementada em cinco telas, nenhuma escrita
+sai do browser direto para a tabela (varredura por `.insert(`/`.update(` em
+`routes/` e `components/` volta vazia) e há 169 testes onde o Cascata tinha
+zero. A separação núcleo-puro / adapter-com-I/O, mantida desde a Fase 2, é o que
+sustenta as três notas verdes.
+
+**Corrigidos na mesma sessão:** **A1** — `Porte` renomeado para `RubricPorte`,
+porque o glossário criou o nome híbrido justamente para impedir a confusão com
+o `RfbPorte`, que é a armadilha 2; e **A4** — as edge functions `extract-customers`
+e `extract-inputs`, herdadas do clone do Cascata, foram apagadas (ninguém as
+invocava, nenhuma estava deployada, e as duas carregavam `service_role` com CORS
+`*` sem checar `is_approved`).
+
+**Seguem abertos:** **A2** (P1) — a busca por nome é um estado impossível
+modelado como possível: `searchCnpjByName` devolve `unavailable` sempre, então
+`ficha.functions.ts:193–204` é inalcançável, e isso sustenta uma variante de
+tipo, um código de erro, uma frase e uma tela inteira; **A3** (P1, segurança) —
+`has_role`, `is_approved` e `is_guest` são `SECURITY DEFINER` executáveis por
+qualquer autenticado via RPC, achado do linter do Supabase, e o impacto cresce
+quando a Fase 8 sair da suspensão; **A5** (P2) — o orquestrador `ficha.functions.ts`
+não tem teste, embora cada peça que ele chama tenha.
+
+As 18 citações `arquivo:linha` do documento foram verificadas uma a uma, e
+re-verificadas depois das correções — corrigir o código envelhece o documento
+que o descreve.
+
+`SEGURANCA.md` e `README.md` já estavam escritos.
 
 **Verificação:** `pnpm test` → `pnpm typecheck` → `pnpm dev` (fluxo completo) →
 `pnpm build` → push → smoke em produção. O runtime da Cloudflare já foi

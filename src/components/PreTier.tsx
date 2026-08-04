@@ -21,10 +21,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { computePreTier, type Porte, type Tier } from "@/lib/tier";
+import { computePreTier, type RubricPorte, type Tier } from "@/lib/tier";
 import { TRIGGERS } from "@/lib/triggers";
 
-const PORTES: readonly { valor: Porte; label: string }[] = [
+const PORTES: readonly { valor: RubricPorte; label: string }[] = [
   { valor: "Early", label: "Early — pré-tração ou início" },
   { valor: "Scale-up", label: "Scale-up — crescendo com receita" },
   { valor: "Grande", label: "Grande — empresa consolidada" },
@@ -49,7 +49,7 @@ const LEGENDA_TIER: Record<Tier, string> = {
 
 export function PreTier() {
   const [gatilho, setGatilho] = useState<string | null>(null);
-  const [porte, setPorte] = useState<Porte | null>(null);
+  const [porte, setPorte] = useState<RubricPorte | null>(null);
 
   const resultado = useMemo(() => computePreTier({ gatilho, porte }), [gatilho, porte]);
 
@@ -87,7 +87,7 @@ export function PreTier() {
           <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
             Porte
           </span>
-          <Select value={porte ?? undefined} onValueChange={(v) => setPorte(v as Porte)}>
+          <Select value={porte ?? undefined} onValueChange={(v) => setPorte(v as RubricPorte)}>
             <SelectTrigger aria-label="Porte">
               <SelectValue placeholder="Escolha o porte" />
             </SelectTrigger>
