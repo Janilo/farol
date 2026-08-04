@@ -204,13 +204,13 @@ function LandingPage() {
                 {PREVIEW_ROWS.map((row) => (
                   <div
                     key={row.label}
-                    className="flex items-baseline gap-4 py-2 border-b border-border/40"
+                    className="flex flex-col gap-y-1 py-2 border-b border-border/40 sm:flex-row sm:items-baseline sm:gap-x-4"
                   >
-                    <span className="w-40 shrink-0 text-[10px] font-mono uppercase tracking-[0.12em] text-muted-foreground">
+                    <span className="shrink-0 text-[10px] font-mono uppercase tracking-[0.12em] text-muted-foreground sm:w-40">
                       {row.label}
                     </span>
                     <span
-                      className={`flex-1 text-sm ${
+                      className={`text-sm sm:flex-1 ${
                         row.kind === "head"
                           ? "font-semibold text-foreground"
                           : row.kind === "num"
@@ -225,17 +225,19 @@ function LandingPage() {
                   </div>
                 ))}
 
-                <div className="-mx-4 mt-1 flex items-center gap-4 bg-muted/30 px-4 py-3">
-                  <span className="w-40 shrink-0 text-[10px] font-mono font-bold uppercase tracking-[0.12em] text-foreground">
+                <div className="-mx-4 mt-1 flex flex-col gap-y-1 bg-muted/30 px-4 py-3 sm:flex-row sm:items-center sm:gap-x-4">
+                  <span className="shrink-0 text-[10px] font-mono font-bold uppercase tracking-[0.12em] text-foreground sm:w-40">
                     Pré-tier
                   </span>
-                  <span className="pill-tier-b rounded-sm px-2 py-0.5 text-xs font-semibold">
-                    B · 3 de 5
-                  </span>
-                  <span className="text-xs italic text-muted-foreground">parcial</span>
+                  <div className="flex items-center gap-4">
+                    <span className="pill-tier-b rounded-sm px-2 py-0.5 text-xs font-semibold">
+                      B · 3 de 5
+                    </span>
+                    <span className="text-xs italic text-muted-foreground">parcial</span>
+                  </div>
                 </div>
                 <div className="flex items-center gap-4 py-2">
-                  <span className="w-40 shrink-0" />
+                  <span className="hidden shrink-0 sm:block sm:w-40" />
                   <span className="text-xs italic text-primary/70">
                     ↳ os quatro eixos que formaram o score…
                   </span>
