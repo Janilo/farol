@@ -4,13 +4,13 @@ Estado das fases e o que falta. Este arquivo substitui o plano que vivia em
 `~/.claude/plans/`, fora de controle de versão — um roteiro de onze fases que
 atravessa sessões precisa de histórico.
 
-**Fases 0, 1, 2, 3, 4, 4.2, 5, 6 e 7 estão fechadas.** O produto está no ar em
+**Fases 0, 1, 2, 3, 4, 4.2, 5, 6, 7 e 9 estão fechadas.** O produto está no ar em
 [farol.pereirasaraiva.com](https://farol.pereirasaraiva.com) consultando o
 cadastro da Receita Federal por CNPJ, com cache de 30 dias e detecção de
 tecnografia brasileira a partir do site.
 
-**Ordem do que resta, decidida com o Janilo em 03/ago/2026: 5 → 9 → 10** — e a
-**Fase 5 fechou no mesmo dia, então o que resta é 9 → 10.** A 5 veio antes da 9
+**Ordem decidida com o Janilo em 03/ago/2026: 5 → 9 → 10.** A **5 e a 9 fecharam
+no mesmo dia, então resta só a 10** (auditoria). A 5 veio antes da 9
 porque é ela que constrói a rubrica, e a rubrica é o que sustenta o discurso da
 página institucional: a tecnografia tem recall baixa fora
 de e-commerce (§Fase 6, item 1 — em ~50 empresas, nenhuma detecção de terceiro
@@ -494,12 +494,42 @@ Na área logada, que **tem** dono, a resposta volta a ser `requireApprovedUser`.
 Teste de RLS mínimo, no padrão do Lente: `anon` não lê `fichas` nem
 `demo_lookups`; `authenticated` não escreve em `fichas`.
 
-## Fase 9 — Site institucional
+## ✅ Fase 9 — Site institucional
 
-Em `Janilo/jp-saraiva-site`: incluir o Farol em `src/content/services.ts` e em
-`src/routes/produtos.tsx` — hoje a página diz "três produtos" e o título da
-seção lista só Lente, Prisma e Cascata. Com quatro itens, remover o div filler
-do grid. Conferir og e description.
+Feita em 03/ago/2026, **no ar** em [pereirasaraiva.com/produtos](https://pereirasaraiva.com/produtos).
+Commit `72dd1dc` em `Janilo/jp-saraiva-site`, CI e deploy verdes.
+
+**A spec citava dois arquivos; eram cinco.** Os três que ela não previa:
+
+- **`src/routes/index.tsx`** — a home mapeia o **mesmo** array `produtos`, com
+  `md:grid-cols-3`. Com o quarto produto, o card do Farol ficaria sozinho numa
+  segunda linha com dois buracos ao lado. Passou a `md:grid-cols-2`, e as duas
+  linhas fecham cheias.
+- **`public/robots.txt`** — lista o sitemap de Lente, Prisma e Cascata; o do
+  Farol faltava.
+- **`public/og/og-produtos.jpg`** — a arte tem o texto **desenhado nela**:
+  "Lente, Prisma e Cascata." e "Três produtos SaaS em fase beta". Sem regerar, a
+  página ficaria correta e **todo compartilhamento exibiria um card falso**.
+  Refeita a partir do layout medido da anterior: mesmas faixas verticais
+  (h9/h53/h24/h3/h9) e mesmas cores de barra, fundo e régua, conferidas pixel a
+  pixel. O `div` filler saiu junto — ele completava a linha ímpar de 3 e, com
+  número par, criaria uma terceira linha vazia.
+
+**A copy foi aprovada em markdown antes de virar código**, como manda a regra da
+casa, porque o deploy é automático no push.
+
+**O bullet da stack não cita marca de propósito.** Diz "um catálogo de
+ferramentas brasileiras" em vez de RD Station, Totvs ou VTEX: em ~50 empresas
+varridas nenhuma detecção de terceiro fora de VTEX sobreviveu ao escrutínio
+(§Fase 6, item 1), e citar as marcas venderia cobertura que o produto não tem.
+
+**Verificado em produção**, não só em dev: os 4 cards na home e na /produtos,
+numeração Produto 01–04, JSON-LD com os quatro serviços, description e
+og:description novas, `robots.txt` com o sitemap do Farol e a arte OG servindo
+41.792 bytes (a anterior tinha 41.106). ⚠️ Na primeira leitura a página parecia
+não ter atualizado — era o DOM em cache do navegador; o HTML fresco do servidor
+já estava certo. Deploy verde não é conteúdo no ar, e o DOM da aba não é o que
+o servidor entrega.
 
 ## Fase 10 — Auditoria
 
