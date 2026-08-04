@@ -268,9 +268,12 @@ prometia "o cálculo de prioridade entra na próxima fase".
 harness rodou `compute_pre_tier` de `Clientes/Leads/fechar_ciclo.py` sobre a
 matriz de 9 setores × 4 portes × 21 gatilhos × 3 trechos de rodada — **2268
 casos, 100% de paridade** em score e tier, incluindo os ramos que a tela não
-expõe. O harness é descartável e não ficou no repo (depende de caminho absoluto
-fora dele); o que ficou é `tier.test.ts`, com 28 casos, entre eles um espelho
-das constantes `GATILHOS_URGENTES` / `GATILHOS_MEDIOS` / `GATILHOS_QUENTES`.
+expõe. O harness está versionado em `scripts/paridade-tier.py`, porque afirmação
+que ninguém consegue reproduzir vale menos do que parece — a primeira versão dele
+viveu no scratchpad e teria sumido com a sessão. Ele **não roda no CI**: depende
+do `fechar_ciclo.py` da esteira, que vive fora deste repo. O alarme do dia a dia
+é `tier.test.ts`, com 28 casos, entre eles um espelho das constantes
+`GATILHOS_URGENTES` / `GATILHOS_MEDIOS` / `GATILHOS_QUENTES`.
 **Esse espelho é o alarme:** mudar a urgência de um gatilho de um lado só faz a
 esteira e o Farol darem tiers diferentes para o mesmo sinal, em silêncio.
 
