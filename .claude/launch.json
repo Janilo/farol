@@ -3,9 +3,9 @@
   "configurations": [
     {
       "name": "farol",
-      "runtimeExecutable": "node_modules/.bin/vite",
-      "runtimeArgs": ["dev"],
-      "port": 5173
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["pnpm@10", "run", "dev", "--port", "8080", "--strictPort"],
+      "port": 8080
     }
   ]
 }
