@@ -6,7 +6,7 @@
 
 > **Nota sobre a meta.** O roadmap pedia "meta 100%". Auditoria que se obriga a fechar em verde não é auditoria — é carimbo. Esta fechou em **três verdes e dois amarelos**, com cinco achados, sendo **um deles contra a Fase 5, escrita horas antes desta auditoria**. O 100% fica como alvo dos achados, não como resultado declarado.
 
-> **✅ A1, A2, A4 e A5 foram corrigidos na mesma sessão** (decisão dele, 03/ago/2026), e as seções abaixo estão marcadas. O texto do diagnóstico foi mantido no passado, porque um achado que some depois de resolvido tira da próxima pessoa a razão pela qual a decisão foi tomada. **Só o A3 segue aberto** — ele mexe no banco de produção.
+> **✅ Os cinco achados foram corrigidos na mesma sessão** (decisões dele, 03/ago/2026), e as seções abaixo estão marcadas. O texto do diagnóstico foi mantido no passado, porque um achado que some depois de resolvido tira da próxima pessoa a razão pela qual a decisão foi tomada.
 
 ---
 
@@ -16,13 +16,13 @@ O Farol nasceu de um clone do Cascata, e a comparação com a auditoria irmã é
 
 O que sobra é de outra natureza, e cabe em uma frase: **o produto carregava estruturas de coisas que não existem.** Uma busca por nome que nunca funcionou tinha tipo, caminho de código, mensagem de erro e tela inteira (A2, resolvido); duas edge functions do Cascata seguiam no repo com `service_role` (A4, resolvido); e o termo que o glossário criou de propósito para evitar o bug mais caro do Cascata foi contrariado pela fase mais recente (A1, resolvido). Nenhum desses é falha de execução tática — são exatamente os pontos onde a estratégia se perde quando cada fase é escrita bem por conta própria.
 
-| Princípio                                      | Nota  | Veredito em uma linha                                                                                                                                                                    |
-| ---------------------------------------------- | ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1. Linguagem ubíqua (DDD)                      | 🟡→🟢 | Glossário forte e seguido no cadastro e na tecnografia. A Fase 5 introduziu `Porte` onde o glossário exige `rubricPorte`; **corrigido nesta sessão** (A1). Resta o rótulo da tela.       |
-| 2. Fatias verticais                            | 🟢    | **Zero** escrita do browser direto na tabela. Toda mutação passa por `serverFn`; a consulta é uma fatia limpa de ponta a ponta. É o achado A6 do Cascata já resolvido por desenho.       |
-| 3. TDD                                         | 🟡    | 169 testes cobrem todos os núcleos puros, e a Fase 5 foi validada contra o Python em 2268 casos. Mas o **orquestrador** — o módulo com mais decisões — não tem nenhum.                   |
-| 4. Módulos profundos (Ousterhout)              | 🟢    | `ficha.ts`, `technographics.ts`, `rate-limit.ts` e `tier.ts` são profundos de verdade: interface pequena, decisão difícil dentro, razão documentada.                                     |
-| 5. Ocultação de informação & design de sistema | 🟢    | `supabaseAdmin` contido em 3 arquivos server, com a regra de autorização escrita e respondida caso a caso no `SEGURANCA.md`. Ressalva aberta: 3 funções `SECURITY DEFINER` por RPC (A3). |
+| Princípio                                      | Nota  | Veredito em uma linha                                                                                                                                                                   |
+| ---------------------------------------------- | ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1. Linguagem ubíqua (DDD)                      | 🟡→🟢 | Glossário forte e seguido no cadastro e na tecnografia. A Fase 5 introduziu `Porte` onde o glossário exige `rubricPorte`; **corrigido nesta sessão** (A1). Resta o rótulo da tela.      |
+| 2. Fatias verticais                            | 🟢    | **Zero** escrita do browser direto na tabela. Toda mutação passa por `serverFn`; a consulta é uma fatia limpa de ponta a ponta. É o achado A6 do Cascata já resolvido por desenho.      |
+| 3. TDD                                         | 🟡→🟢 | 190 testes: todos os núcleos puros, a Fase 5 conferida contra o Python em 2268 casos e, desde 03/ago, **a composição do orquestrador** (A5). Os adapters seguem sem teste, por desenho. |
+| 4. Módulos profundos (Ousterhout)              | 🟢    | `ficha.ts`, `technographics.ts`, `rate-limit.ts` e `tier.ts` são profundos de verdade: interface pequena, decisão difícil dentro, razão documentada.                                    |
+| 5. Ocultação de informação & design de sistema | 🟢    | `supabaseAdmin` contido em 3 arquivos server, com a regra de autorização escrita e respondida caso a caso no `SEGURANCA.md`. A ressalva das 3 funções por RPC foi fechada (A3).         |
 
 ---
 
@@ -33,20 +33,20 @@ src/
   lib/
     cnpj.ts                  ← validação de dígitos (puro)                    ◀ MÓDULO PROFUNDO
     enrichment.ts            ← payload da Receita → Enrichment (puro)
-    enrichment.server.ts     ← fetchCnpj / searchCnpjByName (I/O)             ⚠ searchCnpjByName é stub
+    enrichment.server.ts     ← fetchCnpj (I/O). A busca por nome saiu — achado A2
     ficha.ts                 ← decideFromCache / decideStackFromCache (puro)  ◀ MÓDULO PROFUNDO
     ficha.server.ts          ← leitura e gravação do cache (supabaseAdmin)
-    ficha.functions.ts       ← getFichaFn: a fatia inteira                    ⚠ sem teste
+    ficha.functions.ts       ← resolverConsulta (a fatia, testável) + getFichaFn (casca)
     technographics.ts        ← extractSnapshot / detectTechnologies (puro)    ◀ MÓDULO PROFUNDO
     technographics.server.ts ← fetchTargetSite: 8s, teto de leitura, redirect
     fingerprints.ts          ← catálogo GERADO de tecnografias_br.json
     rate-limit.ts            ← decideQuota (puro)                             ◀ MÓDULO PROFUNDO
     rate-limit.server.ts     ← consumirQuota: bump atômico (supabaseAdmin)
     tier.ts / triggers.ts    ← porta de compute_pre_tier (puro)               ◀ MÓDULO PROFUNDO
-    require-approved.ts      ← gate de aprovação server-side (supabaseAdmin)
+    require-approved.ts      ← gate server-side · has_role vive em `private` (A3)
     errors.ts / error-codes.ts ← erros tipados, canônicos com os irmãos
   routes/
-    demo.tsx                 ← a consulta pública                             ⚠ UI de estado impossível
+    demo.tsx                 ← a consulta pública
     index.tsx · metodologia.tsx · login/signup/reset · _authenticated/app.tsx
 supabase/
   migrations/ (5)            ← auth, cache de fichas, quota, seed dos chips
@@ -71,6 +71,7 @@ O **seam** (onde a lógica se parte entre runtimes):
         ▼                    ▼                    ▼
    Brasil API          site do alvo         Supabase Postgres
    (cadastro)          (tecnografia)        RLS ligada, ZERO policies
+                                              has_role em schema `private`
 ```
 
 Duas escolhas de seam que valem registro. **A quota fica no Worker, antes do primeiro `fetch`** (`ficha.functions.ts:113`) — é o único ponto do fluxo onde se sabe se a consulta vai custar saída de rede, e a unidade contada é isso, não requisição. E **o pré-tier nunca cruza o seam**: é cálculo puro no cliente, então mexer na rubrica não consome quota nem gera carga. As duas decisões são coerentes com o que o produto cobra.
@@ -141,7 +142,7 @@ O que eleva isto acima de "está contido" é a regra do `SEGURANCA.md`: **quem u
 
 As tabelas `fichas` e `demo_lookups` têm **RLS ligada e zero policies**, de propósito: `anon` e `authenticated` não passam, `service_role` passa por definição. O linter do Supabase sinaliza as duas como `rls_enabled_no_policy` (INFO) — é **falso positivo para este desenho**, e fica registrado aqui para ninguém "corrigir" adicionando policy e abrir o que estava fechado.
 
-**A ressalva real vem do mesmo linter, e é achado A4 abaixo:** três funções `SECURITY DEFINER` (`has_role`, `is_approved`, `is_guest`) são executáveis por qualquer usuário autenticado via `/rest/v1/rpc/`.
+**A ressalva real vinha do mesmo linter:** três funções `SECURITY DEFINER` (`has_role`, `is_approved`, `is_guest`) eram executáveis por qualquer usuário autenticado via `/rest/v1/rpc/`. É o achado A3, **corrigido em 03/ago/2026**.
 
 ---
 
@@ -167,13 +168,22 @@ Saíram os 17 pontos que sustentavam o recurso inexistente: `searchCnpjByName`, 
 
 **Quem pegou a remoção foi o teste que congela a contagem de códigos** (`error-codes.test.ts`), com o comentário "bump this count deliberately". Ele reprovou em 8→7 e foi atualizado com a razão escrita — é exatamente para isso que a contagem está travada.
 
-### A3 — Três funções `SECURITY DEFINER` expostas por RPC (P1, segurança)
+### A3 — Três funções `SECURITY DEFINER` expostas por RPC (P1, segurança) · ✅ CORRIGIDO em 03/ago/2026
 
 O linter do Supabase (`authenticated_security_definer_function_executable`, WARN) aponta que `has_role`, `is_approved` e `is_guest` podem ser chamadas por qualquer usuário autenticado via `/rest/v1/rpc/`. Como rodam com os privilégios do dono, um usuário logado pode consultar `is_approved(<uuid de outro>)` e descobrir o status de aprovação alheio.
 
 O impacto hoje é baixo — a base tem poucos usuários e o dado é só um booleano —, mas é vazamento por desenho, não por acidente, e **cresce exatamente quando a Fase 8 sair da suspensão** e a área logada tiver gente.
 
-**Correção:** `REVOKE EXECUTE ... FROM authenticated` nas três. Elas são chamadas de dentro de policies e de `require-approved.ts` via `service_role`, então revogar não quebra o caminho legítimo — a verificar com o teste de RLS antes de aplicar.
+**A correção proposta acima estava errada para uma das três, e a sonda é que mostrou.** Ficou registrada como estava para que o erro não se repita: `REVOKE EXECUTE ... FROM authenticated` nas três **quebraria a área logada**.
+
+Uma sonda em produção revogou o `EXECUTE` de `has_role`, tentou ler `user_roles` como `authenticated` e restaurou o grant, tudo na mesma chamada. Resultado: `permission denied for function has_role`. **Policy avalia a expressão com as permissões de quem consulta**, e `has_role` está em 4 policies `TO authenticated` — revogar fecharia o produto para tapar um vazamento de booleano.
+
+Aplicado em duas migrations, porque as metades têm risco diferente:
+
+- **`20260804130909`** — `is_approved` e `is_guest` perdem o `EXECUTE` de `authenticated`. Seguro porque foi medido antes: nenhuma policy as referencia, e nenhum código as chama por RPC (`require-approved.ts` e `access.ts` leem as **tabelas**; o único `.rpc()` do repo é `bump_demo_quota`, com `service_role`).
+- **`20260804131011`** — `has_role` vai para o schema **`private`**, que o PostgREST não publica. É a outra remediação que o próprio lint oferece. As 4 policies e o trigger `protect_profile_flags` foram recriados apontando para lá, e `public.has_role` foi dropada **sem `CASCADE`**, de propósito: se sobrasse dependência não mapeada, o `DROP` falharia e a migration inteira reverteria.
+
+**Verificado com controle positivo e negativo:** `profiles` e `user_roles` seguem legíveis; `public.has_role` não existe mais; `private.has_role` executa para `authenticated`; `anon` esbarra em `permission denied for schema private`; `is_approved` e `is_guest` respondem `permission denied`. Depois disso, **os três `WARN` sumiram do `get_advisors`** — restaram só os dois `INFO` de `rls_enabled_no_policy`, que são o falso positivo documentado no princípio 5.
 
 ### A4 — Edge functions do Cascata órfãs no repo (P2) · ✅ CORRIGIDO em 03/ago/2026
 

@@ -15,7 +15,7 @@ e a rubrica é o que sustenta o discurso da página institucional: a tecnografia
 tem recall baixa fora de e-commerce (§Fase 6, item 1 — em ~50 empresas, nenhuma
 detecção de terceiro fora de VTEX sobreviveu ao escrutínio). A **Fase 8 é a
 única aberta, e está suspensa**, com o gatilho de reabertura escrito na própria
-seção. O achado A3 da auditoria segue em aberto — ver a Fase 10.
+seção. **Os cinco achados da auditoria foram corrigidos** — ver a Fase 10.
 
 As decisões travadas estão em [`DESIGN.md`](DESIGN.md); os termos, em
 [`../GLOSSARIO.md`](../GLOSSARIO.md). Nada aqui as reabre.
@@ -574,10 +574,22 @@ morava dentro do `createServerFn`, que só roda no runtime do Start, então ela 
 **inalcançável para teste por construção**, não esquecida. Agora `resolverConsulta`
 é exportada e o `getFichaFn` é uma casca que valida e delega.
 
-**Segue aberto só o A3** (P1, segurança): `has_role`, `is_approved` e `is_guest`
-são `SECURITY DEFINER` executáveis por qualquer autenticado via RPC — achado do
-linter do Supabase. O impacto cresce quando a Fase 8 sair da suspensão, e a
-correção **mexe no banco de produção**, então pede migration e teste de RLS.
+**O A3 fechou os cinco**, e a lição está na diferença entre o que a auditoria
+propôs e o que foi feito. A proposta era `REVOKE EXECUTE` nas três funções; uma
+sonda em produção — que revogou, testou e restaurou o grant na mesma chamada —
+mostrou que isso **quebraria a área logada**: policy avalia a expressão com as
+permissões de quem consulta, e `has_role` está em 4 policies `TO authenticated`.
+
+Aplicado em duas migrations, porque as metades têm risco diferente:
+`20260804130909` tira o `EXECUTE` de `is_approved` e `is_guest` (que ninguém
+chama — nem policy, nem código); `20260804131011` move `has_role` para o schema
+**`private`**, que o PostgREST não publica, recriando as 4 policies e o trigger.
+O `DROP` da função antiga foi sem `CASCADE` de propósito, para a migration
+reverter inteira se sobrasse dependência não mapeada.
+
+Verificado com controle positivo e negativo, e depois **os três `WARN` sumiram
+do `get_advisors`** — restaram só os dois `INFO` de `rls_enabled_no_policy`, que
+são o falso positivo documentado.
 
 As 18 citações `arquivo:linha` do documento foram verificadas uma a uma, e
 re-verificadas depois das correções — corrigir o código envelhece o documento

@@ -10,23 +10,53 @@ quê" para "quanto alguém pode consumir".
 
 ## O que o banco impõe hoje
 
-| Fronteira                         | Regra                                                                                                                                                        | Onde vive                                                                                                                             |
-| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
-| **Portão de aprovação**           | entrar na área logada exige `profiles.is_approved` OU role `admin`                                                                                           | client: `src/lib/access.ts` (`getAccessState`), usado no `beforeLoad` de `_authenticated.tsx` · server: `src/lib/require-approved.ts` |
-| **Ninguém se auto-aprova**        | mudar `is_approved` ou `is_guest` exige role `admin`                                                                                                         | trigger `protect_profile_flags` em `supabase/migrations/20260727120000_farol_auth_base.sql`                                           |
-| **Novo usuário entra sem acesso** | `handle_new_user` cria o perfil com `is_approved = false` e role `member`                                                                                    | mesma migration                                                                                                                       |
-| **Papéis**                        | `user_roles` é legível só pelo próprio usuário; escrita e leitura ampla exigem `admin`                                                                       | RLS na mesma migration                                                                                                                |
-| **Cache de ficha**                | `fichas` tem RLS ligada e **zero políticas**: `anon` e `authenticated` não leem nem escrevem; só `service_role` passa                                        | `supabase/migrations/20260728140000_farol_fichas_cache.sql`                                                                           |
-| **Contador de quota**             | `demo_lookups` idem — RLS ligada, zero políticas. O `EXECUTE` de `bump_demo_quota` é só do `service_role`, com `anon` e `authenticated` nomeados no `REVOKE` | `supabase/migrations/20260730120000_farol_demo_quota.sql`                                                                             |
-| **Teto global protegido**         | `bump_demo_quota` recusa `visitor_hash` que não seja hex de 64 caracteres, o que impede alguém passar a sentinela `__global__` como se fosse visitante       | mesma migration                                                                                                                       |
-| **Alvo da leitura de site**       | o servidor só busca **nome de domínio público**: todo literal de IP é recusado, e sufixo de rede interna também                                              | `src/lib/technographics.ts` (`isAllowedTarget`)                                                                                       |
-| **Redirecionamento**              | seguido **à mão**, com o alvo revalidado a cada salto e teto de 3 saltos                                                                                     | `src/lib/technographics.server.ts`                                                                                                    |
+| Fronteira                         | Regra                                                                                                                                                        | Onde vive                                                                                                                                     |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Portão de aprovação**           | entrar na área logada exige `profiles.is_approved` OU role `admin`                                                                                           | client: `src/lib/access.ts` (`getAccessState`), usado no `beforeLoad` de `_authenticated.tsx` · server: `src/lib/require-approved.ts`         |
+| **Ninguém se auto-aprova**        | mudar `is_approved` ou `is_guest` exige role `admin`                                                                                                         | trigger `protect_profile_flags`, criado em `20260727120000_farol_auth_base.sql` e redefinido em `20260804131011` para usar `private.has_role` |
+| **Novo usuário entra sem acesso** | `handle_new_user` cria o perfil com `is_approved = false` e role `member`                                                                                    | mesma migration                                                                                                                               |
+| **Papéis**                        | `user_roles` é legível só pelo próprio usuário; escrita e leitura ampla exigem `admin`                                                                       | RLS na mesma migration                                                                                                                        |
+| **Cache de ficha**                | `fichas` tem RLS ligada e **zero políticas**: `anon` e `authenticated` não leem nem escrevem; só `service_role` passa                                        | `supabase/migrations/20260728140000_farol_fichas_cache.sql`                                                                                   |
+| **Contador de quota**             | `demo_lookups` idem — RLS ligada, zero políticas. O `EXECUTE` de `bump_demo_quota` é só do `service_role`, com `anon` e `authenticated` nomeados no `REVOKE` | `supabase/migrations/20260730120000_farol_demo_quota.sql`                                                                                     |
+| **Teto global protegido**         | `bump_demo_quota` recusa `visitor_hash` que não seja hex de 64 caracteres, o que impede alguém passar a sentinela `__global__` como se fosse visitante       | mesma migration                                                                                                                               |
+| **Alvo da leitura de site**       | o servidor só busca **nome de domínio público**: todo literal de IP é recusado, e sufixo de rede interna também                                              | `src/lib/technographics.ts` (`isAllowedTarget`)                                                                                               |
+| **Redirecionamento**              | seguido **à mão**, com o alvo revalidado a cada salto e teto de 3 saltos                                                                                     | `src/lib/technographics.server.ts`                                                                                                            |
 
-`has_role`, `is_approved` e `is_guest` são `SECURITY DEFINER` com
-`search_path = public` fixo, e o `EXECUTE` delas está revogado de `anon`.
+As três funções auxiliares são `SECURITY DEFINER` com `search_path = public`
+fixo, e **nenhuma delas é alcançável pela API REST** desde 03/ago/2026:
 
-> **Correção de 28/jul/2026 — esta última frase era falsa até hoje.** O arquivo
-> afirmava que o `EXECUTE` de `is_approved` tinha sido revogado de
+| Função                | Onde mora     | `authenticated`   | Por quê                                                |
+| --------------------- | ------------- | ----------------- | ------------------------------------------------------ |
+| `is_approved(uuid)`   | `public`      | sem `EXECUTE`     | ninguém a chama — nem policy, nem código               |
+| `is_guest(uuid)`      | `public`      | sem `EXECUTE`     | idem                                                   |
+| `has_role(uuid,role)` | **`private`** | **com `EXECUTE`** | 4 policies dependem dela; o schema é que não é exposto |
+
+> **Correção de 03/ago/2026 — achado A3 da auditoria de arquitetura.** O linter
+> do Supabase (0029) apontou que as três eram executáveis por **qualquer usuário
+> autenticado** via `/rest/v1/rpc/`: um logado sondava o status de aprovação
+> alheio passando um UUID. A de 28/jul fechou o `anon`; faltava o `authenticated`.
+>
+> **As duas metades têm risco diferente, e a sonda em produção é que separou.**
+> Para `is_approved` e `is_guest`, revogar bastou — nenhuma policy as referencia e
+> nenhum código as chama por RPC. Para `has_role`, revogar **quebraria a área
+> logada inteira**: com o `EXECUTE` fora, um `SELECT` em `user_roles` como
+> `authenticated` falha com `permission denied for function has_role`, porque a
+> policy avalia a expressão com as permissões de quem consulta. Medido numa sonda
+> que revogou, testou e restaurou o grant dentro da mesma chamada.
+>
+> Então `has_role` foi para o schema **`private`**, que o PostgREST não publica —
+> a outra remediação que o próprio lint oferece. As policies seguem chamando pelo
+> nome qualificado; `/rest/v1/rpc/has_role` deixou de existir. `anon` não recebe
+> `USAGE` em `private`.
+>
+> Verificado com controle positivo **e** negativo: leitura de `profiles` e
+> `user_roles` continua OK; `public.has_role` não existe mais; `private.has_role`
+> executa para `authenticated`; `anon` esbarra em `permission denied for schema
+private`; e `is_approved`/`is_guest` respondem `permission denied`. Depois, os
+> três `WARN` sumiram do `get_advisors`.
+
+> **Correção de 28/jul/2026 — o que esta seção afirmava era falso até aquele
+> dia.** O arquivo dizia que o `EXECUTE` de `is_approved` tinha sido revogado de
 > `PUBLIC`/`anon`. A migration de auth escreveu `REVOKE ... FROM PUBLIC`, e no
 > Supabase isso **não** tira a permissão do `anon`, que a tem por concessão
 > nominal vinda do `ALTER DEFAULT PRIVILEGES` do schema. A ACL provava:
