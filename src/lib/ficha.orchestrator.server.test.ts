@@ -28,7 +28,7 @@ vi.mock("./technographics.server", () => ({
   fetchTargetSite: (...a: unknown[]) => fetchTargetSite(...a),
 }));
 
-const { resolverConsulta } = await import("./ficha.functions");
+const { resolverConsulta } = await import("./ficha.orchestrator.server");
 
 /** CNPJ da Petrobras — dígitos verificadores válidos de verdade. */
 const CNPJ = "33000167000101";

@@ -36,6 +36,30 @@ export interface Ficha {
   stack: StackResult | null;
 }
 
+/**
+ * O contrato que a tela consome. Mora aqui, no núcleo puro, e **não** no
+ * orquestrador: `demo.tsx` precisa de `FichaError` para escolher a frase, e se o
+ * tipo viver junto do código que fala com a Receita, importar o tipo arrasta o
+ * módulo servidor para o grafo do cliente. Foi exatamente essa a issue #2.
+ */
+export type FichaError =
+  | "INVALID_CNPJ"
+  | "COMPANY_NOT_FOUND"
+  /** Digitou algo que não é CNPJ. Não existe busca por nome — ver `enrichment.server.ts`. */
+  | "NAME_SEARCH_UNAVAILABLE"
+  | "SOURCE_RATE_LIMITED"
+  | "SOURCE_UNAVAILABLE"
+  | "QUOTA_VISITANTE"
+  | "QUOTA_GLOBAL"
+  | "QUOTA_INDISPONIVEL";
+
+/**
+ * Duas saídas, não três. Havia uma variante `choose` com candidatos de busca por
+ * nome, removida em 03/ago/2026 (achado A2): ela **nunca podia acontecer**, e um
+ * tipo que descreve um estado impossível é uma promessa que o produto não cumpre.
+ */
+export type FichaResult = { status: "ok"; ficha: Ficha } | { status: "error"; error: FichaError };
+
 /** A linha crua do cache, como o adapter a entrega. */
 export interface CachedRow {
   cnpj: string;
