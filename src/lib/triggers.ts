@@ -1,22 +1,19 @@
 /**
  * Os 19 gatilhos da rubrica, com rótulo em português e urgência.
  *
- * ⚠️ **Este arquivo é a terceira cópia da lista.** O catálogo canônico está
- * partido em dois arquivos da esteira Python, e nenhum dos dois tem os 19:
+ * ⚠️ **Esta é uma CÓPIA. A fonte é `Clientes/Leads/gatilhos.md`** — os 19
+ * gatilhos e a coluna `Urgência`, consolidados lá em 04/ago/2026.
  *
- * - `Clientes/Leads/gatilhos.md` — G1 a G14, com fonte, exemplo e pilar. Ele se
- *   apresenta como *o* catálogo e para no G14, então quem lê só ele conclui que
- *   são quatorze.
- * - `Clientes/Leads/farol.md` — G15 a G19, definidos como as fontes brasileiras
- *   que os concorrentes globais não cobrem (JusBrasil, ComprasNet, Reclame Aqui,
- *   INPI, Diário Oficial).
+ * Antes daquela data o catálogo estava partido: G1–G14 no `gatilhos.md`, que se
+ * apresentava como *o* catálogo e parava no G14; G15–G19 só no `farol.md`; e a
+ * urgência em lugar nenhum além das constantes do `fechar_ciclo.py`, já copiada
+ * à mão para o `scoring.md` e para cá. Hoje os três consumidores apontam para o
+ * `.md`, e é lá que se muda primeiro.
  *
- * A classificação de urgência abaixo NÃO vem de nenhum dos dois: vem das
- * constantes `GATILHOS_URGENTES` / `GATILHOS_MEDIOS` / `GATILHOS_QUENTES` de
- * `Clientes/Leads/fechar_ciclo.py`, que é quem realmente pontua. Mudar a
- * urgência de um gatilho exige mudar **os dois lugares**, senão o motor Python e
- * o Farol discordam em silêncio — é exatamente o problema já vivo entre
- * `fingerprints.ts` e `tecnografias_br.json`.
+ * **A sincronia continua manual** — o que existe é alarme, não geração: o
+ * `tier.test.ts` espelha `GATILHOS_URGENTES` / `GATILHOS_MEDIOS` /
+ * `GATILHOS_QUENTES` do Python e quebra se um lado mudar sozinho. Se este
+ * arquivo passar a ser gerado do `.md` algum dia, o espelho sai junto.
  */
 
 /** Peso do gatilho no eixo 3. `nenhuma` soma zero — ver `SEM_CLASSIFICACAO`. */
