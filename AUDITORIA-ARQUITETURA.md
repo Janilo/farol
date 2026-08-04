@@ -36,7 +36,8 @@ src/
     enrichment.server.ts     ← fetchCnpj (I/O). A busca por nome saiu — achado A2
     ficha.ts                 ← decideFromCache / decideStackFromCache (puro)  ◀ MÓDULO PROFUNDO
     ficha.server.ts          ← leitura e gravação do cache (supabaseAdmin)
-    ficha.functions.ts       ← resolverConsulta (a fatia, testável) + getFichaFn (casca)
+    ficha.functions.ts       ← getFichaFn: só a casca RPC — ÚNICO que routes/ importa
+    ficha.orchestrator.server.ts ← resolverConsulta: a fatia inteira, testável
     technographics.ts        ← extractSnapshot / detectTechnologies (puro)    ◀ MÓDULO PROFUNDO
     technographics.server.ts ← fetchTargetSite: 8s, teto de leitura, redirect
     fingerprints.ts          ← catálogo GERADO de tecnografias_br.json
@@ -74,7 +75,7 @@ O **seam** (onde a lógica se parte entre runtimes):
                                               has_role em schema `private`
 ```
 
-Duas escolhas de seam que valem registro. **A quota fica no Worker, antes do primeiro `fetch`** (`ficha.functions.ts:113`) — é o único ponto do fluxo onde se sabe se a consulta vai custar saída de rede, e a unidade contada é isso, não requisição. E **o pré-tier nunca cruza o seam**: é cálculo puro no cliente, então mexer na rubrica não consome quota nem gera carga. As duas decisões são coerentes com o que o produto cobra.
+Duas escolhas de seam que valem registro. **A quota fica no Worker, antes do primeiro `fetch`** (`ficha.orchestrator.server.ts:112`) — é o único ponto do fluxo onde se sabe se a consulta vai custar saída de rede, e a unidade contada é isso, não requisição. E **o pré-tier nunca cruza o seam**: é cálculo puro no cliente, então mexer na rubrica não consome quota nem gera carga. As duas decisões são coerentes com o que o produto cobra.
 
 ---
 
@@ -92,7 +93,7 @@ O efeito é uma inversão desconfortável: no mesmo repo, o porte que **não** e
 
 ## 2 — Fatias verticais 🟢
 
-A consulta é uma fatia limpa e única: `demo.tsx` → `getFichaFn` (`ficha.functions.ts:164`) → decisões puras de cache → adapters de I/O → Postgres. A rota não conhece Supabase, não monta query e não sabe o que é `supabaseAdmin`; ela recebe `FichaResult`, uma união discriminada, e escolhe a frase.
+A consulta é uma fatia limpa e única: `demo.tsx` → `getFichaFn` (`ficha.functions.ts:33`) → decisões puras de cache → adapters de I/O → Postgres. A rota não conhece Supabase, não monta query e não sabe o que é `supabaseAdmin`; ela recebe `FichaResult`, uma união discriminada, e escolhe a frase.
 
 **O achado A6 do Cascata não existe aqui.** Uma varredura por `supabase.from(`, `.insert(`, `.upsert(`, `.update(` e `.delete(` em `src/routes/` e `src/components/` volta **vazia**: nenhuma escrita sai do browser direto para a tabela. Só existem duas `serverFn` no repo (`auth.functions.ts` e `ficha.functions.ts`), e toda mutação passa por uma delas. No Cascata, essa era a fatia furada em três telas.
 
@@ -156,7 +157,7 @@ A Fase 5 declarou `export type Porte = "Early" | "Scale-up" | "Grande"` (hoje `R
 
 ### A2 — Busca por nome: estado impossível modelado como possível (P1) · ✅ CORRIGIDO em 03/ago/2026
 
-`searchCnpjByName` (`enrichment.server.ts:99`) devolve `{ ok: false, error: "unavailable" }` **incondicionalmente**, e isso é deliberado — a rota herdada do script Python não existe na fonte (Fase 3). A consequência é que tudo depois de `ficha.functions.ts:192` é inalcançável: os ramos `none_found`, `rate_limited` e `SOURCE_UNAVAILABLE` (`:193–195`), a resolução do candidato único (`:199–202`) e o retorno `{ status: "choose" }` (`:204`).
+`searchCnpjByName` devolvia `{ ok: false, error: "unavailable" }` **incondicionalmente**, e isso é deliberado — a rota herdada do script Python não existe na fonte (Fase 3). A consequência é que tudo depois da chamada ao stub era inalcançável (a linha 192 do `ficha.functions.ts` **daquele dia** — o arquivo encolheu desde então, e a composição vive hoje em `ficha.orchestrator.server.ts`): os ramos `none_found`, `rate_limited` e `SOURCE_UNAVAILABLE` (`:193–195`), a resolução do candidato único (`:199–202`) e o retorno `{ status: "choose" }` (`:204`).
 
 O custo não é o código morto — é o que ele sustenta: a variante `choose` em `FichaResult` (`:42`), o código `NAME_NO_MATCH` em `FichaError` (`:32`) e em `error-codes.ts:15`, a frase correspondente em `demo.tsx:50`, o estado `escolher` (`demo.tsx:101`), o handler (`:117`) e a tela de seleção (`:259`). **O tipo afirma que o produto tem um recurso que ele não tem**, e foi essa mesma afirmação que sobreviveu na home até ser corrigida hoje (`fix: a home prometia busca por nome que nunca existiu`).
 
@@ -197,9 +198,11 @@ Não são superfície viva, então não são P0. Mas carregam `SUPABASE_SERVICE_
 
 `ficha.functions.ts` concentra a ordem entre quota e `fetch`, o paralelismo entre stack e cadastro, o fallback para `stale`, a exceção do `COMPANY_NOT_FOUND` e o `await` que impede promessa solta no Worker. Todas as peças que ele chama são testadas; a composição não.
 
-**Corrigido.** `ficha.functions.test.ts`, com **21 testes** e os adapters de I/O dublados — os quatro casos previstos e mais dezessete que a leitura do orquestrador revelou (ordem entre validação de CNPJ e busca por nome, os três códigos de quota, site inacessível que não derruba a ficha, `stack: null` como "nem tentou", o que é e o que não é regravado).
+**Corrigido.** `ficha.orchestrator.server.test.ts`, com **21 testes** e os adapters de I/O dublados — os quatro casos previstos e mais dezessete que a leitura do orquestrador revelou (ordem entre validação de CNPJ e busca por nome, os três códigos de quota, site inacessível que não derruba a ficha, `stack: null` como "nem tentou", o que é e o que não é regravado).
 
-**Foi preciso um refactor para o teste existir, e ele é o achado dentro do achado.** A composição morava dentro do `createServerFn`, e `createServerFn` só roda no runtime do TanStack Start, que guarda o contexto num `AsyncLocalStorage`: chamar `getFichaFn` de um teste falha com _"No Start context found"_ **antes de executar uma linha da nossa lógica**. Ou seja, a composição não estava sem teste por esquecimento — ela era **inalcançável para teste por construção**. Agora `resolverConsulta` é exportada e recebe `agora` por parâmetro, e o `getFichaFn` é uma casca que valida e delega.
+**Foi preciso um refactor para o teste existir, e ele é o achado dentro do achado.** A composição morava dentro do `createServerFn`, e `createServerFn` só roda no runtime do TanStack Start, que guarda o contexto num `AsyncLocalStorage`: chamar `getFichaFn` de um teste falha com _"No Start context found"_ **antes de executar uma linha da nossa lógica**. Ou seja, a composição não estava sem teste por esquecimento — ela era **inalcançável para teste por construção**. `resolverConsulta` passou a ser exportada e a receber `agora` por parâmetro, e o `getFichaFn` virou uma casca que valida e delega.
+
+⚠️ **A primeira tentativa deste conserto quebrou a `/demo` no `vite dev`, e a lição vale mais que o conserto.** Exportar `resolverConsulta` do próprio `ficha.functions.ts` deixava um export comum **ao lado** do `createServerFn`, e os dois lados da fronteira se comportam de forma oposta: o corpo do serverFn é removido do bundle cliente e leva os imports junto, enquanto uma função comum exportada do mesmo arquivo **mantém a cadeia servidor inteira viva no grafo do cliente**. O plugin de import-protection do Start barrava e a rota caía no error boundary — com **o build de produção passando**, e lint, typecheck, 190 testes e CI todos verdes. Corrigido em `981c2f3`: a composição foi para `ficha.orchestrator.server.ts`, que `src/routes/` não importa, e os tipos `FichaError`/`FichaResult` desceram para o núcleo puro, porque importar um tipo de módulo servidor arrasta o módulo. Na memória: `feedback-serverfn-fronteira-cliente`.
 
 **Um dos testes documenta uma dependência, não um comportamento desejável.** O orquestrador faz `await writeCachedFicha(ficha)` sem `try/catch`, e o comentário ao lado diz que gravar é otimização. É verdade — mas quem garante isso é `ficha.server.ts`, que envolve o upsert em `try/catch` e nunca lança. O teste `escrita que lança DERRUBA a consulta` afirma o estado real e falha de propósito se alguém tornar o orquestrador autossuficiente, que é quando ele deve ser reescrito.
 
