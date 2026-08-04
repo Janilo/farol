@@ -90,8 +90,13 @@ const AFTER_BLOCKS = [
 const STEPS = [
   {
     n: "01",
-    title: "Digite o nome ou o CNPJ",
-    body: "CNPJ vai direto. Nome cai numa busca que devolve até cinco candidatos com razão social, pra você escolher a empresa certa antes de gastar a consulta.",
+    // Este passo prometia busca por nome — "até cinco candidatos com razão
+    // social" — e ela nunca existiu: `searchCnpjByName` devolve `unavailable`
+    // por desenho, porque as fontes públicas gratuitas não têm índice textual
+    // (ver Fase 3 no ROADMAP). A /demo já dizia a verdade; a home contradizia a
+    // própria demo do mesmo produto. Alinhado com a copy da /demo em 03/ago/2026.
+    title: "Digite o CNPJ",
+    body: "Os dígitos verificadores são conferidos no navegador, então CNPJ errado não gasta consulta. Busca por nome não existe: as fontes públicas gratuitas não têm índice textual, e eu prefiro dizer isso a te devolver resultado ruim.",
   },
   {
     n: "02",

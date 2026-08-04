@@ -1,3 +1,6 @@
+/// <reference types="vitest/config" />
+// A referência acima é o que ensina o `test:` lá embaixo ao tipo `UserConfig` do
+// vite — sem ela o tsc reprova com "'test' does not exist in type 'UserConfig'".
 // @lovable.dev/vite-tanstack-config already includes the following — do NOT add them manually
 // or the app will break with duplicate plugins:
 //   - tanstackStart, viteReact, tailwindcss, tsConfigPaths, cloudflare (build-only),
@@ -28,6 +31,13 @@ export default defineConfig({
         "entities/lib/encode.js": path.resolve(__dirname, "node_modules/entities/lib/encode.js"),
         entities: path.resolve(__dirname, "node_modules/entities"),
       },
+    },
+    // `.claude` guarda os worktrees que as sessões de agente criam DENTRO do
+    // repo, e sem excluí-lo o vitest varre uma cópia inteira do projeto: em
+    // 03/ago/2026 o placar deu 338 testes onde havia 169, e o pior não é o
+    // número — é o trabalho em andamento de outra sessão reprovar a suíte desta.
+    test: {
+      exclude: ["**/node_modules/**", "**/dist/**", "**/.claude/**"],
     },
   },
 });

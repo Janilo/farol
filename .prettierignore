@@ -10,3 +10,8 @@ routeTree.gen.ts
 # Fixtures capturados de API externa: são a resposta crua do provedor, não código
 # nosso. Formatá-los cria drift toda vez que alguém recaptura.
 src/lib/__fixtures__/
+
+# Worktrees que as sessões de agente criam dentro do repo. Sem isto,
+# `prettier --write .` reescreve arquivos de OUTRA sessão — aconteceu em
+# 03/ago/2026 com um fixture, que voltou formatado na árvore alheia.
+.claude

@@ -126,9 +126,15 @@ Label: `Depois — ficha montada`
 
 > Método
 
-**01 — Digite o nome ou o CNPJ**
+**01 — Digite o CNPJ** _(corrigido em 03/ago/2026)_
 
-> CNPJ vai direto. Nome cai numa busca que devolve até cinco candidatos com razão social, pra você escolher a empresa certa antes de gastar a consulta.
+> Os dígitos verificadores são conferidos no navegador, então CNPJ errado não gasta consulta. Busca por nome não existe: as fontes públicas gratuitas não têm índice textual, e eu prefiro dizer isso a te devolver resultado ruim.
+
+O texto anterior prometia "até cinco candidatos com razão social" para busca por
+nome. **Essa busca nunca existiu:** `searchCnpjByName` devolve `unavailable` por
+desenho, porque a rota herdada do script Python não existe na fonte (Fase 3 do
+roadmap). A `/demo` já dizia a verdade — a home contradizia a demo do mesmo
+produto, e este arquivo, que é a copy de referência, sustentava a versão falsa.
 
 **02 — O Farol lê as fontes**
 
