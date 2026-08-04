@@ -124,9 +124,8 @@ function LandingPage() {
           <div className="mx-auto max-w-5xl px-6">
             <p className="eyebrow mb-8">Ficha de empresa brasileira</p>
             <h1
-              className="font-display italic mb-10"
+              className="font-display italic mb-10 text-[44px] min-[380px]:text-[clamp(64px,8vw,112px)]"
               style={{
-                fontSize: "clamp(64px, 8vw, 112px)",
                 lineHeight: 1.0,
                 letterSpacing: "-0.025em",
                 fontWeight: 700,
@@ -198,8 +197,8 @@ function LandingPage() {
             </div>
 
             <div className="rounded-md border border-border bg-background overflow-hidden">
-              <div className="flex items-center justify-between px-5 py-3 border-b border-border bg-muted/40">
-                <div className="flex items-center gap-2">
+              <div className="flex flex-col gap-2 px-5 py-3 border-b border-border bg-muted/40 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                <div className="flex shrink-0 items-center gap-2">
                   <span className="h-2.5 w-2.5 rounded-full bg-destructive/70" />
                   <span className="h-2.5 w-2.5 rounded-full bg-[color:var(--farol-tier-c)]/70" />
                   <span className="h-2.5 w-2.5 rounded-full bg-primary/60" />
