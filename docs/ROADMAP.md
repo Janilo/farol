@@ -41,8 +41,9 @@ index; `profiles.department` não existe mais e o layout ainda a pedia no
 ## ✅ Fase 2 — Consulta de ficha por CNPJ
 
 Núcleo puro testado (`cnpj.ts`, `enrichment.ts`), adapter fino com I/O
-(`enrichment.server.ts`) e a fatia (`ficha.functions.ts`) com união
-discriminada em vez de exceção. Demo pública em `/demo`.
+(`enrichment.server.ts`) e a fatia (`ficha.orchestrator.server.ts`, com a casca
+RPC em `ficha.functions.ts`) com união discriminada em vez de exceção. Demo
+pública em `/demo`.
 
 Dois achados que valem mais que o código:
 
@@ -571,11 +572,17 @@ era morto. A saída alternativa (implementar de verdade) continua aberta e exige
 fonte com índice textual; o `enrichment.server.ts` guarda o fato sobre as fontes
 e por onde recomeçar.
 
-**A5 também foi corrigido:** `ficha.functions.test.ts`, 21 testes com os adapters
-dublados. O refactor que ele exigiu é o achado dentro do achado — a composição
-morava dentro do `createServerFn`, que só roda no runtime do Start, então ela era
-**inalcançável para teste por construção**, não esquecida. Agora `resolverConsulta`
-é exportada e o `getFichaFn` é uma casca que valida e delega.
+**A5 também foi corrigido:** `ficha.orchestrator.server.test.ts`, 21 testes com os
+adapters dublados. O refactor que ele exigiu é o achado dentro do achado — a
+composição morava dentro do `createServerFn`, que só roda no runtime do Start,
+então ela era **inalcançável para teste por construção**, não esquecida. Agora
+`resolverConsulta` é exportada e o `getFichaFn` é uma casca que valida e delega.
+
+A correção nasceu incompleta e cobrou juros em 04/ago (issue #2): exportar a
+composição **do mesmo módulo que a rota importa** derrubou a `/demo` no
+`vite dev`, com o build passando e o CI verde. O diagnóstico está na
+`AUDITORIA-ARQUITETURA.md`, no A5, e a regra geral na memória
+`feedback-serverfn-fronteira-cliente`.
 
 **O A3 fechou os cinco**, e a lição está na diferença entre o que a auditoria
 propôs e o que foi feito. A proposta era `REVOKE EXECUTE` nas três funções; uma
