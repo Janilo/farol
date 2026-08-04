@@ -35,7 +35,7 @@ export function BrandFooter() {
             </a>
           ))}
         </div>
-        <div className="flex flex-row flex-nowrap items-center justify-between gap-3 border-t border-border/70 py-6">
+        <div className="flex flex-row flex-wrap items-center justify-between gap-x-3 gap-y-2 border-t border-border/70 py-6">
           <a
             href="https://pereirasaraiva.com"
             target="_blank"
