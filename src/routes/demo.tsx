@@ -5,9 +5,9 @@ import { Search, ArrowRight, Loader2 } from "lucide-react";
 import { PreTier } from "@/components/PreTier";
 import { SiteHeader } from "@/components/brand/SiteHeader";
 import { BrandFooter } from "@/components/brand/BrandFooter";
-import { getFichaFn, type FichaError } from "@/lib/ficha.functions";
+import { getFichaFn } from "@/lib/ficha.functions";
 import { describePartners, formatBRL, type Enrichment } from "@/lib/enrichment";
-import { formatFetchedAt, type Ficha } from "@/lib/ficha";
+import { formatFetchedAt, type Ficha, type FichaError } from "@/lib/ficha";
 import { CATALOGO } from "@/lib/fingerprints";
 import { QUOTA_ANONIMO } from "@/lib/rate-limit";
 import {
