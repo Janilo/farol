@@ -6,7 +6,7 @@
 
 > **Nota sobre a meta.** O roadmap pedia "meta 100%". Auditoria que se obriga a fechar em verde não é auditoria — é carimbo. Esta fechou em **três verdes e dois amarelos**, com cinco achados, sendo **um deles contra a Fase 5, escrita horas antes desta auditoria**. O 100% fica como alvo dos achados, não como resultado declarado.
 
-> **✅ A1, A2 e A4 foram corrigidos na mesma sessão** (decisão dele, 03/ago/2026), e as seções abaixo estão marcadas. O texto do diagnóstico foi mantido no passado, porque um achado que some depois de resolvido tira da próxima pessoa a razão pela qual a decisão foi tomada. **A3 e A5 seguem abertos.**
+> **✅ A1, A2, A4 e A5 foram corrigidos na mesma sessão** (decisão dele, 03/ago/2026), e as seções abaixo estão marcadas. O texto do diagnóstico foi mantido no passado, porque um achado que some depois de resolvido tira da próxima pessoa a razão pela qual a decisão foi tomada. **Só o A3 segue aberto** — ele mexe no banco de produção.
 
 ---
 
@@ -183,11 +183,15 @@ Não são superfície viva, então não são P0. Mas carregam `SUPABASE_SERVICE_
 
 **Corrigido.** As duas pastas foram removidas. Conferido antes: nenhuma referência no repo, nenhuma menção em `supabase/config.toml`, nenhuma deployada. Se algum dia o Farol precisar de edge function, ela nasce com o gate correto — `getUser()` sozinho não basta, tem que checar `is_approved` como manda o `SEGURANCA.md`.
 
-### A5 — O orquestrador não tem teste (P2)
+### A5 — O orquestrador não tem teste (P2) · ✅ CORRIGIDO em 03/ago/2026
 
 `ficha.functions.ts` concentra a ordem entre quota e `fetch`, o paralelismo entre stack e cadastro, o fallback para `stale`, a exceção do `COMPANY_NOT_FOUND` e o `await` que impede promessa solta no Worker. Todas as peças que ele chama são testadas; a composição não.
 
-**Correção:** testes de fatia com os adapters dublados, cobrindo pelo menos: (a) fonte cai e existe `stale` → serve o velho; (b) fonte diz `not_found` com `stale` presente → erro, não o velho; (c) cache fresco e domínio novo → consome quota; (d) cache fresco e mesmo domínio → não consome.
+**Corrigido.** `ficha.functions.test.ts`, com **21 testes** e os adapters de I/O dublados — os quatro casos previstos e mais dezessete que a leitura do orquestrador revelou (ordem entre validação de CNPJ e busca por nome, os três códigos de quota, site inacessível que não derruba a ficha, `stack: null` como "nem tentou", o que é e o que não é regravado).
+
+**Foi preciso um refactor para o teste existir, e ele é o achado dentro do achado.** A composição morava dentro do `createServerFn`, e `createServerFn` só roda no runtime do TanStack Start, que guarda o contexto num `AsyncLocalStorage`: chamar `getFichaFn` de um teste falha com _"No Start context found"_ **antes de executar uma linha da nossa lógica**. Ou seja, a composição não estava sem teste por esquecimento — ela era **inalcançável para teste por construção**. Agora `resolverConsulta` é exportada e recebe `agora` por parâmetro, e o `getFichaFn` é uma casca que valida e delega.
+
+**Um dos testes documenta uma dependência, não um comportamento desejável.** O orquestrador faz `await writeCachedFicha(ficha)` sem `try/catch`, e o comentário ao lado diz que gravar é otimização. É verdade — mas quem garante isso é `ficha.server.ts`, que envolve o upsert em `try/catch` e nunca lança. O teste `escrita que lança DERRUBA a consulta` afirma o estado real e falha de propósito se alguém tornar o orquestrador autossuficiente, que é quando ele deve ser reescrito.
 
 ---
 

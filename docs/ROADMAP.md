@@ -15,7 +15,7 @@ e a rubrica é o que sustenta o discurso da página institucional: a tecnografia
 tem recall baixa fora de e-commerce (§Fase 6, item 1 — em ~50 empresas, nenhuma
 detecção de terceiro fora de VTEX sobreviveu ao escrutínio). A **Fase 8 é a
 única aberta, e está suspensa**, com o gatilho de reabertura escrito na própria
-seção. Os achados A3 e A5 da auditoria seguem em aberto — ver a Fase 10.
+seção. O achado A3 da auditoria segue em aberto — ver a Fase 10.
 
 As decisões travadas estão em [`DESIGN.md`](DESIGN.md); os termos, em
 [`../GLOSSARIO.md`](../GLOSSARIO.md). Nada aqui as reabre.
@@ -568,11 +568,16 @@ era morto. A saída alternativa (implementar de verdade) continua aberta e exige
 fonte com índice textual; o `enrichment.server.ts` guarda o fato sobre as fontes
 e por onde recomeçar.
 
-**Seguem abertos:** **A3** (P1, segurança) —
-`has_role`, `is_approved` e `is_guest` são `SECURITY DEFINER` executáveis por
-qualquer autenticado via RPC, achado do linter do Supabase, e o impacto cresce
-quando a Fase 8 sair da suspensão; **A5** (P2) — o orquestrador `ficha.functions.ts`
-não tem teste, embora cada peça que ele chama tenha.
+**A5 também foi corrigido:** `ficha.functions.test.ts`, 21 testes com os adapters
+dublados. O refactor que ele exigiu é o achado dentro do achado — a composição
+morava dentro do `createServerFn`, que só roda no runtime do Start, então ela era
+**inalcançável para teste por construção**, não esquecida. Agora `resolverConsulta`
+é exportada e o `getFichaFn` é uma casca que valida e delega.
+
+**Segue aberto só o A3** (P1, segurança): `has_role`, `is_approved` e `is_guest`
+são `SECURITY DEFINER` executáveis por qualquer autenticado via RPC — achado do
+linter do Supabase. O impacto cresce quando a Fase 8 sair da suspensão, e a
+correção **mexe no banco de produção**, então pede migration e teste de RLS.
 
 As 18 citações `arquivo:linha` do documento foram verificadas uma a uma, e
 re-verificadas depois das correções — corrigir o código envelhece o documento

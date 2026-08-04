@@ -163,36 +163,61 @@ const GetFichaSchema = z.object({
   domain: z.string().max(253).optional(),
 });
 
+/**
+ * A composição inteira, **fora do `createServerFn`** e por isso testável.
+ *
+ * A separação não é preciosismo: `createServerFn` só roda dentro do runtime do
+ * TanStack Start, que mantém o contexto num `AsyncLocalStorage`. Chamar
+ * `getFichaFn` de um teste falha com "No Start context found" antes de executar
+ * uma linha da nossa lógica. Enquanto a composição morava lá dentro, ela era
+ * **inalcançável para teste** — cada peça que ela chama tinha cobertura, e a
+ * ordem entre elas não tinha nenhuma (achado A5 da auditoria de arquitetura).
+ *
+ * `agora` entra por parâmetro pelo mesmo motivo do resto do repo: um relógio
+ * implícito obriga o teste a usar fake timers para exercitar frescor de cache.
+ */
+export async function resolverConsulta(
+  queryBruta: string,
+  domainBruto: string | null | undefined,
+  agora: Date,
+): Promise<FichaResult> {
+  const query = queryBruta.trim();
+  if (!query) return { status: "error", error: "INVALID_CNPJ" };
+
+  // Normaliza aqui, na borda: o núcleo e o adapter recebem host, nunca o que
+  // o visitante digitou. `null` quando não dá para extrair host — campo
+  // opcional preenchido com lixo não deve virar erro da consulta.
+  const domain = domainBruto ? normalizeDomain(domainBruto) : null;
+
+  // Parece CNPJ (mesmo incompleto)? Então o erro certo é de CNPJ, não de
+  // nome: quem digitou 13 dígitos quer saber que faltou um.
+  if (looksLikeCnpj(query)) {
+    if (!isValidCnpj(query)) return { status: "error", error: "INVALID_CNPJ" };
+    return resolverPorCnpj(cleanCnpj(query), domain, agora);
+  }
+
+  // Não parece CNPJ. Busca por nome depende de fonte com índice textual, que
+  // não existe nas gratuitas — o porquê está em `enrichment.server.ts`. Erro
+  // próprio para a tela pedir o CNPJ em vez de culpar a Receita por uma
+  // limitação nossa.
+  //
+  // Aqui havia uma cadeia que chamava `searchCnpjByName` e tratava
+  // `none_found`, `rate_limited` e candidatos múltiplos. **Nada daquilo era
+  // alcançável**: o stub devolvia `unavailable` sempre, então só a primeira
+  // linha rodava. Removido em 03/ago/2026 (achado A2 da auditoria).
+  return { status: "error", error: "NAME_SEARCH_UNAVAILABLE" };
+}
+
+/**
+ * A casca. Valida a entrada e delega — nenhuma decisão mora aqui, de propósito:
+ * o que estiver dentro do `createServerFn` não pode ser testado (ver
+ * `resolverConsulta`).
+ *
+ * O `agora` nasce aqui, uma vez por requisição, para que a decisão de frescor do
+ * cache e o carimbo do que for gravado não discordem por milissegundos.
+ */
 export const getFichaFn = createServerFn({ method: "POST" })
   .validator((d) => GetFichaSchema.parse(d))
   .handler(async ({ data }): Promise<FichaResult> => {
-    const query = data.query.trim();
-    if (!query) return { status: "error", error: "INVALID_CNPJ" };
-
-    // Normaliza aqui, na borda: o núcleo e o adapter recebem host, nunca o que
-    // o visitante digitou. `null` quando não dá para extrair host — campo
-    // opcional preenchido com lixo não deve virar erro da consulta.
-    const domain = data.domain ? normalizeDomain(data.domain) : null;
-
-    // Um `agora` só para a requisição inteira: assim a decisão de frescor e o
-    // carimbo do que for gravado não podem discordar por milissegundos.
-    const agora = new Date();
-
-    // Parece CNPJ (mesmo incompleto)? Então o erro certo é de CNPJ, não de
-    // nome: quem digitou 13 dígitos quer saber que faltou um.
-    if (looksLikeCnpj(query)) {
-      if (!isValidCnpj(query)) return { status: "error", error: "INVALID_CNPJ" };
-      return resolverPorCnpj(cleanCnpj(query), domain, agora);
-    }
-
-    // Não parece CNPJ. Busca por nome depende de fonte com índice textual, que
-    // não existe nas gratuitas — o porquê está em `enrichment.server.ts`. Erro
-    // próprio para a tela pedir o CNPJ em vez de culpar a Receita por uma
-    // limitação nossa.
-    //
-    // Aqui havia uma cadeia que chamava `searchCnpjByName` e tratava
-    // `none_found`, `rate_limited` e candidatos múltiplos. **Nada daquilo era
-    // alcançável**: o stub devolvia `unavailable` sempre, então só a primeira
-    // linha rodava. Removido em 03/ago/2026 (achado A2 da auditoria).
-    return { status: "error", error: "NAME_SEARCH_UNAVAILABLE" };
+    return resolverConsulta(data.query, data.domain, new Date());
   });
